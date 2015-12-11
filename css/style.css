@@ -1,0 +1,14 @@
+table {
+	border-collapse: collapse;
+	border: 2px #f2f2f2 solid;
+	font: 12px sans-serif;
+	overflow-y: scroll; 
+	width: 90vw;
+	height: 75vh;
+	display: block;
+}
+
+td {
+	border: 1px #f2f2f2 solid;
+	padding: 10px;
+} 
