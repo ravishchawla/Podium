@@ -1,6 +1,12 @@
-// initialize the web page
-function init() {
-	$(document).ready(function() {
-        loadTable();
-    });
-}
+(function() {
+	main = {}; 
+	
+	/*
+	 * initialize the web page
+	 */
+	main.init = function() {
+		$(document).ready(function() {
+	        mar.loadTable("data/nflData.csv");
+	    });
+	}
+})();
