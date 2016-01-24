@@ -1,6 +1,8 @@
 (function() {
 	main = {}; 
 	
+	
+	
 	/*
 	 * initialize the web page
 	 */

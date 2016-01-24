@@ -6,9 +6,9 @@
 	var focalRowHeight, nonFocalRowHeight;
 	var keys;
 	var numericalAttributes = [];
-
 	var htmlTableToCache;
 
+	
 
 	/*
 	 * load the table for the first time 
@@ -16,6 +16,8 @@
 	mar.loadTable = function(fileName) {
 		loadData(fileName);
 	}
+	
+	
 	
 	/*
 	 * load the data from the given file
@@ -45,6 +47,8 @@
 			displayTable(data);
 		});
 	}
+	
+	
 	
 	/*
 	 * display the table
@@ -91,6 +95,8 @@
 		}
 	}
 
+	
+	
 	/*
 	 * add functionality:
 	 *     click & drag rows
@@ -177,6 +183,8 @@
 		
 	}
 	
+	
+	
 	/*
 	 * For the given row number, determine the range of cells to 
 	 * apply the fisheye effect to.
@@ -210,6 +218,8 @@
 		return surroundingRows; 
 	}
 	
+	
+	
 	/*
 	 * Normalize the data according to the given attribute
 	 */
@@ -230,12 +240,20 @@
 			dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min); 
 	}
 	
+	
 
+	/*
+	 * Return the table to its state before changes were made
+	 */
 	mar.discardButtonClicked = function() {
-
 		$("#tablePanel tbody").html(htmlTableToCache);
-
 	}
-
+	
+	/*
+	 * Rank!
+	 */
+	mar.rankButtonClicked = function() {
+		// TODO: Fill this in
+	}
 
 })();
