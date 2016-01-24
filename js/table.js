@@ -5,6 +5,7 @@
 	var numFocalRows, numNonFocalRows; 
 	var focalRowHeight, nonFocalRowHeight;
 	var keys;
+	var numericalAttributes = [];
 	
 	/*
 	 * load the table for the first time 
@@ -19,6 +20,24 @@
 	function loadData(fileName) {
 		d3.csv(fileName, function(dataset) {
 			data = dataset;
+			if (data.length > 0) {
+				
+				// determine which attributes are numerical
+				keys = Object.keys(data[0]);
+				for (var attr = 0; attr < keys.length; attr++) {
+					var isNumerical = true; 
+					for (var i = 0; i < data.length; i++) {
+						if (isNaN(data[i][keys[attr]])) {
+							isNumerical = false; 
+							break;
+						}
+					}
+					if (isNumerical) {
+						numericalAttributes.push(keys[attr]);
+						normalizeAttribute(data, keys[attr], true);
+					}
+				}
+			}
 			ial.init(data, 0);
 			displayTable(data);
 		});
@@ -30,6 +49,7 @@
 	function displayTable(displayData) {
 		if (displayData != undefined && displayData.length != 0) {
 			keys = Object.keys(displayData[0]);
+			console.log("Keys:  " + keys);
 			var htmlTable = "<table id='tableId'>\n";
 			
 			// append the header
@@ -97,11 +117,11 @@
 		
 		// add table lens effect
 		$(".tableRow").click(function(i) {
-			console.log("numFocalRows: " + numFocalRows);
+			/*console.log("numFocalRows: " + numFocalRows);
 			console.log("numNonFocalRows: " + numNonFocalRows); 
 			console.log("tableHeight: " + tableHeight);
 			console.log("focalRowHeight: " + focalRowHeight);
-			console.log("nonFocalRowHeight: " + nonFocalRowHeight);
+			console.log("nonFocalRowHeight: " + nonFocalRowHeight);*/
 
 			// make all other rows normal height
 			$("#tablePanel tbody tr").each(function(i) {
@@ -152,5 +172,25 @@
 			surroundingRows.push(clickedRow + i);
 		
 		return surroundingRows; 
+	}
+	
+	/*
+	 * Normalize the data according to the given attribute
+	 */
+	function normalizeAttribute(dataset, attr, isHighValGood) {
+		var min = Number.MAX_VALUE; 
+		var max = Number.MIN_VALUE; 
+		var len = dataset.length;
+		for (var i = 0; i < len; i++) {
+			var currentVal = Number(dataset[i][attr]);
+			
+			if (currentVal < min)
+				min = currentVal; 
+			if (currentVal > max)
+				max = currentVal;
+		}
+		
+		for (var i = 0; i < len; i++)
+			dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min); 
 	}
 })();
