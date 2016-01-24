@@ -66,6 +66,7 @@
 			for (var i = 0; i < displayData.length; i++) {
 				htmlTable += "  <tr class='tableRow'>\n";
 				htmlTable += "    <td class='index'>" + (i+1) + "</td>\n";
+				htmlTable += "    <td style='display:none' class='originalIndex'>" + (i+1) + "</td>\n";
 				for (var j = 0; j < keys.length; j++) {
 					htmlTable += "    <td>" + displayData[i][keys[j]] + "</td>\n";
 				}
@@ -105,10 +106,38 @@
 			});
 			return $helper;
 		};
+
 		var updateIndex = function(e, ui) {
-			$('td.index', ui.item.parent()).each(function (i) {
-				$(this).html(i + 1);
+			$('tr', ui.item.parent()).each(function (i) {
+				
+				var usePersistentIndex = false;
+
+				var rowObj = $(this).find("td.index");
+				
+				if(usePersistentIndex == false)
+					var oldIndex = $(this).find("td.originalIndex").html();
+				else
+					var oldIndex = rowObj.html();
+
+				var newIndex = i + 1;
+
+				if(newIndex > oldIndex) {
+					$(this).removeClass('lowRowChange');
+					$(this).addClass('highRowChange');
+				} else if (newIndex < oldIndex) {
+					$(this).removeClass('highRowChange');
+					$(this).addClass('lowRowChange');
+				}
+
+				if(usePersistentIndex == false && newIndex == oldIndex) {
+					$(this).removeClass('highRowChange');
+					$(this).removeClass('lowRowChange');
+				}
+
+				rowObj.html(i+1);
+
 			});
+
 		};
 		$("#tablePanel tbody").sortable({
 		    helper: fixHelperModified,
