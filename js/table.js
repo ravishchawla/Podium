@@ -6,7 +6,10 @@
 	var focalRowHeight, nonFocalRowHeight;
 	var keys;
 	var numericalAttributes = [];
-	
+
+	var htmlTableToCache;
+
+
 	/*
 	 * load the table for the first time 
 	 */
@@ -139,11 +142,15 @@
 			});
 
 		};
+
+
 		$("#tablePanel tbody").sortable({
 		    helper: fixHelperModified,
 		    stop: updateIndex
 		}).disableSelection();
-		
+
+		htmlTableToCache = $("#tablePanel tbody").html();
+
 		// add table lens effect
 		$(".tableRow").click(function(i) {
 			/*console.log("numFocalRows: " + numFocalRows);
@@ -222,4 +229,13 @@
 		for (var i = 0; i < len; i++)
 			dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min); 
 	}
+	
+
+	mar.discardButtonClicked = function() {
+
+		$("#tablePanel tbody").html(htmlTableToCache);
+
+	}
+
+
 })();

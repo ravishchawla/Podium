@@ -8,10 +8,6 @@ table {
 	display: block;
 }
 
-#rank_button {
-	float : right;
-}
-
 .lowRowChange {
 	background-color: #97e899;
 }
