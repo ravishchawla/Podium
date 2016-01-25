@@ -14,7 +14,7 @@
 	 * load the table for the first time 
 	 */
 	mar.loadTable = function(fileName) {
-		loadData(fileName);
+		loadData(fileName); 
 	}
 	
 	
