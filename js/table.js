@@ -1,12 +1,14 @@
 (function() {
 	mar = {};
 	var data;
+	var columns = [];
+	var numericalAttributes = []
 	var tableHeight; 
 	var numFocalRows, numNonFocalRows; 
 	var focalRowHeight, nonFocalRowHeight;
 	var keys;
-	var numericalAttributes = [];
 	var htmlTableToCache;
+	var table, header, body;
 
 	
 
@@ -29,17 +31,21 @@
 				
 				// determine which attributes are numerical
 				keys = Object.keys(data[0]);
+				columns.push({ head: "Rank", cl: "rank index originalIndex", html: function(row, i) { return (i + 1); } });
 				for (var attr = 0; attr < keys.length; attr++) {
+					var attrName = keys[attr];
+					// populate columns with objects to aid D3 
+					columns.push({ head: attrName, cl: attrName, html: ƒ(attrName)});
 					var isNumerical = true; 
 					for (var i = 0; i < data.length; i++) {
-						if (isNaN(data[i][keys[attr]])) {
+						if (isNaN(data[i][attrName])) {
 							isNumerical = false; 
 							break;
 						}
 					}
 					if (isNumerical) {
-						numericalAttributes.push(keys[attr]);
-						normalizeAttribute(data, keys[attr], true);
+						numericalAttributes.push(attrName);
+						normalizeAttribute(data, attrName, true);
 					}
 				}
 			}
@@ -55,33 +61,46 @@
 	 */
 	function displayTable(displayData) {
 		if (displayData != undefined && displayData.length != 0) {
-			keys = Object.keys(displayData[0]);
-			console.log("Keys:  " + keys);
-			var htmlTable = "<table id='tableId'>\n";
 			
-			// append the header
-			htmlTable += "  <thead>\n";
-			htmlTable += "    <tr>\n";
-			htmlTable += "      <th data-header='rank'  class='dragtable-drag-boundary'><div class='dragtable-drag-handle'></div>Rank</th>\n";
-			for (var i = 0; i < keys.length; i++)
-				htmlTable += "      <th data-header='" + (i+1) + "'><div class='dragtable-drag-handle'></div>" + keys[i] + "</th>\n";
-			htmlTable += "    </tr>\n";
-			htmlTable += "  </thead>\n";
+			// append the table
+			table = d3.select("#tablePanel")
+				.append("table")
+				.attr("id", "tableId");
 			
-			// append the data
-			htmlTable += "  <tbody>\n";
-			for (var i = 0; i < displayData.length; i++) {
-				htmlTable += "  <tr class='tableRow'>\n";
-				htmlTable += "    <td class='index'>" + (i+1) + "</td>\n";
-				htmlTable += "    <td style='display:none' class='originalIndex'>" + (i+1) + "</td>\n";
-				for (var j = 0; j < keys.length; j++) {
-					htmlTable += "    <td>" + displayData[i][keys[j]] + "</td>\n";
-				}
-				htmlTable += "  </tr>\n";
-			}
-			htmlTable += "  </tbody>\n";
-			htmlTable += "</table>\n";
-			$("#tablePanel").append(htmlTable);
+			// append the table header
+			header = table.append("thead")
+				.append("tr")
+				.selectAll("th")
+				.data(columns)
+				.enter()
+				.append("th")
+				.attr("class", ƒ("cl"))
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+				.text(ƒ("head"));
+				
+			body = table.append("tbody")
+				.selectAll("tr")
+				.data(data)
+				.enter()
+				.append("tr")
+				.selectAll("td")
+				.data(function(row, i) {
+					return columns.map(function(c) {
+						var cell = {}; 
+						d3.keys(c).forEach(function(k) {
+							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
+							if (c[k] == "rank index")
+								c[k] = i;
+							if (c[k] == "rank originalIndex")
+								c[k] = null; 
+						});
+						return cell; 
+					});
+				}).enter()
+				.append("td")
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+				.html(ƒ("html"))
+				.attr("class", ƒ("cl"));
 			
 			tableHeight = Number(document.getElementById("tableId").offsetHeight); 
 			numFocalRows = (data.length > 5) ? Number(5) : Number(0);
@@ -103,8 +122,6 @@
 	 *     table lens 
 	 */ 
 	function addFunctionality() {
-		// make table columns click & draggable
-		$('#tablePanel').dragtable();
 		
 		// make table rows click & draggable
 		var fixHelperModified = function(e, tr) {
@@ -143,8 +160,7 @@
 					$(this).removeClass('lowRowChange');
 				}
 
-				rowObj.html(i+1);
-
+				rowObj.html(i+1); 
 			});
 
 		};
@@ -158,7 +174,7 @@
 		htmlTableToCache = $("#tablePanel tbody").html();
 
 		// add table lens effect
-		$(".tableRow").click(function(i) {
+		$("tr").click(function(i) {
 			/*console.log("numFocalRows: " + numFocalRows);
 			console.log("numNonFocalRows: " + numNonFocalRows); 
 			console.log("tableHeight: " + tableHeight);
