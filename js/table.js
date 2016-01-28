@@ -77,6 +77,7 @@
 				.enter()
 				.append("th")
 				.attr("class", ƒ("cl"))
+				//.html(ƒ("head"))
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 				
@@ -206,6 +207,23 @@
 					.css("height", focalRowHeight + "px")
 					.addClass("focalRow");
 			}
+		});
+
+		$("th").each(function(i) {
+			var html_text = $(this).html();
+			html_text = html_text + '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>';
+			$(this).html(html_text);
+			$(this).click(function() {
+				var clickedObj = $(this).find("input");
+				clickedObj.toggleClass('directionUp', 'directionDown');
+
+				if(clickedObj.hasClass('directionUp')) {
+					clickedObj.attr('src', 'img/arrow-up.png');
+				} else {
+					clickedObj.attr('src', 'img/arrow-down.png');
+				}
+
+			})
 		});
 		
 	}
