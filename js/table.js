@@ -300,4 +300,8 @@
 		return changedRows;
 	}
 
+	mar.getChangedRows = function() {
+		return changedRows;
+	}
+
 })();
