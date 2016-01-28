@@ -31,7 +31,8 @@
 				
 				// determine which attributes are numerical
 				keys = Object.keys(data[0]);
-				columns.push({ head: "Rank", cl: "rank index originalIndex", html: function(row, i) { return (i + 1); } });
+				columns.push({ head: "Rank", cl: "rank index null", html: function(row, i) { return (i + 1); } });
+				columns.push({ head: "Original Index", cl: "hidden originalIndex", html: function(row, i) { return (i + 1); } });
 				for (var attr = 0; attr < keys.length; attr++) {
 					var attrName = keys[attr];
 					// populate columns with objects to aid D3 
@@ -91,8 +92,9 @@
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
 							if (c[k] == "rank index")
 								c[k] = i;
-							if (c[k] == "rank originalIndex")
-								c[k] = null; 
+							if (c[k] == "originalIndex") {
+								c[k] = null;
+							}
 						});
 						return cell; 
 					});
@@ -134,16 +136,19 @@
 		};
 
 		var updateIndex = function(e, ui) {
+
 			$('tr', ui.item.parent()).each(function (i) {
-				
+
+				//Persistent Index means that a comparison is made between the previous row position and the current position.
+				//Non-persistent Index means that the comparison is made between the original row position and the current position.				
 				var usePersistentIndex = false;
 
-				var rowObj = $(this).find("td.index");
+				var indexObj = $(this).find("td.rank.index");
 				
 				if(usePersistentIndex == false)
 					var oldIndex = $(this).find("td.originalIndex").html();
 				else
-					var oldIndex = rowObj.html();
+					var oldIndex = indexObj.html();
 
 				var newIndex = i + 1;
 
@@ -160,7 +165,8 @@
 					$(this).removeClass('lowRowChange');
 				}
 
-				rowObj.html(i+1); 
+				indexObj.html(i+1);
+
 			});
 
 		};

@@ -25,3 +25,7 @@ td {
 	border: 1px #f2f2f2 solid;
 	padding: 10px;
 }
+
+.hidden {
+	display:none;
+}
