@@ -10,6 +10,7 @@
 	var htmlTableToCache;
 	var table, header, body;
 
+	var changedRows = [];
 	
 
 	/*
@@ -136,6 +137,7 @@
 		};
 
 		var updateIndex = function(e, ui) {
+			changedRows = [];
 
 			$('tr', ui.item.parent()).each(function (i) {
 
@@ -165,10 +167,13 @@
 					$(this).removeClass('lowRowChange');
 				}
 
+				if (indexObj.html() != (i+1)) {
+					changedRows.push(i+1);
+				}
+
 				indexObj.html(i+1);
 
 			});
-
 		};
 
 
@@ -276,6 +281,10 @@
 	 */
 	mar.rankButtonClicked = function() {
 		// TODO: Fill this in
+	}
+
+	mar.getChangedRows = function() {
+		return changedRows;
 	}
 
 })();
