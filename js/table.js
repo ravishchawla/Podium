@@ -1,33 +1,43 @@
 (function() {
+	
+	/*************************************VARIABLES*************************************/
+	
 	mar = {};
 	var data;
 	var columns = [];
-	var numericalAttributes = []
+	var numericalAttributes = [];
+	var changedRows = [];
+	
+	var tolerance; 
 	var tableHeight; 
 	var numFocalRows, numNonFocalRows; 
 	var focalRowHeight, nonFocalRowHeight;
+	
 	var keys;
 	var htmlTableToCache;
 	var table, header, body;
-
-	var changedRows = [];
 	
 
+	
+	
+	/**********************************LOAD THE TABLE**********************************/
+	
 	/*
-	 * load the table for the first time 
+	 * Load the table for the first time 
 	 */
 	mar.loadTable = function(fileName) {
 		loadData(fileName);
 	}
 	
 	
-	
 	/*
-	 * load the data from the given file
+	 * Private
+	 * Load the data from the given file
 	 */
 	function loadData(fileName) {
 		d3.csv(fileName, function(dataset) {
 			data = dataset;
+			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
 				// determine which attributes are numerical
@@ -37,7 +47,6 @@
 				for (var attr = 0; attr < keys.length; attr++) {
 					var attrName = keys[attr];
 					// populate columns with objects to aid D3 
-					columns.push({ head: attrName, cl: attrName, html: ƒ(attrName)});
 					var isNumerical = true; 
 					for (var i = 0; i < data.length; i++) {
 						if (isNaN(data[i][attrName])) {
@@ -45,10 +54,13 @@
 							break;
 						}
 					}
+					
 					if (isNumerical) {
+						columns.push({ head: attrName, cl: attrName + " numericalAttribute", html: ƒ(attrName)});
 						numericalAttributes.push(attrName);
 						normalizeAttribute(data, attrName, true);
-					}
+					} else 
+						columns.push({ head: attrName, cl: attrName, html: ƒ(attrName)});
 				}
 			}
 			ial.init(data, 0);
@@ -57,9 +69,9 @@
 	}
 	
 	
-	
 	/*
-	 * display the table
+	 * Private
+	 * Display the table
 	 */
 	function displayTable(displayData) {
 		if (displayData != undefined && displayData.length != 0) {
@@ -117,17 +129,32 @@
 			console.log("table.js: table appended");
 		}
 	}
-
 	
+	
+	
+	
+	/***********************************TABLE EFFECTS***********************************/
 	
 	/*
-	 * add functionality:
+	 * Private
+	 * Add functionality:
 	 *     click & drag rows
+	 *     add arrows to indicate desired values
 	 *     table lens 
 	 */ 
 	function addFunctionality() {
-		
-		// make table rows click & draggable
+		clickAndDragRows(); 
+		addArrows(); 
+		tableLens(); 
+	}
+	
+	
+	/*
+	 * Private
+	 * Make rows click & draggable
+	 * Change color of row based on direction and magnitude of change
+	 */
+	function clickAndDragRows() {
 		var fixHelperModified = function(e, tr) {
 			var $originals = tr.children();
 			var $helper = tr.clone();
@@ -136,14 +163,14 @@
 			});
 			return $helper;
 		};
-
+		
 		var updateIndex = function(e, ui) {
 			changedRows = [];
 
 			$('tr', ui.item.parent()).each(function (i) {
 
-				//Persistent Index means that a comparison is made between the previous row position and the current position.
-				//Non-persistent Index means that the comparison is made between the original row position and the current position.				
+				// Persistent Index means that a comparison is made between the previous row position and the current position.
+				// Non-persistent Index means that the comparison is made between the original row position and the current position.				
 				var usePersistentIndex = false;
 
 				var indexObj = $(this).find("td.rank.index");
@@ -184,53 +211,114 @@
 		}).disableSelection();
 
 		htmlTableToCache = $("#tablePanel tbody").html();
-
-		// add table lens effect
-		$("tr").click(function(i) {
-			/*console.log("numFocalRows: " + numFocalRows);
-			console.log("numNonFocalRows: " + numNonFocalRows); 
-			console.log("tableHeight: " + tableHeight);
-			console.log("focalRowHeight: " + focalRowHeight);
-			console.log("nonFocalRowHeight: " + nonFocalRowHeight);*/
-
-			// make all other rows normal height
-			$("#tablePanel tbody tr").each(function(i) {
-				$(this).css("height", nonFocalRowHeight + "px")
-					.removeClass("focalRow");
-			}); 
-
-			// increase row height of the given row
-			var clickedRow = $(this).index();
-			var surroundingRows = getSurroundingRowRange(clickedRow, numFocalRows - 1); 
-			for (var i = 0; i < surroundingRows.length; i++) {
-				$(".tableRow").eq(surroundingRows[i])
-					.css("height", focalRowHeight + "px")
-					.addClass("focalRow");
+	}
+	
+	
+	/*
+	 * Private
+	 * Add up / down arrows to rows to indicate
+	 *     up = high values are good
+	 *     down = low values are good
+	 */
+	function addArrows() {
+		$("th").each(function(i) {
+			if (i > 0) { // don't add to Rank col
+				var html_text = $(this).html();
+				html_text = html_text + '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>';
+				$(this).html(html_text);
+				$(this).click(function() {
+					
+					var clickedObjClasses = $(this).attr('class').split(' ');
+					// assumes the first class is the name of the attribute - make sure we don't change this convention
+					var clickedObjAttribute = clickedObjClasses[0];
+					
+					var clickedObj = $(this).find("input");
+					clickedObj.toggleClass('directionUp', 'directionDown');
+					if (clickedObj.hasClass('directionUp')) {
+						clickedObj.attr('src', 'img/arrow-up.png');
+						// re-normalize the attribute
+						normalizeAttribute(data, clickedObjAttribute, true);
+					} else {
+						clickedObj.attr('src', 'img/arrow-down.png');
+						// re-normalize the attribute
+						normalizeAttribute(data, clickedObjAttribute, false);
+					}
+	
+				});
 			}
 		});
+	}
+	
+	
+	/*
+	 * Private
+	 * Add the table lens effect
+	 */
+	function tableLens() {
 
-		$("th").each(function(i) {
-			var html_text = $(this).html();
-			html_text = html_text + '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>';
-			$(this).html(html_text);
-			$(this).click(function() {
-				var clickedObj = $(this).find("input");
-				clickedObj.toggleClass('directionUp', 'directionDown');
+		$("tr").hover(function() {
 
-				if(clickedObj.hasClass('directionUp')) {
-					clickedObj.attr('src', 'img/arrow-up.png');
-				} else {
-					clickedObj.attr('src', 'img/arrow-down.png');
-				}
+			var difference = focalRowHeight - nonFocalRowHeight;
+			var clickedRow = $(this).index();
+			var surroundingRows = getSurroundingRowRange(clickedRow, numFocalRows - 1); 
+			var size = surroundingRows.length;
+			var removePer = difference / size;
 
-			})
+			if (clickedRow >= 0 ) {
+				var a = focalRowHeight / 16;
+				var b = focalRowHeight / 4;
+				var c = focalRowHeight;                  // clickedRow
+				var d = focalRowHeight / 4;
+				var e = focalRowHeight / 16;
+				var trA = $("tr").get(clickedRow - 2);
+				var trB = $("tr").get(clickedRow - 1);
+				var trC = $("tr").get(clickedRow);
+				var trD = $("tr").get(clickedRow + 1);
+				var trE = $("tr").get(clickedRow + 2);
+
+				$(trA).css("height", a);
+				//$(trA).stop(false, false).animate({ height : a});
+				//$(trA).css("background","yellow");
+				$(trA).css("font-size", "0.4em");
+				//$(trA).css("font-size", "xx-small");
+
+				$(trB).css("height", b);
+				//$(trB).stop(false, false).animate({ height : b});
+				$(trB).css("font-size", "0.8em");
+				//$(trB).css("background","yellow");
+
+				$(trC).css("height", c);
+				//$(trC).stop(false, false).animate({ height : c});
+				//$(trC).css("background","cyan");
+				$(trC).css("color", "red");
+				$(trC).stop(false, true).animate({ background: "cyan" });
+				$(trC).css("font-size", "2em");
+
+				$(trD).css("height", d);
+				$(trD).css("font-size", "0.8em");
+				//$(trD).stop(false, false).animate({ height : d});
+				//$(trD).css("background","yellow");
+
+				$(trE).css("height", e);
+				$(trE).css("font-size", "0.4em");
+				//$(trE).stop(false, false).animate({ height : e});
+				//$(trE).css("background","yellow");
+			}
+		}, function () {
+			$("tr").css("background", "");
+			$("tr").css("height", nonFocalRowHeight);
+			$("tr").css("font-size", "initial");
+			$("tr").css("color", "black");
 		});
-		
 	}
 	
 	
 	
+	
+	/*********************************UTILITY FUNCTIONS*********************************/
+	
 	/*
+	 * Private
 	 * For the given row number, determine the range of cells to 
 	 * apply the fisheye effect to.
 	 */
@@ -264,42 +352,67 @@
 	}
 	
 	
-	
 	/*
+	 * Private
 	 * Normalize the data according to the given attribute
 	 */
 	function normalizeAttribute(dataset, attr, isHighValGood) {
-		var min = Number.MAX_VALUE; 
-		var max = Number.MIN_VALUE; 
-		var len = dataset.length;
-		for (var i = 0; i < len; i++) {
-			var currentVal = Number(dataset[i][attr]);
+		if (numericalAttributes.indexOf(attr) > -1) {
+			var min = Number.MAX_VALUE; 
+			var max = Number.MIN_VALUE; 
+			var len = dataset.length;
+			for (var i = 0; i < len; i++) {
+				var currentVal = Number(dataset[i][attr]);
+				
+				if (currentVal < min)
+					min = currentVal; 
+				if (currentVal > max)
+					max = currentVal;
+			}
 			
-			if (currentVal < min)
-				min = currentVal; 
-			if (currentVal > max)
-				max = currentVal;
+			var temp = [];
+			if (isHighValGood) {
+				for (var i = 0; i < len; i++)
+					dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min);
+			} else {
+				for (var i = 0; i < len; i++)
+					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
+			}
+		} else {
+			// TODO categorical
 		}
-		
-		for (var i = 0; i < len; i++)
-			dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min); 
 	}
 	
 	
-
+	/*
+	 * Private
+	 * Get the list of changed rows
+	 */
+	function getChangedRows() {
+		return changedRows;
+	}
+	
+	
+	
+	
+	/**************************************BUTTONS**************************************/
+	
 	/*
 	 * Return the table to its state before changes were made
 	 */
 	mar.discardButtonClicked = function() {
+		console.log("table.js: Discarding Changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
 	}
+	
 	
 	/*
 	 * Rank!
 	 */
 	mar.rankButtonClicked = function() {
-		console.log("table.js: RANKING");
-		/*console.log("svd test");
+		console.log("table.js: Ranking");
+		console.log("-- test: Changed rows: " + getChangedRows());
+		/*console.log("-- test: svd");
 		var mtx = [[.9336, .2273, .2428, -8], 
 		           [0, 0, .9420, -20], 
 		           [.0094, .0027, 1, -25], 
@@ -309,17 +422,8 @@
 		           [.9364, .3636, .1522, -95], 
 		           [.8274, 1, 0, -99]];
 		var res = numeric.svd(mtx);
-		console.log("u: " + res.U);
-		console.log("s: " + res.S);
-		console.log("v: " + res.V);*/
+		console.log("-- u: " + res.U);
+		console.log("-- s: " + res.S);
+		console.log("-- v: " + res.V);*/
 	}
-
-	mar.getChangedRows = function() {
-		return changedRows;
-	}
-
-	mar.getChangedRows = function() {
-		return changedRows;
-	}
-
 })();
