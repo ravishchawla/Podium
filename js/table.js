@@ -6,6 +6,7 @@
 	var data;
 	var columns = [];
 	var numericalAttributes = [];
+	var categoricalAttributeMap = {};
 	var changedRows = [];
 	
 	var tolerance; 
@@ -40,13 +41,23 @@
 			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
-				// determine which attributes are numerical
 				keys = Object.keys(data[0]);
+				
+				// give each data item a unique id
+				var counter = 0; 
+				for (var i = 0; i < data.length; i++) {
+					data[i]["uniqueId"] = counter; 
+					counter++;
+				}
+				
 				columns.push({ head: "Rank", cl: "rank index null", html: function(row, i) { return (i + 1); } });
 				columns.push({ head: "Original Index", cl: "hidden originalIndex", html: function(row, i) { return (i + 1); } });
+				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
+				
+				// find numerical and categorical attributes
 				for (var attr = 0; attr < keys.length; attr++) {
 					var attrName = keys[attr];
-					// populate columns with objects to aid D3 
+					
 					var isNumerical = true; 
 					for (var i = 0; i < data.length; i++) {
 						if (isNaN(data[i][attrName])) {
@@ -58,9 +69,20 @@
 					if (isNumerical) {
 						columns.push({ head: attrName, cl: attrName + " numericalAttribute", html: ƒ(attrName)});
 						numericalAttributes.push(attrName);
-						normalizeAttribute(data, attrName, true);
-					} else 
+					} else {
+						var attrMap = {}; 
+						var counter = 0;
+						for (var i = 0; i < data.length; i++) {
+							var currentVal = data[i][attrName]; 
+							if (!attrMap.hasOwnProperty(currentVal)) {
+								attrMap[currentVal] = counter;
+								counter++; 
+							}
+						}
 						columns.push({ head: attrName, cl: attrName, html: ƒ(attrName)});
+						categoricalAttributeMap[attrName] = attrMap; 
+					}
+					normalizeAttribute(data, attrName, true);
 				}
 			}
 			ial.init(data, 0);
@@ -89,7 +111,6 @@
 				.enter()
 				.append("th")
 				.attr("class", ƒ("cl"))
-				//.html(ƒ("head"))
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 				
@@ -106,7 +127,7 @@
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
 							if (c[k] == "rank index")
 								c[k] = i;
-							if (c[k] == "originalIndex") {
+							if (c[k] == "originalIndex" || c[k] == "uniqueId") {
 								c[k] = null;
 							}
 						});
@@ -133,6 +154,232 @@
 	
 	
 	
+	/*********************************UTILITY FUNCTIONS*********************************/
+	
+	/*
+	 * Private
+	 * For the given row number, determine the range of cells to 
+	 * apply the fisheye effect to.
+	 */
+	function getSurroundingRowRange(clickedRow, numFocalRows) {
+		var surroundingRows = []; 
+		var halfNumFocalRows = numFocalRows / 2.0; 
+		var numTopHalf = Math.floor(halfNumFocalRows); 
+		var numBottomHalf = Math.ceil(halfNumFocalRows);
+		var numAbove, numBelow; 
+		if (clickedRow >= numTopHalf && clickedRow < (data.length - numBottomHalf)) {
+			numBelow = numBottomHalf; 
+			numAbove = numTopHalf; 
+		} else if (clickedRow >= numTopHalf) { 
+			numBelow = (data.length - clickedRow - 1 > 0) ? (data.length - clickedRow - 1) : 0; 
+			numAbove = numTopHalf + (numBottomHalf - numBelow);
+		} else if (clickedRow < (data.length - numBottomHalf)) {
+			numAbove = (clickedRow > 0) ? clickedRow : 0; 
+			numBelow = numBottomHalf + (numTopHalf - numAbove);
+		} else {
+			numAbove = (clickedRow > 0) ? clickedRow : 0;
+			numBelow = (data.length - clickedRow - 1 > 0) ? (data.length - clickedRow - 1) : 0;
+		}
+		
+		for (var i = numAbove; i >= 1; i--)
+			surroundingRows.push(clickedRow - i);
+		surroundingRows.push(clickedRow);
+		for (var i = 1; i <= numBelow; i++)
+			surroundingRows.push(clickedRow + i);
+		
+		return surroundingRows; 
+	}
+	
+	
+	/*
+	 * Private
+	 * Normalize the data according to the given attribute
+	 */
+	function normalizeAttribute(dataset, attr, isHighValGood) {
+		if (numericalAttributes.indexOf(attr) > -1) {
+			var min = Number.MAX_VALUE; 
+			var max = Number.MIN_VALUE; 
+			var len = dataset.length;
+			for (var i = 0; i < len; i++) {
+				var currentVal = Number(dataset[i][attr]);
+				
+				if (currentVal < min)
+					min = currentVal; 
+				if (currentVal > max)
+					max = currentVal;
+			}
+			
+			if (isHighValGood) {
+				for (var i = 0; i < len; i++)
+					dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min);
+			} else {
+				for (var i = 0; i < len; i++)
+					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
+			}
+		} else {
+			var min = 0; 
+			var max = Number.MIN_VALUE; 
+			var len = dataset.length;
+			for (var key in categoricalAttributeMap[attr]) {
+				var currentVal = Number(categoricalAttributeMap[attr][key]);
+				
+				if (currentVal > max)
+					max = currentVal;
+			}
+			
+			// TODO: Remove isHighValGood from categorical attributes
+			if (isHighValGood) {
+				for (var i = 0; i < len; i++)
+					dataset[i][attr + "Norm"] = (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
+			} else {
+				for (var i = 0; i < len; i++)
+					dataset[i][attr + "Norm"] = 1.0 - (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
+			}
+		}
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the list of changed rows
+	 */
+	function getChangedRows() {
+		return changedRows;
+	}
+	
+	
+	/*
+	 * Get the data item using its unique id
+	 */
+	function getDataByUniqueId(id) {
+		for (var i = 0; i < data.length; i++) {
+			if (data[i]["uniqueId"] == id)
+				return data[i];
+		}
+	}
+	
+	
+	/*
+	 * Private 
+	 * Get the matrix for the rows that changed
+	 * Assumes attribute names don't have special characters or spaces
+	 */
+	function getMatrix(rowNums) {
+		var matrix = []; 
+		var uniqueIds = []; 
+		for (var i = 0; i < rowNums.length; i++) {
+			var row = []; 
+			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
+			var id = rowData.find("td.uniqueId").html();
+			var currentData = getDataByUniqueId(id); 
+			for (var j = 0; j < keys.length; j++)
+				row.push(currentData[keys[j] + "Norm"]);
+			uniqueIds.push(id);
+			matrix.push(row); 
+		}
+		
+		return [matrix, uniqueIds];
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the augmented matrix for the rows that changed
+	 * Assumes attribute names don't have special characters or spaces
+	 */
+	function getAugmentedMatrix(rowNums) {
+		var matrix = []; 
+		var uniqueIds = []; 
+		for (var i = 0; i < rowNums.length; i++) {
+			var row = []; 
+			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
+			var id = rowData.find("td.uniqueId").html();
+			var currentData = getDataByUniqueId(id); 
+			for (var j = 0; j < keys.length; j++)
+				row.push(currentData[keys[j] + "Norm"]);
+			row.push(rowNums[i]);
+			uniqueIds.push(id); 
+			matrix.push(row); 
+		}
+		
+		return [matrix, uniqueIds];
+	}
+	
+	
+	/*
+	 * Get the ranking of items given the input weight vector
+	 */
+	function computeRanking(weights) {
+		var allRows = []; 
+		for (var i = 1; i <= data.length; i++)
+			allRows.push(i);
+		var matrixResult = getMatrix(allRows);
+		
+		var matrix = matrixResult[0]; 
+		var uniqueIds = matrixResult[1]; 
+		var ranked = []; 
+		
+		for (var i = 0; i < matrix.length; i++) {
+			var id = uniqueIds[i];
+			var attrVals = matrix[i];
+			var dotProd = numeric.dot(attrVals, weights);
+			ranked.push({ id: id, val: dotProd });
+		}
+		
+		ranked.sort(function(a, b) {
+			return parseFloat(b.val) - parseFloat(a.val);
+		})
+		
+		return ranked;
+	}
+	
+	
+	
+	
+	/**************************************BUTTONS**************************************/
+	
+	/*
+	 * Return the table to its state before changes were made
+	 */
+	mar.discardButtonClicked = function() {
+		console.log("table.js: Discarding Changes"); 
+		$("#tablePanel tbody").html(htmlTableToCache);
+	}
+	
+	
+	/*
+	 * Rank!
+	 */
+	mar.rankButtonClicked = function() {
+		console.log("table.js: Ranking");
+		
+		// use SVD to compute w = V * D_0^−1 * U^T * b
+		var b = getChangedRows(); 
+		if (b.length <= keys.length) {
+			console.log("table.js: ERROR - number of rows moved (" + b.length + ") must be greater than number of attributes (" + keys.length + ") to compute rank using SVD");
+			return;
+		}
+		var A = getAugmentedMatrix(b)[0]; 
+		
+		var SVD = numeric.svd(A); 
+		var U = SVD.U; 
+		var S = SVD.S; 
+		var V = SVD.V; 
+		
+		var D0 = numeric.inv(numeric.diag(S)[0]); 
+		var UT = numeric.transpose(U); 
+		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
+		var ranking = computeRanking(weights);
+		
+		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
+		//console.log("b (" + b.length + "): " + b);
+		//console.log("Weight: " + weights);
+		console.log("Ranking: " + JSON.stringify(ranking)); 
+	}
+
+	
+	
+		
 	/***********************************TABLE EFFECTS***********************************/
 	
 	/*
@@ -310,120 +557,5 @@
 			$("tr").css("font-size", "initial");
 			$("tr").css("color", "black");
 		});
-	}
-	
-	
-	
-	
-	/*********************************UTILITY FUNCTIONS*********************************/
-	
-	/*
-	 * Private
-	 * For the given row number, determine the range of cells to 
-	 * apply the fisheye effect to.
-	 */
-	function getSurroundingRowRange(clickedRow, numFocalRows) {
-		var surroundingRows = []; 
-		var halfNumFocalRows = numFocalRows / 2.0; 
-		var numTopHalf = Math.floor(halfNumFocalRows); 
-		var numBottomHalf = Math.ceil(halfNumFocalRows);
-		var numAbove, numBelow; 
-		if (clickedRow >= numTopHalf && clickedRow < (data.length - numBottomHalf)) {
-			numBelow = numBottomHalf; 
-			numAbove = numTopHalf; 
-		} else if (clickedRow >= numTopHalf) { 
-			numBelow = (data.length - clickedRow - 1 > 0) ? (data.length - clickedRow - 1) : 0; 
-			numAbove = numTopHalf + (numBottomHalf - numBelow);
-		} else if (clickedRow < (data.length - numBottomHalf)) {
-			numAbove = (clickedRow > 0) ? clickedRow : 0; 
-			numBelow = numBottomHalf + (numTopHalf - numAbove);
-		} else {
-			numAbove = (clickedRow > 0) ? clickedRow : 0;
-			numBelow = (data.length - clickedRow - 1 > 0) ? (data.length - clickedRow - 1) : 0;
-		}
-		
-		for (var i = numAbove; i >= 1; i--)
-			surroundingRows.push(clickedRow - i);
-		surroundingRows.push(clickedRow);
-		for (var i = 1; i <= numBelow; i++)
-			surroundingRows.push(clickedRow + i);
-		
-		return surroundingRows; 
-	}
-	
-	
-	/*
-	 * Private
-	 * Normalize the data according to the given attribute
-	 */
-	function normalizeAttribute(dataset, attr, isHighValGood) {
-		if (numericalAttributes.indexOf(attr) > -1) {
-			var min = Number.MAX_VALUE; 
-			var max = Number.MIN_VALUE; 
-			var len = dataset.length;
-			for (var i = 0; i < len; i++) {
-				var currentVal = Number(dataset[i][attr]);
-				
-				if (currentVal < min)
-					min = currentVal; 
-				if (currentVal > max)
-					max = currentVal;
-			}
-			
-			var temp = [];
-			if (isHighValGood) {
-				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min);
-			} else {
-				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
-			}
-		} else {
-			// TODO categorical
-		}
-	}
-	
-	
-	/*
-	 * Private
-	 * Get the list of changed rows
-	 */
-	function getChangedRows() {
-		return changedRows;
-	}
-	
-	
-	
-	
-	/**************************************BUTTONS**************************************/
-	
-	/*
-	 * Return the table to its state before changes were made
-	 */
-	mar.discardButtonClicked = function() {
-		console.log("table.js: Discarding Changes"); 
-		$("#tablePanel tbody").html(htmlTableToCache);
-	}
-	
-	
-	/*
-	 * Rank!
-	 */
-	mar.rankButtonClicked = function() {
-		console.log("table.js: Ranking");
-		console.log("-- test: Changed rows: " + getChangedRows());
-		/*console.log("-- test: svd");
-		var mtx = [[.9336, .2273, .2428, -8], 
-		           [0, 0, .9420, -20], 
-		           [.0094, .0027, 1, -25], 
-		           [.8245, .1136, .3696, -62], 
-		           [1, .4318, .1268, -75], 
-		           [.0894, .0227, .9674, -82], 
-		           [.9364, .3636, .1522, -95], 
-		           [.8274, 1, 0, -99]];
-		var res = numeric.svd(mtx);
-		console.log("-- u: " + res.U);
-		console.log("-- s: " + res.S);
-		console.log("-- v: " + res.V);*/
 	}
 })();
