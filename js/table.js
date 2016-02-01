@@ -423,14 +423,18 @@
 		var fixHelperModified = function(e, tr) {
 			var $originals = tr.children();
 			var $helper = tr.clone();
+
 			$helper.children().each(function(index) {
 				$(this).width($originals.eq(index).width())
 			});
+
 			return $helper;
 		};
 		
 		var updateIndex = function(e, ui) {
 			changedRows = [];
+
+			console.log(ui.item.html());
 
 			$('tr', ui.item.parent()).each(function (i) {
 
@@ -469,10 +473,14 @@
 			});
 		};
 
+		$("#tablePanel tbody").sortable({
+		}).disableSelection();
+
 
 		$("#auxPanel tbody").sortable({
 		    helper: fixHelperModified,
-		    stop: updateIndex
+		    stop: updateIndex,
+		    connectWith: "#tablePanel tbody"
 		}).disableSelection();
 
 		htmlTableToCache = $("#tablePanel tbody").html();
