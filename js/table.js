@@ -101,7 +101,12 @@
 			// append the table
 			table = d3.select("#tablePanel")
 				.append("table")
-				.attr("id", "tableId");
+				.attr("id", "tableId")
+				.attr("width", "100%")
+				.attr("border", "0")
+				.attr("cellspacing", "0")
+				.attr("cellpadding", "0")
+				.attr("height", "100%");
 			
 			// append the table header
 			header = table.append("thead")
@@ -142,9 +147,22 @@
 			tableHeight = Number(document.getElementById("tableId").offsetHeight); 
 			numFocalRows = (data.length > 5) ? Number(5) : Number(0);
 			numNonFocalRows = (data.length - 5 > 0) ? Number(data.length - 5): Number(0); 
+			nonFocalRowHeight = $("tr", "#tableId").height();
 			focalRowHeight = Number(75);
-			nonFocalRowHeight = Number((tableHeight - (focalRowHeight * numFocalRows)) / (numNonFocalRows));
 			
+			$("#auxPanel").html("<table id=\"auxTable\">" + table.html() + "</table>");
+
+
+			
+			var fontSize = parseInt($("tr", "#tableId").css("font-size"), 10);	
+			var tableObj = document.getElementById("tableId");
+
+			while(tableObj.scrollHeight > tableObj.clientHeight && fontSize >= 1) {
+				fontSize--;
+				$("tr", "#tableId").css("font-size", fontSize);
+				tableRowHeight = $("tr", "#tableId").height();
+			}
+
 			addFunctionality(); 
 			
 			console.log("table.js: table appended");
@@ -452,7 +470,7 @@
 		};
 
 
-		$("#tablePanel tbody").sortable({
+		$("#auxPanel tbody").sortable({
 		    helper: fixHelperModified,
 		    stop: updateIndex
 		}).disableSelection();
@@ -503,8 +521,8 @@
 	 */
 	function tableLens() {
 
-		$("tr").hover(function() {
-
+		var fontSize = parseInt($("tr", "#tableId").css("font-size"), 10);		
+		$("tr", "#tablePanel").hover(function() {
 			var difference = focalRowHeight - nonFocalRowHeight;
 			var clickedRow = $(this).index();
 			var surroundingRows = getSurroundingRowRange(clickedRow, numFocalRows - 1); 
@@ -539,7 +557,7 @@
 				//$(trC).css("background","cyan");
 				$(trC).css("color", "red");
 				$(trC).stop(false, true).animate({ background: "cyan" });
-				$(trC).css("font-size", "2em");
+				$(trC).css("font-size", "1em");
 
 				$(trD).css("height", d);
 				$(trD).css("font-size", "0.8em");
@@ -554,7 +572,7 @@
 		}, function () {
 			$("tr").css("background", "");
 			$("tr").css("height", nonFocalRowHeight);
-			$("tr").css("font-size", "initial");
+			$("tr").css("font-size", fontSize);
 			$("tr").css("color", "black");
 		});
 	}
