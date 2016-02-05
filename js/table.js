@@ -7,6 +7,8 @@
 	var columns = [];
 	var numericalAttributes = [];
 	var categoricalAttributeMap = {};
+
+	var lastChangedRow;
 	var changedRows = [];
 	
 	var tolerance; 
@@ -16,7 +18,15 @@
 	
 	var keys;
 	var htmlTableToCache;
-	var table, header, body;
+	var table, header, rows, cells;
+	
+	var useCategorical = false; 
+	var interactionIncrement = 1; 
+	var maxInteractionWeight = 0.5;
+
+	var showAllRows = true;
+	var colorOverlay = true;
+	var fishEyeOverlay = true;
 	
 
 	
@@ -47,11 +57,15 @@
 				var counter = 0; 
 				for (var i = 0; i < data.length; i++) {
 					data[i]["uniqueId"] = counter; 
+					data[i]["rank"] = counter + 1;
+					data[i]["oldIndex"] = counter + 1; 
+					data[i]["rankScore"] = 0;
 					counter++;
 				}
 				
-				columns.push({ head: "Rank", cl: "rank index null", html: function(row, i) { return (i + 1); } });
-				columns.push({ head: "Original Index", cl: "hidden originalIndex", html: function(row, i) { return (i + 1); } });
+				columns.push({ head: "Rank Score", cl: "rankScore", html: function(row, i) { return data[i]["rankScore"]; } });
+				columns.push({ head: "Rank", cl: "rank index null", html: function(row, i) { return data[i]["rank"]; } });
+				columns.push({ head: "Old Index", cl: "hidden oldIndex", html: function(row, i) { return data[i]["oldIndex"]; } });
 				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
 				
 				// find numerical and categorical attributes
@@ -101,12 +115,7 @@
 			// append the table
 			table = d3.select("#tablePanel")
 				.append("table")
-				.attr("id", "tableId")
-				.attr("width", "100%")
-				.attr("border", "0")
-				.attr("cellspacing", "0")
-				.attr("cellpadding", "0")
-				.attr("height", "100%");
+				.attr("id", "tableId");
 			
 			// append the table header
 			header = table.append("thead")
@@ -118,21 +127,24 @@
 				.attr("class", ƒ("cl"))
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
-				
-			body = table.append("tbody")
+			
+			// append the rows
+			rows = table.append("tbody")
 				.selectAll("tr")
 				.data(data)
 				.enter()
-				.append("tr")
-				.selectAll("td")
+				.append("tr");
+			
+			// append the cells
+			cells = rows.selectAll("td")
 				.data(function(row, i) {
 					return columns.map(function(c) {
 						var cell = {}; 
 						d3.keys(c).forEach(function(k) {
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
-							if (c[k] == "rank index")
+							if (c[k] == "rank index" || c[k] == "oldIndex")
 								c[k] = i;
-							if (c[k] == "originalIndex" || c[k] == "uniqueId") {
+							if (c[k] == "uniqueId") {
 								c[k] = null;
 							}
 						});
@@ -147,26 +159,57 @@
 			tableHeight = Number(document.getElementById("tableId").offsetHeight); 
 			numFocalRows = (data.length > 5) ? Number(5) : Number(0);
 			numNonFocalRows = (data.length - 5 > 0) ? Number(data.length - 5): Number(0); 
-			nonFocalRowHeight = $("tr", "#tableId").height();
 			focalRowHeight = Number(75);
+			nonFocalRowHeight = Number((tableHeight - (focalRowHeight * numFocalRows)) / (numNonFocalRows));
 			
-			$("#auxPanel").html("<table id=\"auxTable\">" + table.html() + "</table>");
-
-
-			
-			var fontSize = parseInt($("tr", "#tableId").css("font-size"), 10);	
-			var tableObj = document.getElementById("tableId");
-
-			while(tableObj.scrollHeight > tableObj.clientHeight && fontSize >= 1) {
-				fontSize--;
-				$("tr", "#tableId").css("font-size", fontSize);
-				tableRowHeight = $("tr", "#tableId").height();
-			}
-
 			addFunctionality(); 
 			
 			console.log("table.js: table appended");
 		}
+	}
+	
+	
+	/*
+	 * Update the table to display the given data
+	 */
+	mar.updateTable = function(newOrder) { 
+		// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
+		var updatedData = [];
+		for (var i = 0; i < newOrder.length; i++)
+			updatedData.push(getDataByUniqueId(Number(newOrder[i]["id"])));
+		
+		data = updatedData;
+	
+		
+		// update the rows
+		rows = table.select("tbody")
+			.selectAll("tr")
+			.data(data);
+		
+		// update the cells
+		cells = rows.selectAll("td")
+			.data(function(row, i) {
+				return columns.map(function(c) {
+					var cell = {}; 
+					d3.keys(c).forEach(function(k) {
+						cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
+						if (c[k] == "rank index" || c[k] == "oldIndex")
+							c[k] = i;
+						if (c[k] == "uniqueId")
+							c[k] = null;
+					});
+					return cell; 
+				});
+			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+			.html(ƒ("html"))
+			.attr("placeHolder", function(d, i) {
+				// update the rank and old index
+				var rowData = $('tr', '#tablePanel').eq(i);
+				rowData.find("td.rank").html(i);
+				rowData.find("td.oldIndex").html(i);
+			}).attr("class", ƒ("cl"))
+			.transition()
+			.duration(1000);
 	}
 	
 	
@@ -211,6 +254,99 @@
 	
 	/*
 	 * Private
+	 * Get the list of changed rows
+	 */
+	function getChangedRows() {
+		return changedRows;
+	}
+	
+	function getLastChangedRows() {
+		return lastChangedRow;
+	}
+	
+	/*
+	 * Private
+	 * Get the list of all rows
+	 */
+	function getAllRows() {
+		var allRows = [];
+		for (var i = 1; i <= data.length; i++)
+			allRows.push(i);
+		return allRows;
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the data item using its unique id
+	 */
+	function getDataByUniqueId(id) {
+		for (var i = 0; i < data.length; i++) {
+			if (data[i]["uniqueId"] == id)
+				return data[i];
+		}
+	}
+	
+	
+	/*
+	 * Private 
+	 * Get the matrix for the rows that changed
+	 * Assumes attribute names don't have special characters or spaces
+	 */
+	function getMatrix(rowNums) {
+		var matrix = []; 
+		var uniqueIds = []; 
+		for (var i = 0; i < rowNums.length; i++) {
+			var row = []; 
+			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
+			var id = rowData.find("td.uniqueId").html();
+			var currentData = getDataByUniqueId(id); 
+			if (useCategorical) {
+				for (var j = 0; j < keys.length; j++)
+					row.push(currentData[keys[j] + "Norm"]);
+			} else {
+				for (var j = 0; j < numericalAttributes.length; j++)
+					row.push(currentData[numericalAttributes[j] + "Norm"]);
+			}
+			uniqueIds.push(id);
+			matrix.push(row); 
+		}
+		
+		return [matrix, uniqueIds];
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the augmented matrix for the rows that changed
+	 * Assumes attribute names don't have special characters or spaces
+	 */
+	function getAugmentedMatrix(rowNums) {
+		var matrix = []; 
+		var uniqueIds = []; 
+		for (var i = 0; i < rowNums.length; i++) {
+			var row = []; 
+			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
+			var id = rowData.find("td.uniqueId").html();
+			var currentData = getDataByUniqueId(id); 
+			if (useCategorical) {
+				for (var j = 0; j < keys.length; j++)
+					row.push(currentData[keys[j] + "Norm"]);
+			} else {
+				for (var j = 0; j < numericalAttributes.length; j++)
+					row.push(currentData[numericalAttributes[j] + "Norm"]);
+			}
+			row.push(data.length + 1 - rowNums[i]); // maps everything [1, n] -> [n, 1]
+			uniqueIds.push(id); 
+			matrix.push(row); 
+		}
+		
+		return [matrix, uniqueIds];
+	}
+	
+	
+	/*
+	 * Private
 	 * Normalize the data according to the given attribute
 	 */
 	function normalizeAttribute(dataset, attr, isHighValGood) {
@@ -245,86 +381,87 @@
 					max = currentVal;
 			}
 			
-			// TODO: Remove isHighValGood from categorical attributes
-			if (isHighValGood) {
-				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
-			} else {
-				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = 1.0 - (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
-			}
-		}
-	}
-	
-	
-	/*
-	 * Private
-	 * Get the list of changed rows
-	 */
-	function getChangedRows() {
-		return changedRows;
-	}
-	
-	
-	/*
-	 * Get the data item using its unique id
-	 */
-	function getDataByUniqueId(id) {
-		for (var i = 0; i < data.length; i++) {
-			if (data[i]["uniqueId"] == id)
-				return data[i];
+			for (var i = 0; i < len; i++)
+				dataset[i][attr + "Norm"] = (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
 		}
 	}
 	
 	
 	/*
 	 * Private 
-	 * Get the matrix for the rows that changed
-	 * Assumes attribute names don't have special characters or spaces
+	 * Normalize the interaction value and weight for each data item
 	 */
-	function getMatrix(rowNums) {
-		var matrix = []; 
-		var uniqueIds = []; 
-		for (var i = 0; i < rowNums.length; i++) {
-			var row = []; 
-			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
-			var id = rowData.find("td.uniqueId").html();
-			var currentData = getDataByUniqueId(id); 
-			for (var j = 0; j < keys.length; j++)
-				row.push(currentData[keys[j] + "Norm"]);
-			uniqueIds.push(id);
-			matrix.push(row); 
+	function normalizeInteractions() {
+		var len = data.length;
+		var weightSum = 0; 
+		var rankSum = 0;
+		for (var i = 0; i < len; i++) { 
+			var currentWeight = Number(data[i].ial.weight);
+			var currentRank = Number(data[i]["rank"]);
+			weightSum += currentWeight; 
+			rankSum += currentRank; 
 		}
 		
-		return [matrix, uniqueIds];
+		for (var i = 0; i < len; i++) {
+			data[i].ial.weightNorm = maxInteractionWeight * (data[i].ial.weight / weightSum);
+			data[i].rankNorm = 1.0 - (data[i].rank / rankSum);
+		}
 	}
 	
 	
 	/*
 	 * Private
-	 * Get the augmented matrix for the rows that changed
-	 * Assumes attribute names don't have special characters or spaces
+	 * Normalize the given input vector so the sum of the 
+	 * components = 1
 	 */
-	function getAugmentedMatrix(rowNums) {
-		var matrix = []; 
-		var uniqueIds = []; 
-		for (var i = 0; i < rowNums.length; i++) {
-			var row = []; 
-			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
-			var id = rowData.find("td.uniqueId").html();
-			var currentData = getDataByUniqueId(id); 
-			for (var j = 0; j < keys.length; j++)
-				row.push(currentData[keys[j] + "Norm"]);
-			row.push(rowNums[i]);
-			uniqueIds.push(id); 
-			matrix.push(row); 
-		}
+	function normalize(input) {
+		var result = []; 
+		var sum = getSum(input);
+		var len = input.length;
 		
-		return [matrix, uniqueIds];
+		for (var i = 0; i < len; i++)
+			result.push(input[i] / sum); 
+		
+		return result;
 	}
 	
 	
 	/*
+	 * Private
+	 * Get the min and max of the given list of numbers
+	 */
+	function getMinAndMax(input) {
+		var min = Number.MAX_VALUE; 
+		var max = Number.MIN_VALUE;
+		var len = input.length;
+		
+		for (var i = 0; i < len; i++) { 
+			var currentVal = Number(input[i]);
+				
+			if (currentVal < min)
+				min = currentVal; 
+			if (currentVal > max)
+				max = currentVal;
+		}
+		
+		return [min, max];
+	}
+	
+	/*
+	 * Private
+	 * Get the sum of the given list of numbers
+	 */
+	function getSum(input) {
+		var sum = 0; 
+		for (var i = 0; i < input.length; i++)
+			sum += input[i];
+		
+		return sum;
+	}
+	
+	
+	/*
+	 * Private
 	 * Get the ranking of items given the input weight vector
 	 */
 	function computeRanking(weights) {
@@ -337,16 +474,23 @@
 		var uniqueIds = matrixResult[1]; 
 		var ranked = []; 
 		
+		normalizeInteractions(); // normalize weights and values
+		
 		for (var i = 0; i < matrix.length; i++) {
 			var id = uniqueIds[i];
+			var obj = getDataByUniqueId(Number(id)); 
 			var attrVals = matrix[i];
-			var dotProd = numeric.dot(attrVals, weights);
-			ranked.push({ id: id, val: dotProd });
+			var dotProd = Number(numeric.dot(attrVals, weights));
+			var interactionWeight = Number(obj.ial.weightNorm);
+			var interactionVal = Number(obj.rankNorm);
+			var result = (interactionWeight * interactionVal) + ((1.0 - interactionWeight) * dotProd); 
+			obj["rankScore"] = result;
+			ranked.push({ id: id, val: result });
 		}
 		
 		ranked.sort(function(a, b) {
 			return parseFloat(b.val) - parseFloat(a.val);
-		})
+		});
 		
 		return ranked;
 	}
@@ -354,7 +498,7 @@
 	
 	
 	
-	/**************************************BUTTONS**************************************/
+	/**************************************Inputs**************************************/
 	
 	/*
 	 * Return the table to its state before changes were made
@@ -372,12 +516,21 @@
 		console.log("table.js: Ranking");
 		
 		// use SVD to compute w = V * D_0^−1 * U^T * b
-		var b = getChangedRows(); 
+		var b = getAllRows(); 
 		if (b.length <= keys.length) {
 			console.log("table.js: ERROR - number of rows moved (" + b.length + ") must be greater than number of attributes (" + keys.length + ") to compute rank using SVD");
 			return;
 		}
+		
+		// don't recompute SVD unless something has been moved
+		if (getChangedRows().length < 1) {
+			console.log("table.js: No changes have been made!");
+			return;
+		}
+		
+		console.log("b: " + b);
 		var A = getAugmentedMatrix(b)[0]; 
+		console.log("A: " + JSON.stringify(A));
 		
 		var SVD = numeric.svd(A); 
 		var U = SVD.U; 
@@ -387,16 +540,54 @@
 		var D0 = numeric.inv(numeric.diag(S)[0]); 
 		var UT = numeric.transpose(U); 
 		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
-		var ranking = computeRanking(weights);
+		var normalizedWeights = normalize(weights);
+		var ranking = computeRanking(normalizedWeights);
+		
+		for (var i = 0; i < ranking.length; i++) {
+			var obj = getDataByUniqueId(Number(ranking[i]["id"]));
+			obj["rank"] = i + 1;
+		}
 		
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
 		//console.log("Weight: " + weights);
-		console.log("Ranking: " + JSON.stringify(ranking)); 
+
+		changedRows = []; // reset changed rows
+		htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
+		console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
+		
+		mar.updateTable(ranking); 
+	}
+    
+
+	/*
+	 * Toggle the color overlay
+	 */
+	mar.colorOverlayToggle = function() {
+		colorOverlay = !colorOverlay;
+		//console.log("Color Overlay State is : " + colorOverlay);
+		if (!colorOverlay)
+			$("tr").css("background","white");
 	}
 
-	
-	
+
+	/*
+	 * Toggle the fisheye effect
+	 */
+	mar.fisheyeToggle = function() {
+		fishEyeOverlay = !fishEyeOverlay;
+		//console.log("Fish eye effect : " + fishEyeOverlay);
+	}
+
+
+	/*
+	 * Toggle showing all rows
+	 */
+	mar.allRowsCheckClicked = function() {
+		showAllRows = !showAllRows;
+		colorRows();
+	}
+
 		
 	/***********************************TABLE EFFECTS***********************************/
 	
@@ -410,7 +601,8 @@
 	function addFunctionality() {
 		clickAndDragRows(); 
 		addArrows(); 
-		tableLens(); 
+		if (fishEyeOverlay)
+			tableLens();
 	}
 	
 	
@@ -421,71 +613,95 @@
 	 */
 	function clickAndDragRows() {
 		var fixHelperModified = function(e, tr) {
+
 			var $originals = tr.children();
 			var $helper = tr.clone();
-
 			$helper.children().each(function(index) {
 				$(this).width($originals.eq(index).width())
 			});
 
+			lastChangedRow = tr;
+			changedRows.push(tr.find("td.uniqueId").html());
 			return $helper;
 		};
 		
 		var updateIndex = function(e, ui) {
-			changedRows = [];
+			
+			var id = Number(ui.item.find("td.uniqueId").html());
+			var dataItem = getDataByUniqueId(Number(id));
+			var w = interactionIncrement; 
+			if (Number(dataItem["oldIndex"]) == Number(ui.item.index())) 
+				w = 0;
+			ial.incrementItemWeight(dataItem, w);
 
-			console.log(ui.item.html());
-
-			$('tr', ui.item.parent()).each(function (i) {
-
-				// Persistent Index means that a comparison is made between the previous row position and the current position.
-				// Non-persistent Index means that the comparison is made between the original row position and the current position.				
-				var usePersistentIndex = false;
-
-				var indexObj = $(this).find("td.rank.index");
+			$('tr', ui.item.parent()).each(function(i) {
+				// update the rank attribute
+				dataItem["rank"] = i + 1;
+				$(this).find("td.rank.index").html(i + 1);
+				//console.log($(this).find("td.rank.index").html());
 				
-				if(usePersistentIndex == false)
-					var oldIndex = $(this).find("td.originalIndex").html();
-				else
-					var oldIndex = indexObj.html();
+				//TODO:Update rank/index or uniqueId?
+			});	
 
-				var newIndex = i + 1;
+			colorRows();
 
-				if(newIndex > oldIndex) {
-					$(this).removeClass('lowRowChange');
-					$(this).addClass('highRowChange');
-				} else if (newIndex < oldIndex) {
-					$(this).removeClass('highRowChange');
-					$(this).addClass('lowRowChange');
-				}
-
-				if(usePersistentIndex == false && newIndex == oldIndex) {
-					$(this).removeClass('highRowChange');
-					$(this).removeClass('lowRowChange');
-				}
-
-				if (indexObj.html() != (i+1)) {
-					changedRows.push(i+1);
-				}
-
-				indexObj.html(i+1);
-
-			});
 		};
 
+
 		$("#tablePanel tbody").sortable({
-		}).disableSelection();
-
-
-		$("#auxPanel tbody").sortable({
 		    helper: fixHelperModified,
-		    stop: updateIndex,
-		    connectWith: "#tablePanel tbody"
+		    stop: updateIndex
 		}).disableSelection();
 
 		htmlTableToCache = $("#tablePanel tbody").html();
 	}
 	
+
+	/*
+	 * Modify the colors of the rows based on where they have been moved
+	 */
+	function colorRows() {
+
+		//console.log($(lastChangedRow).find("td.rank.index").html());
+
+		var movedRow = $(lastChangedRow);
+		$('tr', "#tablePanel tbody").each(function (i) {
+			var dataObj = $(this);
+			
+			var newIndex = Number(dataObj.find("td.rank.index").html());
+			var oldIndex = Number(dataObj.find("td.oldIndex").html());
+
+			var gradientSpread = Math.abs(movedRow.find("td.rank.index").html() - movedRow.find("td.oldIndex").html()) + 1;
+			var gradientLevel = Math.abs(movedRow.find("td.rank.index").html() - newIndex);
+			
+			var uniqueId = dataObj.find("td.uniqueId").html();
+
+			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) ||
+					(newIndex == oldIndex)) {
+				$(this).removeClass('greenColorChange');
+				$(this).removeClass('redColorChange');
+				$(this).css("background-color", "transparent");
+				return true;
+			} else if (newIndex > oldIndex) {
+				$(this).removeClass('greenColorChange');
+				$(this).addClass('redColorChange');
+			} else if (newIndex < oldIndex) {
+				$(this).removeClass('redColorChange');
+				$(this).addClass('greenColorChange');
+			}
+
+			var opacityVal = Math.abs(newIndex - oldIndex) / data.length;
+			var opacity = (5*opacityVal > 1) ? 1 : (5*opacityVal);
+
+			if (colorOverlay) {
+				if ($(this).hasClass('greenColorChange'))
+					dataObj.css("background-color", 'rgba(0, 255, 0, ' + opacity + ')');
+				else if ($(this).hasClass('redColorChange'))
+					dataObj.css("background-color", 'rgba(255, 0, 0, ' + opacity + ')');
+			}
+
+		});
+	}
 	
 	/*
 	 * Private
@@ -497,27 +713,29 @@
 		$("th").each(function(i) {
 			if (i > 0) { // don't add to Rank col
 				var html_text = $(this).html();
-				html_text = html_text + '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>';
-				$(this).html(html_text);
-				$(this).click(function() {
-					
-					var clickedObjClasses = $(this).attr('class').split(' ');
-					// assumes the first class is the name of the attribute - make sure we don't change this convention
-					var clickedObjAttribute = clickedObjClasses[0];
-					
-					var clickedObj = $(this).find("input");
-					clickedObj.toggleClass('directionUp', 'directionDown');
-					if (clickedObj.hasClass('directionUp')) {
-						clickedObj.attr('src', 'img/arrow-up.png');
-						// re-normalize the attribute
-						normalizeAttribute(data, clickedObjAttribute, true);
-					} else {
-						clickedObj.attr('src', 'img/arrow-down.png');
-						// re-normalize the attribute
-						normalizeAttribute(data, clickedObjAttribute, false);
-					}
-	
-				});
+				if (numericalAttributes.indexOf(html_text) > -1) {
+					html_text = html_text + '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>';
+					$(this).html(html_text);
+					$(this).click(function() {
+						
+						var clickedObjClasses = $(this).attr('class').split(' ');
+						// assumes the first class is the name of the attribute - make sure we don't change this convention
+						var clickedObjAttribute = clickedObjClasses[0];
+						
+						var clickedObj = $(this).find("input");
+						clickedObj.toggleClass('directionUp', 'directionDown');
+						if (clickedObj.hasClass('directionUp')) {
+							clickedObj.attr('src', 'img/arrow-up.png');
+							// re-normalize the attribute
+							normalizeAttribute(data, clickedObjAttribute, true);
+						} else {
+							clickedObj.attr('src', 'img/arrow-down.png');
+							// re-normalize the attribute
+							normalizeAttribute(data, clickedObjAttribute, false);
+						}
+		
+					});
+				}
 			}
 		});
 	}
@@ -529,8 +747,9 @@
 	 */
 	function tableLens() {
 
-		var fontSize = parseInt($("tr", "#tableId").css("font-size"), 10);		
-		$("tr", "#tablePanel").hover(function() {
+		$("tr").hover(function() {
+            if(fishEyeOverlay){
+
 			var difference = focalRowHeight - nonFocalRowHeight;
 			var clickedRow = $(this).index();
 			var surroundingRows = getSurroundingRowRange(clickedRow, numFocalRows - 1); 
@@ -565,7 +784,7 @@
 				//$(trC).css("background","cyan");
 				$(trC).css("color", "red");
 				$(trC).stop(false, true).animate({ background: "cyan" });
-				$(trC).css("font-size", "1em");
+				$(trC).css("font-size", "2em");
 
 				$(trD).css("height", d);
 				$(trD).css("font-size", "0.8em");
@@ -577,11 +796,13 @@
 				//$(trE).stop(false, false).animate({ height : e});
 				//$(trE).css("background","yellow");
 			}
+            }
 		}, function () {
 			$("tr").css("background", "");
 			$("tr").css("height", nonFocalRowHeight);
-			$("tr").css("font-size", fontSize);
+			$("tr").css("font-size", "initial");
 			$("tr").css("color", "black");
 		});
 	}
+
 })();

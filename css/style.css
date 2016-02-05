@@ -1,40 +1,12 @@
-#tablePanel {
-	width: 10%;
-	height: 90vh;
-	float: left;
-}
-
-#auxPanel {
-	width: 90%;
-	height: 90vh;
-	float:right;
-}
-
-
-
-#tableId td{
-	padding: 0px;	
-	overflow: hidden;;
-}
-
 table {
 	border-collapse: collapse;
 	border: 2px #f2f2f2 solid;
 	font: 12px sans-serif;
 	overflow-y: scroll;
+	width: 95vw;
+	height: 90vh;
 	display: block;
-	max-width: 100%;
-	max-height: 100%;
 }
-
-.lowRowChange {
-	background-color: #97e899;
-}
-
-.highRowChange {
-	background-color: #ffb2b2;
-}
-
 
 .focalRow {
 	border: 2px #000 solid;

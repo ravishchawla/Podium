@@ -27,14 +27,15 @@
 
 
     <!-- Main Divs -->
-<div id="overPanel">
+
     <div id="tablePanel"></div> 
     <div id="auxPanel">
+        <input type="checkbox" id="show_all_rows_checkbox" onclick="mar.allRowsCheckClicked()">Show All Rows</input>
+        <input type="checkbox" id="color_overlay_checkbox" onclick="mar.colorOverlayToggle()" checked>Color Overlay</input>
+        <input type="checkbox" id="fisheye_checkbox" onclick="mar.fisheyeToggle()" checked>Fish Eye Effect</input>
         <button type="button" id="rank_button" onclick="mar.rankButtonClicked()">Rank</button>
         <button type="button" id="discard_button" onclick="mar.discardButtonClicked()">Discard Changes</button>
     </div>
-</div>
-    
 
 
     <!--scripts-->

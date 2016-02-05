@@ -8,7 +8,7 @@
 	 */
 	main.init = function() {
 		$(document).ready(function() {
-	        mar.loadTable("data/nflData.csv");
+	        mar.loadTable("data/offenseData.csv");
 	    });
 	}
 })();
