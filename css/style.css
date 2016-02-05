@@ -1,0 +1,22 @@
+table {
+	border-collapse: collapse;
+	border: 2px #f2f2f2 solid;
+	font: 12px sans-serif;
+	overflow-y: scroll;
+	width: 95vw;
+	height: 90vh;
+	display: block;
+}
+
+.focalRow {
+	border: 2px #000 solid;
+}
+
+td {
+	border: 1px #f2f2f2 solid;
+	padding: 10px;
+}
+
+.hidden {
+	display:none;
+}
