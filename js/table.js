@@ -25,8 +25,8 @@
 	var maxInteractionWeight = 0.5;
 
 	var showAllRows = true;
-    var colorOverlay = true;
-    var fishEyeOverlay = true;
+	var colorOverlay = true;
+	var fishEyeOverlay = true;
 	
 
 	
@@ -559,26 +559,35 @@
 		mar.updateTable(ranking); 
 	}
     
-    mar.colorOverlayToggle = function(){
-        colorOverlay = !colorOverlay;
-        console.log("Color Overlay State is : " + colorOverlay);
-        if(!colorOverlay){
-            $("tr").css("background","white");
-        }
-    }
-    
-    mar.fisheyeToggle = function(){
-        fishEyeOverlay = !fishEyeOverlay;
-        console.log("Fish eye effect : " + fishEyeOverlay);
-        
-    }
 
+	/*
+	 * Toggle the color overlay
+	 */
+	mar.colorOverlayToggle = function() {
+		colorOverlay = !colorOverlay;
+		//console.log("Color Overlay State is : " + colorOverlay);
+		if (!colorOverlay)
+			$("tr").css("background","white");
+	}
+
+
+	/*
+	 * Toggle the fisheye effect
+	 */
+	mar.fisheyeToggle = function() {
+		fishEyeOverlay = !fishEyeOverlay;
+		//console.log("Fish eye effect : " + fishEyeOverlay);
+	}
+
+
+	/*
+	 * Toggle showing all rows
+	 */
 	mar.allRowsCheckClicked = function() {
 		showAllRows = !showAllRows;
-		
 		colorRows();
 	}
-	
+
 		
 	/***********************************TABLE EFFECTS***********************************/
 	
@@ -592,11 +601,8 @@
 	function addFunctionality() {
 		clickAndDragRows(); 
 		addArrows(); 
-        if(fishEyeOverlay){
-           tableLens();  
-        }
-        
-   
+		if (fishEyeOverlay)
+			tableLens();
 	}
 	
 	
@@ -629,14 +635,12 @@
 			ial.incrementItemWeight(dataItem, w);
 
 			$('tr', ui.item.parent()).each(function(i) {
-				// update the rank and oldIndex attributes
-				//dataObj["oldIndex"] = dataObj["rank"];
-				//dataObj["rank"] = i + 1;
+				// update the rank attribute
+				dataItem["rank"] = i + 1;
+				$(this).find("td.rank.index").html(i + 1);
+				//console.log($(this).find("td.rank.index").html());
 				
 				//TODO:Update rank/index or uniqueId?
-				//$(this).find("td.rank.index").html(i+1);
-				$(this).find("td.rank").html(i+1);
-				//console.log($(this).find("td.rank"));
 			});	
 
 			colorRows();
@@ -653,47 +657,48 @@
 	}
 	
 
+	/*
+	 * Modify the colors of the rows based on where they have been moved
+	 */
 	function colorRows() {
 
 		//console.log($(lastChangedRow).find("td.rank.index").html());
-		
+
 		var movedRow = $(lastChangedRow);
 		$('tr', "#tablePanel tbody").each(function (i) {
 			var dataObj = $(this);
+			
 			var newIndex = Number(dataObj.find("td.rank.index").html());
 			var oldIndex = Number(dataObj.find("td.oldIndex").html());
 
 			var gradientSpread = Math.abs(movedRow.find("td.rank.index").html() - movedRow.find("td.oldIndex").html()) + 1;
 			var gradientLevel = Math.abs(movedRow.find("td.rank.index").html() - newIndex);
-
-
 			
 			var uniqueId = dataObj.find("td.uniqueId").html();
 
 			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) ||
-				(newIndex == oldIndex)) {
-					$(this).removeClass('greenColorChange');
-					$(this).removeClass('redColorChange');
-					$(this).css("background-color", "transparent");
-					return true;
-			}
-			else if (newIndex > oldIndex) {
+					(newIndex == oldIndex)) {
+				$(this).removeClass('greenColorChange');
+				$(this).removeClass('redColorChange');
+				$(this).css("background-color", "transparent");
+				return true;
+			} else if (newIndex > oldIndex) {
 				$(this).removeClass('greenColorChange');
 				$(this).addClass('redColorChange');
 			} else if (newIndex < oldIndex) {
 				$(this).removeClass('redColorChange');
 				$(this).addClass('greenColorChange');
 			}
-			
-			var opacity = 1 - gradientLevel/gradientSpread;
-			
-            if(colorOverlay){
-			if($(this).hasClass('greenColorChange')) {
-				dataObj.css("background-color", 'rgba(0,255, 0,' + opacity + ')');
-			} else if ($(this).hasClass('redColorChange')) {
-				dataObj.css("background-color", 'rgba(255,0, 0,' + opacity + ')');
+
+			var opacityVal = Math.abs(newIndex - oldIndex) / data.length;
+			var opacity = (5*opacityVal > 1) ? 1 : (5*opacityVal);
+
+			if (colorOverlay) {
+				if ($(this).hasClass('greenColorChange'))
+					dataObj.css("background-color", 'rgba(0, 255, 0, ' + opacity + ')');
+				else if ($(this).hasClass('redColorChange'))
+					dataObj.css("background-color", 'rgba(255, 0, 0, ' + opacity + ')');
 			}
-                }
 
 		});
 	}
