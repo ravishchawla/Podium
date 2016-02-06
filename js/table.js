@@ -568,6 +568,9 @@
 		//console.log("Color Overlay State is : " + colorOverlay);
 		if (!colorOverlay)
 			$("tr").css("background","white");
+		else {
+			colorRows();
+		}
 	}
 
 
@@ -661,26 +664,22 @@
 	 * Modify the colors of the rows based on where they have been moved
 	 */
 	function colorRows() {
-
-		//console.log($(lastChangedRow).find("td.rank.index").html());
-
 		var movedRow = $(lastChangedRow);
 		$('tr', "#tablePanel tbody").each(function (i) {
 			var dataObj = $(this);
-			
 			var newIndex = Number(dataObj.find("td.rank.index").html());
 			var oldIndex = Number(dataObj.find("td.oldIndex").html());
+			var movedRowIndex = movedRow.find("td.rank.index").html();
 
-			var gradientSpread = Math.abs(movedRow.find("td.rank.index").html() - movedRow.find("td.oldIndex").html()) + 1;
-			var gradientLevel = Math.abs(movedRow.find("td.rank.index").html() - newIndex);
+			var gradientSpread = Math.abs(movedRowIndex - movedRow.find("td.oldIndex").html()) + 1;
+			var gradientLevel = Math.abs(movedRowIndex - newIndex);
 			
 			var uniqueId = dataObj.find("td.uniqueId").html();
 
-			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) ||
-					(newIndex == oldIndex)) {
+			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) || (newIndex == oldIndex)) {
 				$(this).removeClass('greenColorChange');
 				$(this).removeClass('redColorChange');
-				$(this).css("background-color", "transparent");
+				$(this).animate({backgroundColor: "transparent"}, 1000);
 				return true;
 			} else if (newIndex > oldIndex) {
 				$(this).removeClass('greenColorChange');
@@ -690,16 +689,13 @@
 				$(this).addClass('greenColorChange');
 			}
 
-			var opacityVal = Math.abs(newIndex - oldIndex) / data.length;
-			var opacity = (5*opacityVal > 1) ? 1 : (5*opacityVal);
+			var opacity = 1 - gradientLevel/gradientSpread;
 
-			if (colorOverlay) {
-				if ($(this).hasClass('greenColorChange'))
-					dataObj.css("background-color", 'rgba(0, 255, 0, ' + opacity + ')');
-				else if ($(this).hasClass('redColorChange'))
-					dataObj.css("background-color", 'rgba(255, 0, 0, ' + opacity + ')');
+			if($(this).hasClass('greenColorChange')) {
+				dataObj.css("background-color", 'rgba(0,255, 0,' + opacity + ')');
+			} else if ($(this).hasClass('redColorChange')) {
+				dataObj.css("background-color", 'rgba(255,0, 0,' + opacity + ')');
 			}
-
 		});
 	}
 	
@@ -798,7 +794,6 @@
 			}
             }
 		}, function () {
-			$("tr").css("background", "");
 			$("tr").css("height", nonFocalRowHeight);
 			$("tr").css("font-size", "initial");
 			$("tr").css("color", "black");
