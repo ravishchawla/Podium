@@ -16,11 +16,12 @@
 	var tableHeight; 
 	var numFocalRows, numNonFocalRows; 
 	var focalRowHeight, nonFocalRowHeight;
-	
+	var mapBarHeight;
+
 	var keys;
 	var htmlTableToCache;
 	var table, header, rows, cells;
-	
+
 	var useCategorical = false; 
 	var interactionIncrement = 1; 
 	var maxInteractionWeight = 0.5;
@@ -29,6 +30,7 @@
 	var colorOverlay = true;
 	var fishEyeOverlay = true;
 	
+	var rand_colors = ["red", "black", "darkred", "green", "blue", "brown", "violet"];
 
 	
 	
@@ -114,14 +116,19 @@
 	 * Display the table
 	 */
 	function displayTable(displayData) {
+		console.log(data["Published-Rank"]);
 		if (displayData != undefined && displayData.length != 0) {
 			
 			// append the table
 			table = d3.select("#tablePanel")
-				.append("table")
+				.insert("table", ":first-child")
 				.attr("id", "tableId")
 				.attr("class", "table");
 			
+			minimap = d3.select("#auxPanel")
+				.append("table")
+				.attr("id", "miniChart");
+
 			// append the table header
 			header = table.append("thead")
 				.append("tr")
@@ -132,7 +139,16 @@
 				.attr("class", ƒ("cl"))
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
-			
+
+			minimap.append("thead")
+				.append("tr")
+				.selectAll("th")
+				.data([columns[0]])
+				.enter()
+				.append("th")
+				.attr("class", ƒ("cl"))
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+				.text(ƒ("head"));
 			// append the rows
 			m = -1;
 			rows = table.append("tbody")
@@ -145,6 +161,13 @@
 					return "tr" + m;
 				});
 			
+			minimap_rows = minimap.append("tbody")
+				.selectAll("tr")
+				.data(data)
+				.enter()
+				.append("tr");
+
+
 			// append the cells
 			cells = rows.selectAll("td")
 				.data(function(row, i) {
@@ -165,7 +188,37 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.html(ƒ("html"))
 				.attr("class", ƒ("cl"));
+
 			
+			//TODO:hardcoded for now because it is always 50, but should be retreived instead.
+			var minimap_width = 50;
+			
+			var num_rows = cells.length;
+
+			minimap_rows.selectAll("td")
+				.data(function(row, i) {
+					return [
+							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["Published-Rank"]/ parseFloat(num_rows) 
+													+ ' height="5" fill="' + rand_colors[Math.round(Math.random() * rand_colors.length)] +
+								'"/></svg>'}];
+
+				}).enter()
+				.append("td")
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+				.html(function(d) {return d.value; })
+				.attr("height", "10px");
+				
+			$("td", "#miniChart").attr("height", "1");
+
+
+			mapBarHeight = $("svg").height();
+
+			var tableObj = document.getElementById("miniChart");
+			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
+				mapBarHeight--;
+				$("svg").height(mapBarHeight);
+			}
+
 			tableHeight = Number(document.getElementById("tableId").offsetHeight); 
 			numFocalRows = (data.length > 5) ? Number(5) : Number(0);
 			numNonFocalRows = (data.length - 5 > 0) ? Number(data.length - 5): Number(0); 
@@ -229,7 +282,41 @@
 			.duration(1000);
 	}
 	
-	
+	mar.updateMinimap = function() {
+
+		minimap = d3.select("#auxPanel");
+		minimap_rows = minimap.select("tbody")
+				.selectAll("tr")
+				.data(data);
+
+			
+			var minimap_width = 50;
+			
+			var num_rows = cells.length;
+
+			minimap_rows.selectAll("td")
+				.data(function(row, i) {
+					var barColor = "black";
+					if(row["Published-Rank"] > row["uniqueId"])
+						barColor = "green";
+					else if (row["Published-Rank"] < row["uniqueId"])
+						barColor = "red";
+
+					return [
+							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["Published-Rank"]/ parseFloat(num_rows) 
+													+ ' height="5" fill="' + barColor +
+								'"/></svg>'}];
+
+				})
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+				.html(function(d) {return d.value; })
+				.attr("height",  "10px");
+				
+			$("td", "#miniChart").attr("height", "1");
+
+			$("svg").height(mapBarHeight);
+
+	}
 	
 	
 	/*********************************UTILITY FUNCTIONS*********************************/
@@ -587,6 +674,7 @@
 		
 		// update the table order and color the rows
 		mar.updateTable(ranking); 
+		mar.updateMinimap();
 		colorRows();
 		
 		// update oldIndex to match rank after it has been used to color rows
@@ -714,7 +802,6 @@
 	 * Modify the colors of the rows based on where they have been moved
 	 */
 	function colorRows() {
-
 		var movedRow = $(lastChangedRow);
 		$('tr', "#tablePanel tbody").each(function (i) {
 		
@@ -739,7 +826,6 @@
 			}
 			
 			updateColorAndOpacity($(this), oldIndex, newIndex);
-
 		});
 	}
 	
