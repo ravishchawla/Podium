@@ -578,6 +578,9 @@
 		//console.log("Color Overlay State is : " + colorOverlay);
 		if (!colorOverlay)
 			$("tr").css("background","white");
+		else {
+			colorRows();
+		}
 	}
 
 
@@ -680,12 +683,15 @@
 			
 			var newIndex = Number(dataObj.find("td.rank.index").html());
 			var oldIndex = Number(dataObj.find("td.oldIndex").html());
+			var uniqueId = dataObj.find("td.uniqueId").html();
+
+			var movedRowIndex = movedRow.find("td.rank.index").html();
 
 			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) ||
 					(newIndex == oldIndex)) {
 				$(this).removeClass('greenColorChange');
 				$(this).removeClass('redColorChange');
-				$(this).css("background-color", "transparent");
+				$(this).animate({backgroundColor: "transparent"}, 1000);
 				return true;
 			} else if (newIndex > oldIndex) {
 				$(this).removeClass('greenColorChange');
