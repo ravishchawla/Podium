@@ -4,6 +4,7 @@
 	
 	mar = {};
 	var data;
+	var opacityScale;
 	var columns = [];
 	var numericalAttributes = [];
 	var categoricalAttributeMap = {};
@@ -48,6 +49,9 @@
 	function loadData(fileName) {
 		d3.csv(fileName, function(dataset) {
 			data = dataset;
+			opacityScale = d3.scale.quantize()
+				.domain([0, data.length])
+				.range([0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
 			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
@@ -129,11 +133,16 @@
 				.text(ƒ("head"));
 			
 			// append the rows
+			m = -1;
 			rows = table.append("tbody")
 				.selectAll("tr")
 				.data(data)
 				.enter()
-				.append("tr");
+				.append("tr")
+				.attr("id",function(){
+					m += 1;
+					return "tr" + m;
+				});
 			
 			// append the cells
 			cells = rows.selectAll("td")
@@ -601,8 +610,8 @@
 	function addFunctionality() {
 		clickAndDragRows(); 
 		addArrows(); 
-		if (fishEyeOverlay)
-			tableLens();
+		//if (fishEyeOverlay)
+		//	tableLens();
 	}
 	
 	
@@ -671,11 +680,6 @@
 			var newIndex = Number(dataObj.find("td.rank.index").html());
 			var oldIndex = Number(dataObj.find("td.oldIndex").html());
 
-			var gradientSpread = Math.abs(movedRow.find("td.rank.index").html() - movedRow.find("td.oldIndex").html()) + 1;
-			var gradientLevel = Math.abs(movedRow.find("td.rank.index").html() - newIndex);
-			
-			var uniqueId = dataObj.find("td.uniqueId").html();
-
 			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) ||
 					(newIndex == oldIndex)) {
 				$(this).removeClass('greenColorChange');
@@ -690,8 +694,9 @@
 				$(this).addClass('greenColorChange');
 			}
 
-			var opacityVal = Math.abs(newIndex - oldIndex) / data.length;
-			var opacity = (5*opacityVal > 1) ? 1 : (5*opacityVal);
+			opacity = opacityScale(Math.abs(newIndex - oldIndex));
+			if (newIndex == oldIndex)
+				opacity = 0;
 
 			if (colorOverlay) {
 				if ($(this).hasClass('greenColorChange'))
@@ -746,61 +751,60 @@
 	 * Add the table lens effect
 	 */
 	function tableLens() {
-
 		$("tr").hover(function() {
-            if(fishEyeOverlay){
+			if (fishEyeOverlay) {
+				var clickedRow = $(this).index();
+				var trThis = $("tr").get(clickedRow);
+				var size = $("tr").length;
+				var upInd = clickedRow;
+				var dwnInd = clickedRow;
+				var shuffledArray = [];
+				shuffledArray.push(clickedRow);
+				
+				for (var i = 0; i < size - 1; i++) {
+					if (upInd > 0) {
+						shuffledArray.push(upInd - 1);
+						upInd -= 1;
+					}
+					if (dwnInd < size - 1) {
+						shuffledArray.push(dwnInd + 1);
+						dwnInd += 1;
+					}
+					if (upInd < 0 && dwnInd > size)
+						break;
+				}   
+				
+				var ht = 1;
+				var r = 255;
+				var g = 200;
+				var b = 255;
+				var a = 1.0;
 
-			var difference = focalRowHeight - nonFocalRowHeight;
-			var clickedRow = $(this).index();
-			var surroundingRows = getSurroundingRowRange(clickedRow, numFocalRows - 1); 
-			var size = surroundingRows.length;
-			var removePer = difference / size;
-
-			if (clickedRow >= 0 ) {
-				var a = focalRowHeight / 16;
-				var b = focalRowHeight / 4;
-				var c = focalRowHeight;                  // clickedRow
-				var d = focalRowHeight / 4;
-				var e = focalRowHeight / 16;
-				var trA = $("tr").get(clickedRow - 2);
-				var trB = $("tr").get(clickedRow - 1);
-				var trC = $("tr").get(clickedRow);
-				var trD = $("tr").get(clickedRow + 1);
-				var trE = $("tr").get(clickedRow + 2);
-
-				$(trA).css("height", a);
-				//$(trA).stop(false, false).animate({ height : a});
-				//$(trA).css("background","yellow");
-				$(trA).css("font-size", "0.4em");
-				//$(trA).css("font-size", "xx-small");
-
-				$(trB).css("height", b);
-				//$(trB).stop(false, false).animate({ height : b});
-				$(trB).css("font-size", "0.8em");
-				//$(trB).css("background","yellow");
-
-				$(trC).css("height", c);
-				//$(trC).stop(false, false).animate({ height : c});
-				//$(trC).css("background","cyan");
-				$(trC).css("color", "red");
-				$(trC).stop(false, true).animate({ background: "cyan" });
-				$(trC).css("font-size", "2em");
-
-				$(trD).css("height", d);
-				$(trD).css("font-size", "0.8em");
-				//$(trD).stop(false, false).animate({ height : d});
-				//$(trD).css("background","yellow");
-
-				$(trE).css("height", e);
-				$(trE).css("font-size", "0.4em");
-				//$(trE).stop(false, false).animate({ height : e});
-				//$(trE).css("background","yellow");
+				//make the series
+				var quadSeries =[]
+				var x = 2;
+				var ft = 30;
+				for (var i = 0; i < size; i++) {
+					var value = x * x * (x + 1) + 5 * x;
+					value = value.toFixed(2);
+					x -= 0.1;
+					quadSeries.push(value);
+					$("#tr" + shuffledArray[i]).css("height", value * 15);
+					var color = "rgba(" + r + "," + g + "," + b + "," + a + ")";
+					a -= 0.05;
+					b -= 5;
+					if (colorOverlay)
+						$("#tr" + shuffledArray[i]).css("background", color); 
+					if (i < 3 && colorOverlay) {
+						$("#tr" + shuffledArray[i]).css("font-size", "8em");
+						$("#tr" + shuffledArray[i]).css("color", "red");
+					} else {
+						$("#tr" + shuffledArray[i]).css("font-size", ft);
+						ft -= 0.05;
+					}
+				}
 			}
-            }
-		}, function () {
-			$("tr").css("background", "");
-			$("tr").css("height", nonFocalRowHeight);
-			$("tr").css("font-size", "initial");
+		}, function() {
 			$("tr").css("color", "black");
 		});
 	}
