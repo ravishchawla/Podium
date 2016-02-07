@@ -215,8 +215,15 @@
 			.attr("placeHolder", function(d, i) {
 				// update the rank and old index
 				var rowData = $('tr', '#tablePanel').eq(i);
-				rowData.find("td.rank").html(i);
-				rowData.find("td.oldIndex").html(i);
+				var id = rowData.find("td.uniqueId").html(); 
+				if (id != undefined) {
+					var dataItem = getDataByUniqueId(id);
+					var newIndex = i; 
+					var oldIndex = Number(dataItem["oldIndex"]);
+
+					rowData.find("td.oldIndex").html(oldIndex);
+					rowData.find("td.rank").html(newIndex);
+				}
 			}).attr("class", ƒ("cl"))
 			.transition()
 			.duration(1000);
@@ -226,6 +233,24 @@
 	
 	
 	/*********************************UTILITY FUNCTIONS*********************************/
+	
+	/*
+	 * Private
+	 * Update the opacity of the given row object based on the change in index
+	 */
+	function updateColorAndOpacity(rowObj, oldIndex, newIndex) {
+		var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
+		if (newIndex == oldIndex)
+			opacity = 0;
+
+		if (colorOverlay) {;
+			if (rowObj.hasClass('greenColorChange'))
+				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
+			else if (rowObj.hasClass('redColorChange'))
+				rowObj.css("background-color", 'rgba(218, 91, 88, ' + opacity + ')');
+		}
+	}
+	
 	
 	/*
 	 * Private
@@ -538,9 +563,7 @@
 			return;
 		}
 		
-		console.log("b: " + b);
-		var A = getAugmentedMatrix(b)[0]; 
-		console.log("A: " + JSON.stringify(A));
+		var A = getAugmentedMatrix(b)[0];
 		
 		var SVD = numeric.svd(A); 
 		var U = SVD.U; 
@@ -553,20 +576,38 @@
 		var normalizedWeights = normalize(weights);
 		var ranking = computeRanking(normalizedWeights);
 		
+		// update oldIndex to the old rank position and update rank
 		for (var i = 0; i < ranking.length; i++) {
-			var obj = getDataByUniqueId(Number(ranking[i]["id"]));
+			var id = Number(ranking[i]["id"]);
+			var obj = getDataByUniqueId(id);
+			
+			obj["oldIndex"] = obj["rank"]; 
 			obj["rank"] = i + 1;
 		}
+		
+		// update the table order and color the rows
+		mar.updateTable(ranking); 
+		colorRows();
+		
+		// update oldIndex to match rank after it has been used to color rows
+		for (var i = 0; i < ranking.length; i++) {
+			var id = Number(ranking[i]["id"]);
+			var obj = getDataByUniqueId(id);
+			var rank = obj["rank"];
+			
+			obj["oldIndex"] = rank; 
+			var rowObj = $('tr', '#tablePanel').eq(i + 1);
+			rowObj.find("td.oldIndex").html(rank);
+		}
+		
+		changedRows = []; // reset changed rows
 		
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
 		//console.log("Weight: " + weights);
-
-		changedRows = []; // reset changed rows
-		htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
-		console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
+		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
 		
-		mar.updateTable(ranking); 
+		htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
 	}
     
 
@@ -575,12 +616,11 @@
 	 */
 	mar.colorOverlayToggle = function() {
 		colorOverlay = !colorOverlay;
-		//console.log("Color Overlay State is : " + colorOverlay);
+
 		if (!colorOverlay)
 			$("tr").css("background","white");
-		else {
+		else
 			colorRows();
-		}
 	}
 
 
@@ -675,15 +715,12 @@
 	 */
 	function colorRows() {
 
-		//console.log($(lastChangedRow).find("td.rank.index").html());
-
 		var movedRow = $(lastChangedRow);
 		$('tr', "#tablePanel tbody").each(function (i) {
-			var dataObj = $(this);
-			
-			var newIndex = Number(dataObj.find("td.rank.index").html());
-			var oldIndex = Number(dataObj.find("td.oldIndex").html());
-			var uniqueId = dataObj.find("td.uniqueId").html();
+		
+			var newIndex = Number($(this).find("td.rank.index").html());
+			var oldIndex = Number($(this).find("td.oldIndex").html());
+			var uniqueId = $(this).find("td.uniqueId").html();
 
 			var movedRowIndex = movedRow.find("td.rank.index").html();
 
@@ -700,17 +737,8 @@
 				$(this).removeClass('redColorChange');
 				$(this).addClass('greenColorChange');
 			}
-
-			opacity = opacityScale(Math.abs(newIndex - oldIndex));
-			if (newIndex == oldIndex)
-				opacity = 0;
-
-			if (colorOverlay) {
-				if ($(this).hasClass('greenColorChange'))
-					dataObj.css("background-color", 'rgba(0, 255, 0, ' + opacity + ')');
-				else if ($(this).hasClass('redColorChange'))
-					dataObj.css("background-color", 'rgba(255, 0, 0, ' + opacity + ')');
-			}
+			
+			updateColorAndOpacity($(this), oldIndex, newIndex);
 
 		});
 	}
