@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="css/style.css" type="text/css"/>
     <link rel="stylesheet" href="lib/jqueryUI/jquery-ui.css" type="text/css"/>
     <link rel="stylesheet" href="css/dragtable-default.css" type="text/css"/>
-    
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
     <!-- libraries -->
     <script type="text/javascript" src="lib/d3/d3.v3.min.js"></script>
     <script type="text/javascript" src="lib/d3/d3.layout.cloud.js"></script>
@@ -20,6 +21,7 @@
     <script type="text/javascript" src="lib/jquery.dragtable.js"></script>
     <script type="text/javascript" src="lib/ial_new.js"></script>
     <script type="text/javascript" src="lib/numeric-1.2.6.js"></script>
+    <script src="lib/bootstrap.min.js"></script>
 </head>
 
 
@@ -33,8 +35,9 @@
         <input type="checkbox" id="show_all_rows_checkbox" onclick="mar.allRowsCheckClicked()">Show All Rows</input>
         <input type="checkbox" id="color_overlay_checkbox" onclick="mar.colorOverlayToggle()" checked>Color Overlay</input>
         <input type="checkbox" id="fisheye_checkbox" onclick="mar.fisheyeToggle()" checked>Fish Eye Effect</input>
-        <button type="button" id="rank_button" onclick="mar.rankButtonClicked()">Rank</button>
-        <button type="button" id="discard_button" onclick="mar.discardButtonClicked()">Discard Changes</button>
+
+        <button type="button" id="rank_button" onclick="mar.rankButtonClicked()" class="btn btn-primary">Rank</button>
+        <button type="button" id="discard_button" onclick="mar.discardButtonClicked()" class="btn btn-danger">Discard Changes</button>
     </div>
 
 

@@ -119,7 +119,8 @@
 			// append the table
 			table = d3.select("#tablePanel")
 				.append("table")
-				.attr("id", "tableId");
+				.attr("id", "tableId")
+				.attr("class", "table");
 			
 			// append the table header
 			header = table.append("thead")
