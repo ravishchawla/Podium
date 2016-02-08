@@ -197,8 +197,9 @@
 
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
+				console.log(row);
 					return [
-							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["Published-Rank"]/ parseFloat(num_rows) 
+							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rank"]/ parseFloat(num_rows) 
 													+ ' height="5" fill="' + rand_colors[Math.round(Math.random() * rand_colors.length)] +
 								'"/></svg>'}];
 
@@ -231,18 +232,22 @@
 		}
 	}
 	
-	
-	/*
-	 * Update the table to display the given data
-	 */
-	mar.updateTable = function(newOrder) { 
-		// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
+
+	mar.updateData = function(newOrder) {
+				// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
 		var updatedData = [];
 		for (var i = 0; i < newOrder.length; i++)
 			updatedData.push(getDataByUniqueId(Number(newOrder[i]["id"])));
 		
 		data = updatedData;
 	
+	}
+	
+	/*
+	 * Update the table to display the given data
+	 */
+	mar.updateTable = function() { 
+
 		
 		// update the rows
 		rows = table.select("tbody")
@@ -297,13 +302,13 @@
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
 					var barColor = "black";
-					if(row["Published-Rank"] > row["uniqueId"])
+					if(row["rank"] < row["oldIndex"])
 						barColor = "green";
-					else if (row["Published-Rank"] < row["uniqueId"])
+					else if (row["rank"] > row["oldIndex"])
 						barColor = "red";
 
 					return [
-							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["Published-Rank"]/ parseFloat(num_rows) 
+							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rank"]/ parseFloat(num_rows) 
 													+ ' height="5" fill="' + barColor +
 								'"/></svg>'}];
 
@@ -673,8 +678,9 @@
 		}
 		
 		// update the table order and color the rows
-		mar.updateTable(ranking); 
+		mar.updateData(ranking);
 		mar.updateMinimap();
+		mar.updateTable(); 
 		colorRows();
 		
 		// update oldIndex to match rank after it has been used to color rows
