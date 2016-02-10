@@ -25,13 +25,11 @@
 	var useCategorical = false; 
 	var interactionIncrement = 1; 
 	var maxInteractionWeight = 0.5;
+	var maxRankScore = 1; 
 
 	var showAllRows = true;
 	var colorOverlay = true;
 	var fishEyeOverlay = true;
-	
-	var rand_colors = ["red", "black", "darkred", "green", "blue", "brown", "violet"];
-
 	
 	
 	/**********************************LOAD THE TABLE**********************************/
@@ -310,7 +308,7 @@
 					barColor = "#DA5B58";
 	
 				return [
-				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] 
+				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
 				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
 	
 			})
@@ -335,12 +333,53 @@
 			opacity = 0;
 
 		if (colorOverlay) {;
-			if (rowObj.hasClass('greenColorChange')) // emily
+			if (rowObj.hasClass('greenColorChange')) 
 				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
 			else if (rowObj.hasClass('redColorChange'))
 				rowObj.css("background-color", 'rgba(218, 91, 88, ' + opacity + ')');
 		}
 	}
+	
+	
+	/*
+	 * Private
+	 * Get a list of n rows taken from the surrounding area of the clicked rows
+	 */
+	function getRowsForSVD(clickedRows, numRows) {
+		var rowsForSVD = new Set(clickedRows);
+		var numSurrounding = Math.ceil(numRows / clickedRows ); 
+		
+		for (var i = 0; i < clickedRows.length; i++) {
+			var r = clickedRows[i];
+			var count = 0; 
+			var currentDist = 1; 
+			
+			// crawl out to find numSurrounding new rows
+			while (count < numSurrounding) {
+				// check r - currentDist
+				if (r - currentDist > 0 && rowsForSVD.has(r - currentDist)) {
+					rowsForSVD.add(r - currentDist);
+					count++;
+				}
+				
+				if (count == numSurrounding)
+					break; 
+				
+				// check r + currentDist
+				if (r + currentDist <= data.length && rowsForSVD.has(r + currentDist)) {
+					rowsForSVD.add(r + currentDist);
+					count++;
+				}
+			}
+			
+			if (currentDist > data.length)
+				break;
+			currentDist++;
+		}
+		
+		return rowsForSVD;
+	}
+	
 	
 	
 	/*
@@ -386,9 +425,6 @@
 		return changedRows;
 	}
 	
-	function getLastChangedRows() {
-		return lastChangedRow;
-	}
 	
 	/*
 	 * Private
@@ -617,6 +653,8 @@
 		ranked.sort(function(a, b) {
 			return parseFloat(b.val) - parseFloat(a.val);
 		});
+		
+		maxRankScore = ranked[0]["val"];
 		
 		return ranked;
 	}
