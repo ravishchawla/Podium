@@ -60,7 +60,7 @@
 				// give each data item a unique id
 				var counter = 0; 
 				for (var i = 0; i < data.length; i++) {
-					data[i]["uniqueId"] = counter; 
+					data[i]["uniqueId"] = counter + 1; 
 					data[i]["rank"] = counter + 1;
 					data[i]["oldIndex"] = counter + 1; 
 					data[i]["rankScore"] = 0;
@@ -302,7 +302,7 @@
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
 				var barColor = "black"; // #337ab7
-				if(row["rank"] < row["oldIndex"])
+				if (row["rank"] < row["oldIndex"])
 					barColor = "#58DA5B";
 				else if (row["rank"] > row["oldIndex"])
 					barColor = "#DA5B58";
@@ -343,22 +343,63 @@
 	
 	/*
 	 * Private
+	 * Get a list of the rank values for the given list of unique ids
+	 */
+	function getRankValues(uniqueIds) {
+		var rankVals = [];
+		for (var i = 0; i < uniqueIds.length; i++) {
+			var dataItem = getDataByUniqueId(Number(uniqueIds[i]));
+			rankVals.push(Number(dataItem["rank"]));
+		}
+		
+		return rankVals;
+	}
+	
+	
+	/*
+	 * Private
+	 * Get a list of unique ids for the given list of rank values
+	 */
+	function getUniqueIds(rankVals) {
+		var uniqueIds = [];
+		for (var i = 0; i < rankVals.length; i++) {
+			// get the row
+			var rowObj = $('tr', '#tablePanel').eq(rankVals[i]);
+			uniqueIds.push(Number(rowObj.find("td.uniqueId").html()));
+		}
+		
+		return uniqueIds;
+	}
+	
+	
+	/*
+	 * Private
 	 * Get a list of n rows taken from the surrounding area of the clicked rows
+	 * Input is an array of unique ids
 	 */
 	function getRowsForSVD(clickedRows, numRows) {
-		var rowsForSVD = new Set(clickedRows);
-		var numSurrounding = Math.ceil(numRows / clickedRows ); 
+		
+		// use the rank values of the rows with the given unique ids
+		clickedRows = getRankValues(clickedRows); 
+		
+		if (numRows > data.length) {
+			console.log("table.js: cannot get more than " + data.length + " rows");
+			return [];
+		}
+			
+		var rowsForSVD = clickedRows.slice();
+		var numSurrounding = Math.ceil((numRows - clickedRows.length) / clickedRows.length); 
 		
 		for (var i = 0; i < clickedRows.length; i++) {
-			var r = clickedRows[i];
+			var r = Number(clickedRows[i]);
 			var count = 0; 
 			var currentDist = 1; 
 			
 			// crawl out to find numSurrounding new rows
 			while (count < numSurrounding) {
 				// check r - currentDist
-				if (r - currentDist > 0 && rowsForSVD.has(r - currentDist)) {
-					rowsForSVD.add(r - currentDist);
+				if (r - currentDist > 0 && rowsForSVD.indexOf(r - currentDist) < 0) {
+					rowsForSVD.push(r - currentDist);
 					count++;
 				}
 				
@@ -366,18 +407,19 @@
 					break; 
 				
 				// check r + currentDist
-				if (r + currentDist <= data.length && rowsForSVD.has(r + currentDist)) {
-					rowsForSVD.add(r + currentDist);
+				if (r + currentDist <= data.length && rowsForSVD.indexOf(r + currentDist) < 0) {
+					rowsForSVD.push(r + currentDist);
 					count++;
 				}
+				
+				currentDist++; 
+				if (currentDist > data.length)
+					break;
 			}
-			
-			if (currentDist > data.length)
-				break;
-			currentDist++;
 		}
 		
-		return rowsForSVD;
+		// return the unique ids of the adjacent rows
+		return getUniqueIds(rowsForSVD);
 	}
 	
 	
@@ -578,11 +620,20 @@
 	 */
 	function normalize(input) {
 		var result = []; 
-		var sum = getSum(input);
-		var len = input.length;
+		
+		// first normalize the result to be in the range 0-1
+		var minMax = getMinAndMax(input); 
+		var min = minMax[0];
+		var max = minMax[1];
+		for (var i = 0; i < input.length; i++)
+			result.push((input[i] - min) / (max - min));
+		
+		// now normalize so the components sum to 1
+		var sum = getSum(result);
+		var len = result.length;
 		
 		for (var i = 0; i < len; i++)
-			result.push(input[i] / sum); 
+			result[i] = result[i] / sum; 
 		
 		return result;
 	}
@@ -680,7 +731,8 @@
 		console.log("table.js: Ranking");
 		
 		// use SVD to compute w = V * D_0^−1 * U^T * b
-		var b = getAllRows(); 
+		var b = getRowsForSVD(getChangedRows(), keys.length + 1); 
+
 		if (b.length <= keys.length) {
 			console.log("table.js: ERROR - number of rows moved (" + b.length + ") must be greater than number of attributes (" + keys.length + ") to compute rank using SVD");
 			return;
@@ -822,10 +874,10 @@
 
 			$('tr', ui.item.parent()).each(function(i) {
 				// update the rank attribute
+				id = Number($(this).find("td.uniqueId").html());
+				dataItem = getDataByUniqueId(Number(id));
 				dataItem["rank"] = i + 1;
 				$(this).find("td.rank.index").html(i + 1);
-				
-				//TODO:Update rank/index or uniqueId?
 			});	
 
 			colorRows();
