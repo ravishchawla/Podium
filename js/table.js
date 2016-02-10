@@ -53,7 +53,7 @@
 			data = dataset;
 			opacityScale = d3.scale.quantize()
 				.domain([0, data.length])
-				.range([0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
+				.range([0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
 			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
@@ -73,6 +73,7 @@
 				columns.push({ head: "Rank", cl: "rank index null", html: function(row, i) { return data[i]["rank"]; } });
 				columns.push({ head: "Old Index", cl: "hidden oldIndex", html: function(row, i) { return data[i]["oldIndex"]; } });
 				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
+				columns.push({ head: "Interaction", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
 				
 				// find numerical and categorical attributes
 				for (var attr = 0; attr < keys.length; attr++) {
@@ -116,7 +117,6 @@
 	 * Display the table
 	 */
 	function displayTable(displayData) {
-		console.log(data["Published-Rank"]);
 		if (displayData != undefined && displayData.length != 0) {
 			
 			// append the table
@@ -125,6 +125,7 @@
 				.attr("id", "tableId")
 				.attr("class", "table");
 			
+			// append the mini map
 			minimap = d3.select("#auxPanel")
 				.append("table")
 				.attr("id", "miniChart");
@@ -140,6 +141,7 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 
+			// append the mini map header
 			minimap.append("thead")
 				.append("tr")
 				.selectAll("th")
@@ -149,6 +151,7 @@
 				.attr("class", ƒ("cl"))
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
+			
 			// append the rows
 			m = -1;
 			rows = table.append("tbody")
@@ -161,12 +164,12 @@
 					return "tr" + m;
 				});
 			
+			// append the rows of the mini map
 			minimap_rows = minimap.append("tbody")
 				.selectAll("tr")
 				.data(data)
 				.enter()
 				.append("tr");
-
 
 			// append the cells
 			cells = rows.selectAll("td")
@@ -195,22 +198,21 @@
 			
 			var num_rows = cells.length;
 
+			// append mini map cells
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
-				console.log(row);
 					return [
-							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rank"]/ parseFloat(num_rows) 
-													+ ' height="5" fill="' + rand_colors[Math.round(Math.random() * rand_colors.length)] +
-								'"/></svg>'}];
+							{ column: "svg", value: '<svg width="50"><rect width=' + 
+								minimap_width * (data.length - row["rank"]) / data.length +
+								' height="5" fill="' + "#337ab7" + '"/></svg>' }];
 
 				}).enter()
 				.append("td")
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				.html(function(d) {return d.value; })
+				.html(function(d) { return d.value; })
 				.attr("height", "10px");
 				
 			$("td", "#miniChart").attr("height", "1");
-
 
 			mapBarHeight = $("svg").height();
 
@@ -232,23 +234,22 @@
 		}
 	}
 	
-
+	/*
+	 * Update the order of the data according to the input array
+	 */
 	mar.updateData = function(newOrder) {
-				// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
+		// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
 		var updatedData = [];
 		for (var i = 0; i < newOrder.length; i++)
 			updatedData.push(getDataByUniqueId(Number(newOrder[i]["id"])));
 		
 		data = updatedData;
-	
 	}
 	
 	/*
 	 * Update the table to display the given data
 	 */
 	mar.updateTable = function() { 
-
-		
 		// update the rows
 		rows = table.select("tbody")
 			.selectAll("tr")
@@ -287,40 +288,38 @@
 			.duration(1000);
 	}
 	
+	/*
+	 * Update the mini map 
+	 */
 	mar.updateMinimap = function() {
 
 		minimap = d3.select("#auxPanel");
 		minimap_rows = minimap.select("tbody")
-				.selectAll("tr")
-				.data(data);
+			.selectAll("tr")
+			.data(data);
 
-			
-			var minimap_width = 50;
-			
-			var num_rows = cells.length;
+		var minimap_width = 50;
+		var num_rows = cells.length;
 
-			minimap_rows.selectAll("td")
-				.data(function(row, i) {
-					var barColor = "black";
-					if(row["rank"] < row["oldIndex"])
-						barColor = "green";
-					else if (row["rank"] > row["oldIndex"])
-						barColor = "red";
+		minimap_rows.selectAll("td")
+			.data(function(row, i) {
+				var barColor = "black"; // #337ab7
+				if(row["rank"] < row["oldIndex"])
+					barColor = "#58DA5B";
+				else if (row["rank"] > row["oldIndex"])
+					barColor = "#DA5B58";
+	
+				return [
+				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] 
+				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
+	
+			})
+			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+			.html(function(d) {return d.value; })
+			.attr("height",  "10px");
 
-					return [
-							{column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rank"]/ parseFloat(num_rows) 
-													+ ' height="5" fill="' + barColor +
-								'"/></svg>'}];
-
-				})
-				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				.html(function(d) {return d.value; })
-				.attr("height",  "10px");
-				
-			$("td", "#miniChart").attr("height", "1");
-
-			$("svg").height(mapBarHeight);
-
+		$("td", "#miniChart").attr("height", "1");
+		$("svg").height(mapBarHeight);
 	}
 	
 	
@@ -336,7 +335,7 @@
 			opacity = 0;
 
 		if (colorOverlay) {;
-			if (rowObj.hasClass('greenColorChange'))
+			if (rowObj.hasClass('greenColorChange')) // emily
 				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
 			else if (rowObj.hasClass('redColorChange'))
 				rowObj.css("background-color", 'rgba(218, 91, 88, ' + opacity + ')');
@@ -780,12 +779,13 @@
 			if (Number(dataItem["oldIndex"]) == Number(ui.item.index())) 
 				w = 0;
 			ial.incrementItemWeight(dataItem, w);
+			
+			ui.item.find("td.interactionWeight").html(dataItem.ial.weight);
 
 			$('tr', ui.item.parent()).each(function(i) {
 				// update the rank attribute
 				dataItem["rank"] = i + 1;
 				$(this).find("td.rank.index").html(i + 1);
-				//console.log($(this).find("td.rank.index").html());
 				
 				//TODO:Update rank/index or uniqueId?
 			});	
