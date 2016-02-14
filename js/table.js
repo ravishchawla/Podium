@@ -124,9 +124,20 @@
 				.attr("class", "table");
 			
 			// append the mini map
-			minimap = d3.select("#auxPanel")
+
+			/*auxContentDiv = d3.select("#auxPanel")
+				.append("div")
+				.attr("id", "auxContentDiv");
+			*/	
+			minimap = d3.select("#auxPanel #auxContentDiv")
 				.append("table")
 				.attr("id", "miniChart");
+
+
+			consolePanel = d3.select("#auxPanel #auxContentDiv")
+				.append("table")
+				.attr("id", "consoleChart")
+				.attr("hifdden", "hidden");
 
 			// append the table header
 			header = table.append("thead")
@@ -139,16 +150,6 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 
-			// append the mini map header
-			minimap.append("thead")
-				.append("tr")
-				.selectAll("th")
-				.data([columns[0]])
-				.enter()
-				.append("th")
-				.attr("class", ƒ("cl"))
-				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				.text(ƒ("head"));
 			
 			// append the rows
 			m = -1;
@@ -164,6 +165,13 @@
 			
 			// append the rows of the mini map
 			minimap_rows = minimap.append("tbody")
+				.selectAll("tr")
+				.data(data)
+				.enter()
+				.append("tr");
+
+
+			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
 				.data(data)
 				.enter()
@@ -214,7 +222,7 @@
 
 			mapBarHeight = $("svg").height();
 
-			var tableObj = document.getElementById("miniChart");
+			var tableObj = document.getElementById("auxContentDiv");
 			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
 				mapBarHeight--;
 				$("svg").height(mapBarHeight);
@@ -291,7 +299,7 @@
 	 */
 	mar.updateMinimap = function() {
 
-		minimap = d3.select("#auxPanel");
+		minimap = d3.select("#auxPanel #miniChart");
 		minimap_rows = minimap.select("tbody")
 			.selectAll("tr")
 			.data(data);
@@ -709,6 +717,14 @@
 		
 		return ranked;
 	}
+
+	function toggleActiveTab(consoleTab, minimapTab) {
+		consoleTab = $("#auxPanel #consoleTab");
+		consoleTab.toggleClass("active");
+
+		minimapTab = $("#auxPanel #minimapTab");
+		minimapTab.toggleClass("active");	
+	}
 	
 	
 	
@@ -824,6 +840,19 @@
 		colorRows();
 	}
 
+	mar.changeToConsole = function() {
+		toggleActiveTab();
+		
+		$("#miniChart").attr("hidden", "hidden");
+		$("consoleChart").removeAttr("hidden");
+
+	}
+
+	mar.changeToMinimap = function() {
+		toggleActiveTab();
+		$("#miniChart").removeAttr('hidden');
+		$("#consoleChart").attr("hidden", "hidden");
+	}
 		
 	/***********************************TABLE EFFECTS***********************************/
 	
