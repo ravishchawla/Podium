@@ -17,6 +17,8 @@
 	var numFocalRows, numNonFocalRows; 
 	var focalRowHeight, nonFocalRowHeight;
 	var mapBarHeight;
+	var minimap_width = 50;
+	var console_width = 150;
 
 	var keys;
 	var htmlTableToCache;
@@ -125,19 +127,21 @@
 			
 			// append the mini map
 
-			/*auxContentDiv = d3.select("#auxPanel")
-				.append("div")
-				.attr("id", "auxContentDiv");
-			*/	
-			minimap = d3.select("#auxPanel #auxContentDiv")
+			minimap = d3.select("#auxContentDiv")
 				.append("table")
-				.attr("id", "miniChart");
+				.attr("id", "miniChart")
 
-
-			consolePanel = d3.select("#auxPanel #auxContentDiv")
+			consolePanel = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "consoleChart")
-				.attr("hifdden", "hidden");
+				.attr("hidden", "hidden");
+
+			consolePanel.append("button")
+				.attr("id", "applyColumnWeights")
+				.attr("onclick", "mar.applyColumnWeights()")
+				.attr("class", "btn btn-secondary")
+				.html("Apply Changes");
+
 
 			// append the table header
 			header = table.append("thead")
@@ -170,10 +174,9 @@
 				.enter()
 				.append("tr");
 
-
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
-				.data(data)
+				.data(columns)
 				.enter()
 				.append("tr");
 
@@ -196,13 +199,10 @@
 				.append("td")
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.html(ƒ("html"))
-				.attr("class", ƒ("cl"));
-
-			
-			//TODO:hardcoded for now because it is always 50, but should be retreived instead.
-			var minimap_width = 50;
+				.attr("class", ƒ("cl"));			
 			
 			var num_rows = cells.length;
+			var num_cols = columns.length;
 
 			// append mini map cells
 			minimap_rows.selectAll("td")
@@ -217,15 +217,49 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.html(function(d) { return d.value; })
 				.attr("height", "10px");
-				
+
+
+			console_rows.selectAll("td")
+				.data(function(column, i) {
+					return [{id: "col" + i, name: column['cl'], amount: (100/num_cols).toFixed(2)}];
+				}).enter()
+				.append("td")
+				.html(function(d) { 
+					return "<p id=" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>"})
+				.append("svg")
+				.append("rect")
+				.attr("fill", "#337ab7")
+				.attr("width", function(d) {
+					d.width = (console_width * d.amount)/100;
+					return d.width + "px";
+				})
+				.attr("height", "10px")
+				.call(d3.behavior.drag().on('drag', function(d) {
+					var new_width = d.width + d3.event.dx;
+
+					if(new_width < 0)
+						new_width = 0;
+
+					if(new_width > console_width)
+						new_width = console_width;
+
+					d.width = new_width;
+					d.amount = ((new_width * 100)/console_width).toFixed(2);
+					d3.select(this).attr("width", d.width);
+					d3.select("#" + d.id).html(
+						"<p id=" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
+				}));
+
+
 			$("td", "#miniChart").attr("height", "1");
+			$("td", "#consoleChart").attr("height", "1");
 
 			mapBarHeight = $("svg").height();
 
-			var tableObj = document.getElementById("auxContentDiv");
+			var tableObj = document.getElementById("miniChart");
 			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
 				mapBarHeight--;
-				$("svg").height(mapBarHeight);
+				$("svg", "#miniChart").height(mapBarHeight);
 			}
 
 			tableHeight = Number(document.getElementById("tableId").offsetHeight); 
@@ -240,6 +274,25 @@
 		}
 	}
 	
+	function reAdjustWeights() {
+
+		totalPercentage = 0;
+		d3.selectAll("#consoleChart td").each(function(d, i) {
+			console.log(d);
+			totalPercentage = totalPercentage + Number(d.amount);
+		});
+
+
+		d3.selectAll("#consoleChart td").each(function(d, i) {
+			d.amount = ((d.amount/totalPercentage) * 100).toFixed(2);
+			d.width = console_width * d.amount;
+			d3.select(this).attr("width", d.width);
+			d3.select("#" + d.id).html(
+					"<p id=" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
+		});
+
+	}
+
 	/*
 	 * Update the order of the data according to the input array
 	 */
@@ -340,7 +393,7 @@
 		if (newIndex == oldIndex)
 			opacity = 0;
 
-		if (colorOverlay) {;
+		if (colorOverlay) {
 			if (rowObj.hasClass('greenColorChange')) 
 				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
 			else if (rowObj.hasClass('redColorChange'))
@@ -844,8 +897,8 @@
 		toggleActiveTab();
 		
 		$("#miniChart").attr("hidden", "hidden");
-		$("consoleChart").removeAttr("hidden");
-
+		$("#consoleChart").removeAttr("hidden");
+		
 	}
 
 	mar.changeToMinimap = function() {
@@ -853,7 +906,12 @@
 		$("#miniChart").removeAttr('hidden');
 		$("#consoleChart").attr("hidden", "hidden");
 	}
+
+	mar.applyColumnWeights = function() {
+		reAdjustWeights();
+	}
 		
+
 	/***********************************TABLE EFFECTS***********************************/
 	
 	/*

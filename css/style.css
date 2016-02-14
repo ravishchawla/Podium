@@ -1,8 +1,12 @@
 #auxPanel {
-	width: 10%;
+	width: 20%;
 	height: 90vh;
 	float: left;
 	overflow-x: hidden;
+}
+
+#auxContentDiv {
+	height: 100%;
 }
 
 table {
@@ -16,12 +20,12 @@ table {
 }
 
 
-#auxPanel table {
+#auxContentDiv table {
 	border: none;
 }
 
 #tablePanel {
-	width: 90%;
+	width: 80%;
 	height: 90vh;
 	float:right;
 }
