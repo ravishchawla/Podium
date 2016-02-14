@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 
@@ -41,9 +42,9 @@
     </div> 
 
     <div id="auxPanel">
-            <ul class="nav nav-pills nav-stacked">
-                <li role="presentation" class="active nav-tab"><a href="#">Minimap</a></li>
-                <li role="presentation" class="nav-tab"><a href="#">Console</a></li>
+            <ul class="nav nav-tabs">
+                <li class="active">Minimap</a></li>
+                <li>Console</a></li>
             </ul>
     </div>
     
