@@ -175,7 +175,6 @@
 				.enter()
 				.append("tr");
 
-			console.log(numericalAttributes);
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
 				.data(numericalAttributes)
@@ -221,13 +220,14 @@
 				.attr("height", "10px");
 
 
+
 			console_rows.selectAll("td")
 				.data(function(column, i) {
 					return [{id: i, name: column, amount: (100/num_cols).toFixed(2)}];
 				}).enter()
 				.append("td")
-				.html(function(d) { 
-					return "<p id=col" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>"})
+				.html(function(d) { 	
+					return "<p id=col" + d.id + " name=" + d.name + ">" + d.name + "</p><p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>"})
 				.append("svg")
 				.append("rect")
 				.attr("fill", "#337ab7")
@@ -249,8 +249,8 @@
 					d.width = new_width;
 					d.amount = ((new_width * 100)/console_width).toFixed(2);
 					d3.select(this).attr("width", d.width);
-					d3.select("#col" + d.id).html(
-						"<p id=col" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
+					d3.select("#colVal" + d.id).html(
+						"<p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>");
 				}));
 
 
@@ -277,21 +277,27 @@
 		}
 	}
 	
-	function reAdjustWeights() {
+	function updateColumnWeights(weights = null) {
 
 		totalPercentage = 0;
-		d3.selectAll("#consoleChart td").each(function(d, i) {
-			totalPercentage = totalPercentage + Number(d.amount);
-		});
+		if(weights == null) {
+			d3.selectAll("#consoleChart td").each(function(d, i) {
+				totalPercentage = totalPercentage + Number(d.amount);
+			});
+		}
 
 
 		d3.selectAll("#consoleChart td").each(function(d, i) {
-			d.amount = ((d.amount/totalPercentage) * 100).toFixed(2);
+			if(weights == null)
+				d.amount = ((d.amount/totalPercentage) * 100).toFixed(2);
+			else
+				d.amount = (weights[i] * 100).toFixed(2);
+
 			d.width = (console_width * d.amount)/100;
 			
 			d3.select("#rect" + d.id).attr("width", d.width);
-			d3.select("#col" + d.id).html(
-					"<p id=col" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
+			d3.select("#colVal" + d.id).html(
+						"<p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>");
 		});
 	}
 
@@ -648,8 +654,9 @@
 					max = currentVal;
 			}
 			
-			for (var i = 0; i < len; i++)
+			for (var i = 0; i < len; i++) {
 				dataset[i][attr + "Norm"] = (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
+			}
 		}
 	}
 	
@@ -827,7 +834,7 @@
 		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
 		var normalizedWeights = normalize(weights);
 		var ranking = computeRanking(normalizedWeights);
-		
+
 		// update oldIndex to the old rank position and update rank
 		for (var i = 0; i < ranking.length; i++) {
 			var id = Number(ranking[i]["id"]);
@@ -855,6 +862,9 @@
 		}
 		
 		changedRows = []; // reset changed rows
+
+
+		updateColumnWeights(normalizedWeights);
 		
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
@@ -910,7 +920,7 @@
 	}
 
 	mar.applyColumnWeights = function() {
-		reAdjustWeights();
+		updateColumnWeights();
 	}
 		
 
@@ -1021,26 +1031,29 @@
 	 *     down = low values are good
 	 */
 	function addArrows() {
-		$("th").each(function(i) {
+		consoleRows = $("#consoleChart td p");
+		$("#tablePanel th").each(function(i) {
 			if (i > 0) { // don't add to Rank col
 				var html_text = $(this).html();
 				if (numericalAttributes.indexOf(html_text) > -1) {
-					html_text = html_text + '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>';
-					$(this).html(html_text);
-					$(this).click(function() {
-						
-						var clickedObjClasses = $(this).attr('class').split(' ');
+					conrow = $('#consoleChart td p[name="' + html_text + '"]');
+					conrow = conrow[0];
+					//$(this).html(html_text);
+					html_text = '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>' + html_text;
+					$(conrow).html(html_text);
+					$(conrow).click(function() {
+						var clickedObj = $(this).find("input")[0];
+						var clickedObjClasses = $(clickedObj).attr('class').split(' ');
 						// assumes the first class is the name of the attribute - make sure we don't change this convention
 						var clickedObjAttribute = clickedObjClasses[0];
-						
-						var clickedObj = $(this).find("input");
-						clickedObj.toggleClass('directionUp', 'directionDown');
-						if (clickedObj.hasClass('directionUp')) {
-							clickedObj.attr('src', 'img/arrow-up.png');
+						console.log(clickedObjAttribute);
+						$(clickedObj).toggleClass('directionUp', 'directionDown');
+						if ($(clickedObj).hasClass('directionUp')) {
+							$(clickedObj).attr('src', 'img/arrow-up.png');
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedObjAttribute, true);
 						} else {
-							clickedObj.attr('src', 'img/arrow-down.png');
+							$(clickedObj).attr('src', 'img/arrow-down.png');
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedObjAttribute, false);
 						}

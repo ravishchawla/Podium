@@ -55,6 +55,10 @@ td {
 	padding: 10px;
 }
 
+.columnChartVal {
+	float:right;
+}
+
 .hidden {
 	display:none;
 }
