@@ -395,7 +395,7 @@
 			.attr("height",  "10px");
 
 		$("td", "#miniChart").attr("height", "1");
-		$("svg").height(mapBarHeight);
+		$("svg", "#miniChart").height(mapBarHeight);
 	}
 	
 	
