@@ -226,7 +226,7 @@
 				}).enter()
 				.append("td")
 				.html(function(d) { 	
-					return "<p id=col" + d.id + " name=" + d.name + ">" + d.name + "</p><p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>"})
+					return "<p class=columnChartName id=col" + d.id + " name=" + d.name + ">" + d.name + "</p><p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>"})
 				.append("svg")
 				.append("rect")
 				.attr("fill", "#337ab7")
@@ -1066,7 +1066,7 @@
 						toggleRowItemClass($(clickedObj));
 						if ($(clickedObj).hasClass('directionUp')) {
 							$(clickedObj).attr('src', 'img/arrow-up.png');
-							$((($(this).parent())[0])).removeClass("fadedRow")
+							$((($(this).parent())[0])).removeClass("disabledAttribute")
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedObjAttribute, true);
 						} else if ($(clickedObj).hasClass('directionDown')) {
@@ -1075,7 +1075,7 @@
 							normalizeAttribute(data, clickedObjAttribute, false);
 						} else if ($(clickedObj).hasClass('unusedRow')) {
 							$(clickedObj).attr('src', 'img/remove.png');
-							$((($(this).parent())[0])).addClass("fadedRow")
+							$((($(this).parent())[0])).addClass("disabledAttribute")
 						}
 		
 					});
