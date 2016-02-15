@@ -130,11 +130,12 @@
 			minimap = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "miniChart")
+				.attr("hidden", "hidden");
 
 			consolePanel = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "consoleChart")
-				.attr("hidden", "hidden");
+				
 
 			consolePanel.append("button")
 				.attr("id", "applyColumnWeights")
@@ -174,9 +175,10 @@
 				.enter()
 				.append("tr");
 
+			console.log(numericalAttributes);
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
-				.data(columns)
+				.data(numericalAttributes)
 				.enter()
 				.append("tr");
 
@@ -202,7 +204,7 @@
 				.attr("class", ƒ("cl"));			
 			
 			var num_rows = cells.length;
-			var num_cols = columns.length;
+			var num_cols = numericalAttributes.length;
 
 			// append mini map cells
 			minimap_rows.selectAll("td")
@@ -221,14 +223,15 @@
 
 			console_rows.selectAll("td")
 				.data(function(column, i) {
-					return [{id: "col" + i, name: column['cl'], amount: (100/num_cols).toFixed(2)}];
+					return [{id: i, name: column, amount: (100/num_cols).toFixed(2)}];
 				}).enter()
 				.append("td")
 				.html(function(d) { 
-					return "<p id=" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>"})
+					return "<p id=col" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>"})
 				.append("svg")
 				.append("rect")
 				.attr("fill", "#337ab7")
+				.attr("id", function(d) { return "rect" + d.id;})
 				.attr("width", function(d) {
 					d.width = (console_width * d.amount)/100;
 					return d.width + "px";
@@ -246,8 +249,8 @@
 					d.width = new_width;
 					d.amount = ((new_width * 100)/console_width).toFixed(2);
 					d3.select(this).attr("width", d.width);
-					d3.select("#" + d.id).html(
-						"<p id=" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
+					d3.select("#col" + d.id).html(
+						"<p id=col" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
 				}));
 
 
@@ -278,19 +281,18 @@
 
 		totalPercentage = 0;
 		d3.selectAll("#consoleChart td").each(function(d, i) {
-			console.log(d);
 			totalPercentage = totalPercentage + Number(d.amount);
 		});
 
 
 		d3.selectAll("#consoleChart td").each(function(d, i) {
 			d.amount = ((d.amount/totalPercentage) * 100).toFixed(2);
-			d.width = console_width * d.amount;
-			d3.select(this).attr("width", d.width);
-			d3.select("#" + d.id).html(
-					"<p id=" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
+			d.width = (console_width * d.amount)/100;
+			
+			d3.select("#rect" + d.id).attr("width", d.width);
+			d3.select("#col" + d.id).html(
+					"<p id=col" + d.id + ">" + d.name + "  (" + d.amount + "%)</p>");
 		});
-
 	}
 
 	/*
