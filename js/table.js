@@ -8,6 +8,7 @@
 	var columns = [];
 	var numericalAttributes = [];
 	var categoricalAttributeMap = {};
+	var attributeWeights = [];
 
 	var lastChangedRow;
 	var changedRows = [];
@@ -222,17 +223,18 @@
 
 			console_rows.selectAll("td")
 				.data(function(column, i) {
-					return [{id: i, name: column, amount: (100/num_cols).toFixed(2)}];
+					return [{id: i, name: column, amount: (1/num_cols).toFixed(2)}];
 				}).enter()
 				.append("td")
-				.html(function(d) { 	
-					return "<p class=columnChartName id=col" + d.id + " name=" + d.name + ">" + d.name + "</p><p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>"})
+				.html(function(d) {
+					attributeWeights[d.id] = d.amount;
+					return "<p class=columnChartName id=col" + d.id + " name=" + d.name + ">" + d.name + "</p><p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>"})
 				.append("svg")
 				.append("rect")
 				.attr("fill", "#337ab7")
 				.attr("id", function(d) { return "rect" + d.id;})
 				.attr("width", function(d) {
-					d.width = (console_width * d.amount)/100;
+					d.width = (console_width * d.amount);
 					return d.width + "px";
 				})
 				.attr("height", "10px")
@@ -246,10 +248,11 @@
 						new_width = console_width;
 
 					d.width = new_width;
-					d.amount = ((new_width * 100)/console_width).toFixed(2);
+					d.amount = ((new_width)/console_width).toFixed(2);
+					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.width);
 					d3.select("#colVal" + d.id).html(
-						"<p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>");
+						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
 				}));
 
 
@@ -291,15 +294,17 @@
 
 		d3.selectAll("#consoleChart td").each(function(d, i) {
 			if(weights == null)
-				d.amount = ((d.amount/totalPercentage) * 100).toFixed(2);
+				d.amount = ((d.amount/totalPercentage)).toFixed(2);
 			else
-				d.amount = (weights[i] * 100).toFixed(2);
+				d.amount = (weights[i]).toFixed(2);
 
-			d.width = (console_width * d.amount)/100;
+
+			attributeWeights[d.id] = d.amount;
+			d.width = (console_width * d.amount);
 			
 			d3.select("#rect" + d.id).attr("width", d.width);
 			d3.select("#colVal" + d.id).html(
-						"<p class=columnChartVal id=colVal" + d.id + ">" + d.amount + "%" + "</p>");
+						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
 		});
 	}
 
@@ -355,6 +360,8 @@
 			}).attr("class", ƒ("cl"))
 			.transition()
 			.duration(1000);
+
+		$("td.interactionWeight").addClass("tableSeperator")			
 	}
 	
 	/*
@@ -782,40 +789,28 @@
 		return ranked;
 	}
 
+	/*
+	 * Toggles the state of the tabs when they are clicked upon.
+	 */
 	function toggleActiveTab(consoleTab, minimapTab) {
 		consoleTab = $("#auxPanel #consoleTab");
 		consoleTab.toggleClass("active");
 
 		minimapTab = $("#auxPanel #minimapTab");
 		minimapTab.toggleClass("active");	
-	}
-	
-	
-	
-	
-	/**************************************Inputs**************************************/
+	}	
+
 	
 	/*
-	 * Return the table to its state before changes were made
+	 * Runs SVD on the changed rows and returns an array of normalized weights
 	 */
-	mar.discardButtonClicked = function() {
-		console.log("table.js: Discarding Changes"); 
-		$("#tablePanel tbody").html(htmlTableToCache);
-	}
-	
-	
-	/*
-	 * Rank!
-	 */
-	mar.rankButtonClicked = function() {
-		console.log("table.js: Ranking");
-		
+	function runSVD() {
 		// use SVD to compute w = V * D_0^−1 * U^T * b
 		var b = getRowsForSVD(getChangedRows(), keys.length + 1); 
 
 		if (b.length <= keys.length) {
-			console.log("table.js: ERROR - number of rows moved (" + b.length + ") must be greater than number of attributes (" + keys.length + ") to compute rank using SVD");
-			return;
+			//console.log("table.js: ERROR - number of rows moved (" + b.length + ") must be greater than number of attributes (" + keys.length + ") to compute rank using SVD");
+			return attributeWeights;
 		}
 		
 		// don't recompute SVD unless something has been moved
@@ -835,6 +830,29 @@
 		var UT = numeric.transpose(U); 
 		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
 		var normalizedWeights = normalize(weights);
+
+		return normalizedWeights;
+	}
+	
+	
+	/**************************************Inputs**************************************/
+	
+	/*
+	 * Return the table to its state before changes were made
+	 */
+	mar.discardButtonClicked = function() {
+		console.log("table.js: Discarding Changes"); 
+		$("#tablePanel tbody").html(htmlTableToCache);
+	}
+	
+	
+	/*
+	 * Rank!
+	 */
+	mar.rankButtonClicked = function() {
+		console.log("table.js: Ranking");
+		
+		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 
 		// update oldIndex to the old rank position and update rank
@@ -857,7 +875,6 @@
 			var id = Number(ranking[i]["id"]);
 			var obj = getDataByUniqueId(id);
 			var rank = obj["rank"];
-			
 			obj["oldIndex"] = rank; 
 			var rowObj = $('tr', '#tablePanel').eq(i + 1);
 			rowObj.find("td.oldIndex").html(rank);
@@ -868,6 +885,7 @@
 
 		updateColumnWeights(normalizedWeights);
 		
+
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
 		//console.log("Weight: " + weights);
