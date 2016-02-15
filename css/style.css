@@ -55,6 +55,10 @@ td {
 	padding: 10px;
 }
 
+.tableSeperator {
+	border-right: 5px grey solid;
+}
+
 .columnChartVal {
 	float:right;
 }

@@ -130,12 +130,11 @@
 			minimap = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "miniChart")
-				.attr("hidden", "hidden");
 
 			consolePanel = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "consoleChart")
-				
+				.attr("hidden", "hidden");
 
 			consolePanel.append("button")
 				.attr("id", "applyColumnWeights")
@@ -270,7 +269,10 @@
 			numNonFocalRows = (data.length - 5 > 0) ? Number(data.length - 5): Number(0); 
 			focalRowHeight = Number(75);
 			nonFocalRowHeight = Number((tableHeight - (focalRowHeight * numFocalRows)) / (numNonFocalRows));
-			
+		
+			$("td.interactionWeight").addClass("tableSeperator")			
+
+
 			addFunctionality(); 
 			
 			console.log("table.js: table appended");
