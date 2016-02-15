@@ -51,7 +51,7 @@
 			data = dataset;
 			opacityScale = d3.scale.quantize()
 				.domain([0, data.length])
-				.range([0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
+				.range([0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
 			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
@@ -133,7 +133,6 @@
 				.attr("id", "consoleChart")
 				.attr("hidden", "hidden");
 
-
 			// append the table header
 			header = table.append("thead")
 				.append("tr")
@@ -163,7 +162,7 @@
 				.data(data)
 				.enter()
 				.append("tr");
-
+ 
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
 				.data(numericalAttributes)
@@ -255,7 +254,6 @@
 			}
 
 			$("td.interactionWeight").addClass("tableSeperator")			
-
 			addFunctionality(); 
 			
 			console.log("table.js: table appended");
@@ -322,15 +320,19 @@
 
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
-				var barColor = "black"; // #337ab7
+				var barColor = "#337ab7";
 				if (row["rank"] < row["oldIndex"])
 					barColor = "#58DA5B";
 				else if (row["rank"] > row["oldIndex"])
 					barColor = "#DA5B58";
-	
+				
+				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
+				if (row["rank"] == row["oldIndex"])
+					opacity = 1;
+
 				return [
 				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
+				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];
 	
 			})
 			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -654,6 +656,7 @@
 	 */
 	function runSVD() {
 		// use SVD to compute w = V * D_0^−1 * U^T * b
+		var minRows = useCategorical ? keys.length + 1 : numericalAttributes.length + 1;
 		var b = getRowsForSVD(getChangedRows(), keys.length + 1); 
 
 		if (b.length <= keys.length) {
