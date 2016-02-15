@@ -1026,6 +1026,21 @@
 		});
 	}
 	
+	function toggleRowItemClass(clickedObj) {
+		if(clickedObj.hasClass("directionUp")) {
+			clickedObj.removeClass("directionUp");
+			clickedObj.addClass("directionDown");
+		} else if(clickedObj.hasClass("directionDown")) {
+			clickedObj.removeClass("directionDown");
+			clickedObj.addClass("unusedRow");
+		} else if (clickedObj.hasClass("unusedRow")) {
+			clickedObj.removeClass("unusedRow");
+			clickedObj.addClass("directionUp");
+		}
+
+
+	}
+
 	/*
 	 * Private
 	 * Add up / down arrows to rows to indicate
@@ -1048,16 +1063,19 @@
 						var clickedObjClasses = $(clickedObj).attr('class').split(' ');
 						// assumes the first class is the name of the attribute - make sure we don't change this convention
 						var clickedObjAttribute = clickedObjClasses[0];
-						console.log(clickedObjAttribute);
-						$(clickedObj).toggleClass('directionUp', 'directionDown');
+						toggleRowItemClass($(clickedObj));
 						if ($(clickedObj).hasClass('directionUp')) {
 							$(clickedObj).attr('src', 'img/arrow-up.png');
+							$((($(this).parent())[0])).removeClass("fadedRow")
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedObjAttribute, true);
-						} else {
+						} else if ($(clickedObj).hasClass('directionDown')) {
 							$(clickedObj).attr('src', 'img/arrow-down.png');
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedObjAttribute, false);
+						} else if ($(clickedObj).hasClass('unusedRow')) {
+							$(clickedObj).attr('src', 'img/remove.png');
+							$((($(this).parent())[0])).addClass("fadedRow")
 						}
 		
 					});
