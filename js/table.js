@@ -1,4 +1,4 @@
-﻿(function() {
+(function() {
 	
 	/*************************************VARIABLES*************************************/
 	
@@ -941,12 +941,17 @@
 		addArrows(); 
         tablelens2();
         updateClickedItem();
+        
+        $("tr").attr("onmousedown", "removeClickedItem(event)");
 		
 	}
-	
-        function updateClickedItem(){
+    
+    
+    
+    
+    function updateClickedItem(){
         
-    var isDragging = false;   
+        var isDragging = false;   
         
         $('tr').mousedown(function() {
         //console.log("dragging"); 
@@ -993,8 +998,16 @@
                 if(arSelRow[i] == $(this).text()){
                     
                     var idValTr = $(this).closest('tr');
-                    idValTr.css("font-size","1.5em");
-                    idValTr.css("font-weight","900");
+                    //idValTr.css("font-size","1.5em");
+                    if(i==arSelRow.length-1){
+                        //idValTr.css("font-size","1.5em");
+                        idValTr.css("color","black");
+                        idValTr.css("font-weight","900");
+                    }else{
+                        idValTr.css("color","#636363");
+                        idValTr.css("font-weight","900");
+                    }
+                    
                 }
                 });
             
