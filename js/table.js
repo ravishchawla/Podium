@@ -14,9 +14,6 @@
 	var changedRows = [];
 	
 	var tolerance; 
-	var tableHeight; 
-	var numFocalRows, numNonFocalRows; 
-	var focalRowHeight, nonFocalRowHeight;
 	var mapBarHeight;
 	var minimap_width = 50;
 	var console_width = 150;
@@ -54,7 +51,7 @@
 			data = dataset;
 			opacityScale = d3.scale.quantize()
 				.domain([0, data.length])
-				.range([0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
+				.range([0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
 			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
@@ -70,8 +67,8 @@
 					counter++;
 				}
 				
-				columns.push({ head: "Rank Score", cl: "rankScore", html: function(row, i) { return data[i]["rankScore"]; } });
 				columns.push({ head: "Rank", cl: "rank index null", html: function(row, i) { return data[i]["rank"]; } });
+				columns.push({ head: "Rank Score", cl: "rankScore", html: function(row, i) { return data[i]["rankScore"]; } });
 				columns.push({ head: "Old Index", cl: "hidden oldIndex", html: function(row, i) { return data[i]["oldIndex"]; } });
 				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
 				columns.push({ head: "Interaction", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
@@ -127,7 +124,6 @@
 				.attr("class", "table");
 			
 			// append the mini map
-
 			minimap = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "miniChart")
@@ -136,13 +132,6 @@
 				.append("table")
 				.attr("id", "consoleChart")
 				.attr("hidden", "hidden");
-
-			consolePanel.append("button")
-				.attr("id", "applyColumnWeights")
-				.attr("onclick", "mar.applyColumnWeights()")
-				.attr("class", "btn btn-secondary")
-				.html("Apply Changes");
-
 
 			// append the table header
 			header = table.append("thead")
@@ -155,7 +144,6 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 
-			
 			// append the rows
 			m = -1;
 			rows = table.append("tbody")
@@ -174,7 +162,7 @@
 				.data(data)
 				.enter()
 				.append("tr");
-
+ 
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
 				.data(numericalAttributes)
@@ -218,8 +206,6 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.html(function(d) { return d.value; })
 				.attr("height", "10px");
-
-
 
 			console_rows.selectAll("td")
 				.data(function(column, i) {
@@ -267,58 +253,13 @@
 				$("svg", "#miniChart").height(mapBarHeight);
 			}
 
-			tableHeight = Number(document.getElementById("tableId").offsetHeight); 
-			numFocalRows = (data.length > 5) ? Number(5) : Number(0);
-			numNonFocalRows = (data.length - 5 > 0) ? Number(data.length - 5): Number(0); 
-			focalRowHeight = Number(75);
-			nonFocalRowHeight = Number((tableHeight - (focalRowHeight * numFocalRows)) / (numNonFocalRows));
-		
 			$("td.interactionWeight").addClass("tableSeperator")			
-
-
 			addFunctionality(); 
 			
 			console.log("table.js: table appended");
 		}
 	}
 	
-	function updateColumnWeights(weights = null) {
-
-		totalPercentage = 0;
-		if(weights == null) {
-			d3.selectAll("#consoleChart td").each(function(d, i) {
-				totalPercentage = totalPercentage + Number(d.amount);
-			});
-		}
-
-
-		d3.selectAll("#consoleChart td").each(function(d, i) {
-			if(weights == null)
-				d.amount = ((d.amount/totalPercentage)).toFixed(2);
-			else
-				d.amount = (weights[i]).toFixed(2);
-
-
-			attributeWeights[d.id] = d.amount;
-			d.width = (console_width * d.amount);
-			
-			d3.select("#rect" + d.id).attr("width", d.width);
-			d3.select("#colVal" + d.id).html(
-						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
-		});
-	}
-
-	/*
-	 * Update the order of the data according to the input array
-	 */
-	mar.updateData = function(newOrder) {
-		// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
-		var updatedData = [];
-		for (var i = 0; i < newOrder.length; i++)
-			updatedData.push(getDataByUniqueId(Number(newOrder[i]["id"])));
-		
-		data = updatedData;
-	}
 	
 	/*
 	 * Update the table to display the given data
@@ -379,15 +320,19 @@
 
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
-				var barColor = "black"; // #337ab7
+				var barColor = "#337ab7";
 				if (row["rank"] < row["oldIndex"])
 					barColor = "#58DA5B";
 				else if (row["rank"] > row["oldIndex"])
 					barColor = "#DA5B58";
-	
+				
+				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
+				if (row["rank"] == row["oldIndex"])
+					opacity = 1;
+
 				return [
 				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
+				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];
 	
 			})
 			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -399,23 +344,35 @@
 	}
 	
 	
-	/*********************************UTILITY FUNCTIONS*********************************/
+	/************************************RANK UTILITY************************************/
 	
 	/*
-	 * Private
-	 * Update the opacity of the given row object based on the change in index
+	 * Private 
+	 * Update the weights of the attributes based on changes to the bar width
 	 */
-	function updateColorAndOpacity(rowObj, oldIndex, newIndex) {
-		var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
-		if (newIndex == oldIndex)
-			opacity = 0;
+	function updateColumnWeights(weights = null) {
 
-		if (colorOverlay) {
-			if (rowObj.hasClass('greenColorChange')) 
-				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
-			else if (rowObj.hasClass('redColorChange'))
-				rowObj.css("background-color", 'rgba(218, 91, 88, ' + opacity + ')');
+		totalPercentage = 0;
+		if (weights == null) {
+			d3.selectAll("#consoleChart td").each(function(d, i) {
+				totalPercentage = totalPercentage + Number(d.amount);
+			});
 		}
+
+		d3.selectAll("#consoleChart td").each(function(d, i) {
+			if (weights == null)
+				d.amount = ((d.amount/totalPercentage)).toFixed(2);
+			else
+				d.amount = (weights[i]).toFixed(2);
+
+
+			attributeWeights[d.id] = d.amount;
+			d.width = (console_width * d.amount);
+			
+			d3.select("#rect" + d.id).attr("width", d.width);
+			d3.select("#colVal" + d.id).html(
+						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
+		});
 	}
 	
 	
@@ -431,22 +388,6 @@
 		}
 		
 		return rankVals;
-	}
-	
-	
-	/*
-	 * Private
-	 * Get a list of unique ids for the given list of rank values
-	 */
-	function getUniqueIds(rankVals) {
-		var uniqueIds = [];
-		for (var i = 0; i < rankVals.length; i++) {
-			// get the row
-			var rowObj = $('tr', '#tablePanel').eq(rankVals[i]);
-			uniqueIds.push(Number(rowObj.find("td.uniqueId").html()));
-		}
-		
-		return uniqueIds;
 	}
 	
 	
@@ -501,42 +442,6 @@
 	}
 	
 	
-	
-	/*
-	 * Private
-	 * For the given row number, determine the range of cells to 
-	 * apply the fisheye effect to.
-	 */
-	function getSurroundingRowRange(clickedRow, numFocalRows) {
-		var surroundingRows = []; 
-		var halfNumFocalRows = numFocalRows / 2.0; 
-		var numTopHalf = Math.floor(halfNumFocalRows); 
-		var numBottomHalf = Math.ceil(halfNumFocalRows);
-		var numAbove, numBelow; 
-		if (clickedRow >= numTopHalf && clickedRow < (data.length - numBottomHalf)) {
-			numBelow = numBottomHalf; 
-			numAbove = numTopHalf; 
-		} else if (clickedRow >= numTopHalf) { 
-			numBelow = (data.length - clickedRow - 1 > 0) ? (data.length - clickedRow - 1) : 0; 
-			numAbove = numTopHalf + (numBottomHalf - numBelow);
-		} else if (clickedRow < (data.length - numBottomHalf)) {
-			numAbove = (clickedRow > 0) ? clickedRow : 0; 
-			numBelow = numBottomHalf + (numTopHalf - numAbove);
-		} else {
-			numAbove = (clickedRow > 0) ? clickedRow : 0;
-			numBelow = (data.length - clickedRow - 1 > 0) ? (data.length - clickedRow - 1) : 0;
-		}
-		
-		for (var i = numAbove; i >= 1; i--)
-			surroundingRows.push(clickedRow - i);
-		surroundingRows.push(clickedRow);
-		for (var i = 1; i <= numBelow; i++)
-			surroundingRows.push(clickedRow + i);
-		
-		return surroundingRows; 
-	}
-	
-	
 	/*
 	 * Private
 	 * Get the list of changed rows
@@ -555,18 +460,6 @@
 		for (var i = 1; i <= data.length; i++)
 			allRows.push(i);
 		return allRows;
-	}
-	
-	
-	/*
-	 * Private
-	 * Get the data item using its unique id
-	 */
-	function getDataByUniqueId(id) {
-		for (var i = 0; i < data.length; i++) {
-			if (data[i]["uniqueId"] == id)
-				return data[i];
-		}
 	}
 	
 	
@@ -720,40 +613,6 @@
 	
 	/*
 	 * Private
-	 * Get the min and max of the given list of numbers
-	 */
-	function getMinAndMax(input) {
-		var min = Number.MAX_VALUE; 
-		var max = Number.MIN_VALUE;
-		var len = input.length;
-		
-		for (var i = 0; i < len; i++) { 
-			var currentVal = Number(input[i]);
-				
-			if (currentVal < min)
-				min = currentVal; 
-			if (currentVal > max)
-				max = currentVal;
-		}
-		
-		return [min, max];
-	}
-	
-	/*
-	 * Private
-	 * Get the sum of the given list of numbers
-	 */
-	function getSum(input) {
-		var sum = 0; 
-		for (var i = 0; i < input.length; i++)
-			sum += input[i];
-		
-		return sum;
-	}
-	
-	
-	/*
-	 * Private
 	 * Get the ranking of items given the input weight vector
 	 */
 	function computeRanking(weights) {
@@ -788,28 +647,21 @@
 		
 		return ranked;
 	}
-
-	/*
-	 * Toggles the state of the tabs when they are clicked upon.
-	 */
-	function toggleActiveTab(consoleTab, minimapTab) {
-		consoleTab = $("#auxPanel #consoleTab");
-		consoleTab.toggleClass("active");
-
-		minimapTab = $("#auxPanel #minimapTab");
-		minimapTab.toggleClass("active");	
-	}	
-
+	
 	
 	/*
+	 * Private
 	 * Runs SVD on the changed rows and returns an array of normalized weights
+	 * If no rows have been changed, returns the current array of attribute weights
 	 */
 	function runSVD() {
 		// use SVD to compute w = V * D_0^−1 * U^T * b
+		var minRows = useCategorical ? keys.length + 1 : numericalAttributes.length + 1;
 		var b = getRowsForSVD(getChangedRows(), keys.length + 1); 
 
 		if (b.length <= keys.length) {
-			//console.log("table.js: ERROR - number of rows moved (" + b.length + ") must be greater than number of attributes (" + keys.length + ") to compute rank using SVD");
+			// make sure the weights are updated
+			updateColumnWeights(); 
 			return attributeWeights;
 		}
 		
@@ -835,7 +687,115 @@
 	}
 	
 	
-	/**************************************Inputs**************************************/
+	/*********************************UTILITY FUNCTIONS*********************************/
+	
+	/*
+	 * Update the order of the data according to the input array
+	 */
+	mar.updateData = function(newOrder) {
+		// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
+		var updatedData = [];
+		for (var i = 0; i < newOrder.length; i++)
+			updatedData.push(getDataByUniqueId(Number(newOrder[i]["id"])));
+		
+		data = updatedData;
+	}
+	
+	
+	/*
+	 * Private
+	 * Update the opacity of the given row object based on the change in index
+	 */
+	function updateColorAndOpacity(rowObj, oldIndex, newIndex) {
+		var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
+		if (newIndex == oldIndex)
+			opacity = 0;
+
+		if (colorOverlay) {
+			if (rowObj.hasClass('greenColorChange')) 
+				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
+			else if (rowObj.hasClass('redColorChange'))
+				rowObj.css("background-color", 'rgba(218, 91, 88, ' + opacity + ')');
+		}
+	}
+	
+	
+	/*
+	 * Private
+	 * Get a list of unique ids for the given list of rank values
+	 */
+	function getUniqueIds(rankVals) {
+		var uniqueIds = [];
+		for (var i = 0; i < rankVals.length; i++) {
+			// get the row
+			var rowObj = $('tr', '#tablePanel').eq(rankVals[i]);
+			uniqueIds.push(Number(rowObj.find("td.uniqueId").html()));
+		}
+		
+		return uniqueIds;
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the data item using its unique id
+	 */
+	function getDataByUniqueId(id) {
+		for (var i = 0; i < data.length; i++) {
+			if (data[i]["uniqueId"] == id)
+				return data[i];
+		}
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the min and max of the given list of numbers
+	 */
+	function getMinAndMax(input) {
+		var min = Number.MAX_VALUE; 
+		var max = Number.MIN_VALUE;
+		var len = input.length;
+		
+		for (var i = 0; i < len; i++) { 
+			var currentVal = Number(input[i]);
+				
+			if (currentVal < min)
+				min = currentVal; 
+			if (currentVal > max)
+				max = currentVal;
+		}
+		
+		return [min, max];
+	}
+	
+	/*
+	 * Private
+	 * Get the sum of the given list of numbers
+	 */
+	function getSum(input) {
+		var sum = 0; 
+		for (var i = 0; i < input.length; i++)
+			sum += input[i];
+		
+		return sum;
+	}
+	
+
+	/*
+	 * Private
+	 * Toggles the state of the tabs when they are clicked upon.
+	 */
+	function toggleActiveTab(consoleTab, minimapTab) {
+		consoleTab = $("#auxPanel #consoleTab");
+		consoleTab.toggleClass("active");
+
+		minimapTab = $("#auxPanel #minimapTab");
+		minimapTab.toggleClass("active");	
+	}	
+	
+	
+	/**************************************INPUTS**************************************/
 	
 	/*
 	 * Return the table to its state before changes were made
@@ -882,7 +842,6 @@
 		
 		changedRows = []; // reset changed rows
 
-
 		updateColumnWeights(normalizedWeights);
 		
 
@@ -925,6 +884,9 @@
 		colorRows();
 	}
 
+	/*
+	 * Toggle to the console tab
+	 */
 	mar.changeToConsole = function() {
 		toggleActiveTab();
 		
@@ -933,17 +895,17 @@
 		
 	}
 
+	/*
+	 * Toggle to the mini map tab
+	 */
 	mar.changeToMinimap = function() {
 		toggleActiveTab();
 		$("#miniChart").removeAttr('hidden');
 		$("#consoleChart").attr("hidden", "hidden");
 	}
-
-	mar.applyColumnWeights = function() {
-		updateColumnWeights();
-	}
-		
-
+	
+	
+	
 	/***********************************TABLE EFFECTS***********************************/
 	
 	/*
@@ -1014,6 +976,7 @@
 	
 
 	/*
+	 * Private
 	 * Modify the colors of the rows based on where they have been moved
 	 */
 	function colorRows() {
@@ -1044,19 +1007,21 @@
 		});
 	}
 	
+	/*
+	 * Private
+	 * Toggle the arrow for the given attribute to be up or down
+	 */
 	function toggleRowItemClass(clickedObj) {
-		if(clickedObj.hasClass("directionUp")) {
+		if (clickedObj.hasClass("directionUp")) {
 			clickedObj.removeClass("directionUp");
 			clickedObj.addClass("directionDown");
-		} else if(clickedObj.hasClass("directionDown")) {
+		} else if (clickedObj.hasClass("directionDown")) {
 			clickedObj.removeClass("directionDown");
 			clickedObj.addClass("unusedRow");
 		} else if (clickedObj.hasClass("unusedRow")) {
 			clickedObj.removeClass("unusedRow");
 			clickedObj.addClass("directionUp");
 		}
-
-
 	}
 
 	/*
