@@ -1,4 +1,4 @@
-(function() {
+﻿(function() {
 	
 	/*************************************VARIABLES*************************************/
 	
@@ -12,6 +12,7 @@
 
 	var lastChangedRow;
 	var changedRows = [];
+    var selectedRows = [];
 	
 	var tolerance; 
 	var mapBarHeight;
@@ -26,10 +27,13 @@
 	var interactionIncrement = 1; 
 	var maxInteractionWeight = 0.5;
 	var maxRankScore = 1; 
+    var timeDie = 1000;
 
 	var showAllRows = true;
 	var colorOverlay = true;
 	var fishEyeOverlay = true;
+   
+   
 	
 	
 	/**********************************LOAD THE TABLE**********************************/
@@ -114,6 +118,8 @@
 	 * Private
 	 * Display the table
 	 */
+    var m = -1;
+    var n = -1;
 	function displayTable(displayData) {
 		if (displayData != undefined && displayData.length != 0) {
 			
@@ -144,16 +150,15 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 
-			// append the rows
-			m = -1;
+			// append the rows			
 			rows = table.append("tbody")
 				.selectAll("tr")
 				.data(data)
 				.enter()
 				.append("tr")
 				.attr("id",function(){
-					m += 1;
-					return "tr" + m;
+					n += 1;
+					return "tr" + n;
 				});
 			
 			// append the rows of the mini map
@@ -161,7 +166,12 @@
 				.selectAll("tr")
 				.data(data)
 				.enter()
-				.append("tr");
+				.append("tr")
+                .attr("class","miniTr")
+                .attr("id",function(){
+                m += 1;
+                return "tr"+m;
+                });;
  
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
@@ -197,9 +207,9 @@
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
 					return [
-							{ column: "svg", value: '<svg width="50"><rect width=' + 
+							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width="50"><rect id = rec'+ i + ' class = miniMapRect width=' + 
 								minimap_width * (data.length - row["rank"]) / data.length +
-								' height="5" fill="' + "#337ab7" + '"/></svg>' }];
+								' height="50" fill="' + "#337ab7" + '"/></svg>' }];
 
 				}).enter()
 				.append("td")
@@ -255,7 +265,7 @@
 
 			$("td.interactionWeight").addClass("tableSeperator")			
 			addFunctionality(); 
-			
+			$("#discard_button").attr("disabled","disabled");
 			console.log("table.js: table appended");
 		}
 	}
@@ -329,10 +339,13 @@
 				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
 				if (row["rank"] == row["oldIndex"])
 					opacity = 1;
-
+/*
 				return [
 				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];
+				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];*/
+            return [
+				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width="50"><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
+				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
 	
 			})
 			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -350,7 +363,8 @@
 	 * Private 
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
-	function updateColumnWeights(weights = null) {
+	function updateColumnWeights(weights) {
+        weights = null;
 
 		totalPercentage = 0;
 		if (weights == null) {
@@ -850,7 +864,14 @@
 		//console.log("Weight: " + weights);
 		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
 		
+		  updateRowFont(selectedRows);
 		htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
+        
+        setTimeout(function(){       
+            $('tr').animate({backgroundColor: "white"}, 1000);
+          
+        }, timeDie);
+        $("#discard_button").attr("disabled","disabled");
 	}
     
 
@@ -918,11 +939,185 @@
 	function addFunctionality() {
 		clickAndDragRows(); 
 		addArrows(); 
-		//if (fishEyeOverlay)
-		//	tableLens();
+        tablelens2();
+        updateClickedItem();
+		
 	}
 	
-	
+        function updateClickedItem(){
+        
+    var isDragging = false;   
+        
+        $('tr').mousedown(function() {
+        //console.log("dragging"); 
+        isDragging = true;
+         var item = $(this).index(); 
+         highlightItems(item);
+        $("#discard_button").removeAttr("disabled");
+    })
+    .mouseup(function() {
+       //console.log("dropped");  
+            
+    });        
+        
+        function highlightItems(item){
+        if(isDragging == true){
+           
+            var teamName ="";
+            var tx =0;
+            $('.School').each(function() {
+                tx += 1;
+                if(item == tx-2){
+                    teamName = $(this).text();   
+                }
+                });
+        
+        // console.log("The team is : " + teamName);
+         $("#tr"+item).attr("id",teamName);
+         selectedRows.push(teamName);
+         updateRowFont(selectedRows);
+        }
+        }        
+       // console.log("Selected Rows are : " + selectedRows);   
+        
+    }    
+    
+         function updateRowFont(arSelRow){
+             
+            var defFontSize = $("#tr1").css('font-size');
+            var defFontWeight = $("#tr1").css('font-weight');
+             $("tr").css("font-size",defFontSize);
+             $("tr").css("font-weight",defFontWeight);
+            for(var i=0;i<arSelRow.length;i++){
+             $('.School').each(function() {                
+                if(arSelRow[i] == $(this).text()){
+                    
+                    var idValTr = $(this).closest('tr');
+                    idValTr.css("font-size","1.5em");
+                    idValTr.css("font-weight","900");
+                }
+                });
+            
+        } 
+        }
+	    //fish eye effect on the minimap
+    function tablelens2(){
+        
+        var defTrHeight = $(".miniTr")[0].offsetHeight; // added change "tr" to "#tr1"
+        var defSvgHeight = $(".miniMapSvg")[0].offsetHeight;
+        var defFontSize = $("#tr1").css('font-size');
+        
+      
+        $(".miniTr").hover(function() {
+            
+            ////////////////////////////////////////////////////////////////////
+            var clickedRow = $(this).index();
+            $('.School').attr("id", "school"+clickedRow);
+            var teamName ="";
+            var tn =0;
+            $('.School').each(function() {
+                tn += 1;
+                if(clickedRow == tn-2){
+                    teamName = $(this).text();   
+                }
+                });
+            
+            var rankScore ="";
+            var rs =0;
+            $('.rankScore').attr("id", "rankScore"+clickedRow);
+            $('.rankScore').each(function() {
+                rs += 1;
+                if(clickedRow == rs-2){
+                    rankScore = $(this).text();   
+                    rankScore = parseFloat(rankScore).toFixed(2);
+                }
+                });
+          
+            $( ".miniTr" ).tooltip();        
+            var toolText = "" + (clickedRow+1) + " , "+ teamName + " has Rank Score  : " + rankScore;
+            $( ".miniTr" ).attr("title",toolText);
+                     
+                        
+            $('.miniTr').tooltip({
+                tooltipClass: "tooltipTest",
+            });
+         
+            $(".miniTr").tooltip({
+              position: {
+                my: "right top",
+                at: "center top"
+              }
+            });
+          
+            
+            if(fishEyeOverlay){
+            var trThis = $(".miniTr").get(clickedRow);
+            var size = $(".miniTr").length;
+            var upInd = clickedRow;
+            var dwnInd =clickedRow;
+            var shuffledArray=[];
+            shuffledArray.push(clickedRow);
+            for(var i=0;i<size-1;i++){
+                
+                 if(upInd>0){
+                    shuffledArray.push(upInd-1);
+                    upInd -= 1;
+                   }
+                               
+                if(dwnInd<size-1){
+                   shuffledArray.push(dwnInd+1);
+                   dwnInd += 1;
+                   }
+                
+                if(upInd < 0 && dwnInd > size){
+                   break;
+                   }
+                
+            }            
+            var ht = 1;
+            var r = 255;
+            var g = 200;
+            var b = 255;
+            var a = 1.0;
+            
+            //make the series
+            var quadSeries =[]
+            var x = 2;
+            var inc = 6;
+            var ft = 30;
+            for(var i=0;i<size;i++){
+                var value = (x*(x*x + x) + 2*x);
+                value = value.toFixed(2);
+                x -= 0.2;
+                if(value > 150) value = 150;
+                if(value < 1) value = 1;
+                quadSeries.push(value);
+                //$("#tr"+shuffledArray[i]).css("height", value);
+                $("#svg"+shuffledArray[i]).css("height", value*5);
+                $("#rec"+shuffledArray[i]).css("height", value*5);
+              
+                
+            }
+                //console.log("The value is : " + quadSeries);
+            }
+            
+            if(!fishEyeOverlay){
+            $(".miniTr").css('height',defTrHeight);
+            $(".miniTr").css('font-size', defFontSize);
+            $(".miniTr").css('background', "white");
+            $(".miniTr").css('color', "black");
+                
+            $(".miniMapSvg").css('height',defSvgHeight);
+        }
+            
+        },function(){
+            $("tr").css("color", "black");
+        });
+        
+        
+     
+        
+    }
 	/*
 	 * Private
 	 * Make rows click & draggable
@@ -1068,67 +1263,6 @@
 	}
 	
 	
-	/*
-	 * Private
-	 * Add the table lens effect
-	 */
-	function tableLens() {
-		$("tr").hover(function() {
-			if (fishEyeOverlay) {
-				var clickedRow = $(this).index();
-				var trThis = $("tr").get(clickedRow);
-				var size = $("tr").length;
-				var upInd = clickedRow;
-				var dwnInd = clickedRow;
-				var shuffledArray = [];
-				shuffledArray.push(clickedRow);
-				
-				for (var i = 0; i < size - 1; i++) {
-					if (upInd > 0) {
-						shuffledArray.push(upInd - 1);
-						upInd -= 1;
-					}
-					if (dwnInd < size - 1) {
-						shuffledArray.push(dwnInd + 1);
-						dwnInd += 1;
-					}
-					if (upInd < 0 && dwnInd > size)
-						break;
-				}   
-				
-				var ht = 1;
-				var r = 255;
-				var g = 200;
-				var b = 255;
-				var a = 1.0;
 
-				//make the series
-				var quadSeries =[]
-				var x = 2;
-				var ft = 30;
-				for (var i = 0; i < size; i++) {
-					var value = x * x * (x + 1) + 5 * x;
-					value = value.toFixed(2);
-					x -= 0.1;
-					quadSeries.push(value);
-					$("#tr" + shuffledArray[i]).css("height", value * 15);
-					var color = "rgba(" + r + "," + g + "," + b + "," + a + ")";
-					a -= 0.05;
-					b -= 5;
-					if (colorOverlay)
-						$("#tr" + shuffledArray[i]).css("background", color); 
-					if (i < 3 && colorOverlay) {
-						$("#tr" + shuffledArray[i]).css("font-size", "8em");
-						$("#tr" + shuffledArray[i]).css("color", "red");
-					} else {
-						$("#tr" + shuffledArray[i]).css("font-size", ft);
-						ft -= 0.05;
-					}
-				}
-			}
-		}, function() {
-			$("tr").css("color", "black");
-		});
-	}
 
 })();
