@@ -75,3 +75,26 @@ td {
 	display:none;
 }
 
+.tooltipTest {
+    font-size:5em;
+    height:100px;
+    width:150px;
+    padding:50px;
+    color:white; 
+    z-index: 99;
+    bottom: 10px;
+}
+
+.header {
+	color: white;
+}
+
+.pseudoHeader {
+	color: #FFF;
+	background-color: #555;
+}
+
+tbody:before {
+	content: "_";
+	color:white;
+}
