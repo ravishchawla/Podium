@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Multi-Attribute Ranking System</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- stylesheets -->
+    <link rel="stylesheet" href="css/style.css" type="text/css"/>
+    <link rel="stylesheet" href="lib/jqueryUI/jquery-ui.css" type="text/css"/>
+    <link rel="stylesheet" href="css/dragtable-default.css" type="text/css"/>
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+
+    <!-- libraries -->
+    <script type="text/javascript" src="lib/d3/d3.v3.min.js"></script>
+    <script type="text/javascript" src="lib/d3/d3.layout.cloud.js"></script>
+    <script type="text/javascript" src="lib/d3/d3-jetpack.js"></script>
+    <script type="text/javascript" src="lib/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="lib/jqueryUI/jquery-ui.js"></script>
+    <script type="text/javascript" src="lib/jquery.dragtable.js"></script>
+    <script type="text/javascript" src="lib/ial_new.js"></script>
+    <script type="text/javascript" src="lib/numeric-1.2.6.js"></script>
+    <script type="text/javascript" src="lib/bootstrap.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.color-2.1.2.min.js"></script>
+</head>
+
+
+<body class="body">
+
+
+    <!-- Main Divs -->
+
+    <div id="tablePanel">
+        <input type="checkbox" id="show_all_rows_checkbox" onclick="mar.allRowsCheckClicked()" checked autocomplete="off">Show All Rows</input>
+        <input type="checkbox" id="color_overlay_checkbox" onclick="mar.colorOverlayToggle()" checked>Color Overlay</input>
+        <input type="checkbox" id="fisheye_checkbox" onclick="mar.fisheyeToggle()" checked>Fish Eye Effect</input>
+        <button type="button" id="rank_button" onclick="mar.rankButtonClicked()" class="btn btn-primary">Rank</button>
+        <button type="button" id="discard_button" onclick="mar.discardButtonClicked()" class="btn btn-danger">Discard Changes</button>
+
+    </div> 
+
+    <div id="auxPanel">
+            <ul class="nav nav-tabs">
+                <li id="minimapTab" onclick="mar.changeToMinimap()" role="presentation" class="active nav-tab"><a href="#">Minimap</a></li>
+                <li id="consoleTab" onclick="mar.changeToConsole()" role="presentation" class="nav-tab"><a href="#">Console</a></li>
+            </ul>
+
+
+
+            <div id="auxContentDiv" </div>
+    </div>
+    
+
+
+    <!--scripts-->
+    <script src="js/table.js"></script>
+    <script src="js/main.js"></script>
+    <script type="text/javascript">
+    	main.init();
+    </script>
+     
+</body>
+
+</html>
