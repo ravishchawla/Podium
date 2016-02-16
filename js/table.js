@@ -141,6 +141,7 @@
 
 			// append the table header
 			header = table.append("thead")
+				.attr("class", "header")
 				.append("tr")
 				.selectAll("th")
 				.data(columns)
@@ -265,6 +266,7 @@
 
 			$("td.interactionWeight").addClass("tableSeperator")			
 			addFunctionality(); 
+			addPseudoHeader();
 			$("#discard_button").attr("disabled","disabled");
 			console.log("table.js: table appended");
 		}
@@ -315,6 +317,28 @@
 		$("td.interactionWeight").addClass("tableSeperator")			
 	}
 	
+	function addPseudoHeader() {
+		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
+
+		widths = [];
+		$("th", "#tableId").each(function(d) {
+			widths.push(this.getBoundingClientRect().width);
+		});
+
+		$("th", ".pseudoHeader").each(function(i, d) {
+			$(this).css("min-width", widths[i]);
+			
+		});
+		$(".pseudoHeader").parent().css({"position": "relative"});
+		$(".pseudoHeader").css({"top": 0, "position" : "fixed"});
+		$(".pseudoHeader").css({"overflow-x":"scroll", "max-width":"100%"});
+
+		$("#tableId").scroll(function() {
+			$(".pseudoHeader").scrollLeft($(this).scrollLeft());
+		});
+	}
+
+
 	/*
 	 * Update the mini map 
 	 */
