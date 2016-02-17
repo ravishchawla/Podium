@@ -237,6 +237,7 @@
 				.attr("id", function(d) { return "rect" + d.id;})
 				.attr("width", function(d) {
 					d.width = (console_width * d.amount);
+					d.visibleWidth = d.width;
 					return d.width + "px";
 				})
 				.attr("height", "10px")
@@ -250,9 +251,10 @@
 						new_width = console_width;
 
 					d.width = new_width;
+					d.visibleWidth = (d.width < 10 ? 10 : d.width);
 					d.amount = ((new_width)/console_width).toFixed(2);
 					attributeWeights[d.id] = d.amount;
-					d3.select(this).attr("width", d.width);
+					d3.select(this).attr("width", d.visibleWidth);
 					d3.select("#colVal" + d.id).html(
 						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
 				}));
@@ -410,8 +412,9 @@
 
 			attributeWeights[d.id] = d.amount;
 			d.width = (console_width * d.amount);
+			d.visibleWidth = (d.width < 10 ? 10 : d.width);
 			
-			d3.select("#rect" + d.id).attr("width", d.width);
+			d3.select("#rect" + d.id).attr("width", d.visibleWidth);
 			d3.select("#colVal" + d.id).html(
 						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
 		});
