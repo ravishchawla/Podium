@@ -123,7 +123,7 @@
     var n = -1;
 	function displayTable(displayData) {
 		if (displayData != undefined && displayData.length != 0) {
-			
+
 			// append the table
 			table = d3.select("#tablePanel")
 				.insert("table", ":first-child")
@@ -205,11 +205,14 @@
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length;
 
+			minimap_width = $("#auxContentDiv").width();
+			console_width = $("#auxContentDiv").width();
+			console.log(minimap_width);
 			// append mini map cells
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
 					return [
-							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width="50"><rect id = rec'+ i + ' class = miniMapRect width=' + 
+							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width = ' + minimap_width +  '><rect id = rec'+ i + ' class = miniMapRect width=' +
 								minimap_width * (data.length - row["rank"]) / data.length +
 								' height="50" fill="' + "#337ab7" + '"/></svg>' }];
 
@@ -218,6 +221,7 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.html(function(d) { return d.value; })
 				.attr("height", "10px");
+
 
 			console_rows.selectAll("td")
 				.data(function(column, i) {
@@ -273,7 +277,6 @@
 			console.log("table.js: table appended");
 		}
 	}
-	
 	
 	/*
 	 * Update the table to display the given data
@@ -333,7 +336,7 @@
 		});
 		$(".pseudoHeader").parent().css({"position": "relative"});
 		$(".pseudoHeader").css({"top": 0, "position" : "fixed"});
-		$(".pseudoHeader").css({"overflow-x":"scroll", "max-width":"100%"});
+		$(".pseudoHeader").css({"overflow-x":"hidden", "max-width":"100%"});
 
 		$("#tableId").scroll(function() {
 			$(".pseudoHeader").scrollLeft($(this).scrollLeft());
@@ -351,7 +354,6 @@
 			.selectAll("tr")
 			.data(data);
 
-		var minimap_width = 50;
 		var num_rows = cells.length;
 
 		minimap_rows.selectAll("td")
@@ -370,7 +372,7 @@
 				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
 				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];*/
             return [
-				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width="50"><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
+				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width="${minimap_width}"><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
 				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
 	
 			})
