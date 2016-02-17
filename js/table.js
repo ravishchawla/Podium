@@ -230,7 +230,12 @@
 				.append("td")
 				.html(function(d) {
 					attributeWeights[d.id] = d.amount;
-					return "<p class=columnChartName id=col" + d.id + " name=" + d.name + ">" + d.name + "</p><p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>"})
+					return "<p class=columnChartName id=col" + d.id + " name=" + d.name + ">" + d.name + "</p>"; 
+					/*
+					//Attribute weight percentages
+					+ "<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>"
+					*/
+				})
 				.append("svg")
 				.append("rect")
 				.attr("fill", "#337ab7")
@@ -255,8 +260,12 @@
 					d.amount = ((new_width)/console_width).toFixed(2);
 					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.visibleWidth);
+					
+					/*
+					//Attribute weight percentages
 					d3.select("#colVal" + d.id).html(
 						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
+					*/
 				}));
 
 
@@ -323,6 +332,10 @@
 
 		$("td.interactionWeight").addClass("tableSeperator")			
 	}
+
+	/*
+	 * Adds a pseudo header that floats above the table when scrolling.
+	 */
 	
 	function addPseudoHeader() {
 		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
@@ -415,8 +428,12 @@
 			d.visibleWidth = (d.width < 10 ? 10 : d.width);
 			
 			d3.select("#rect" + d.id).attr("width", d.visibleWidth);
+			
+			/*
+			//Attribute weight percentages
 			d3.select("#colVal" + d.id).html(
 						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
+			*/
 		});
 	}
 	
