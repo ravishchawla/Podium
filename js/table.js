@@ -336,6 +336,31 @@
 		});
 	}
 
+	function addPseudoHeaderWithWrapper() {
+
+		d3.select("#tableId").append("div").attr("class", "pseudoDivWrapper");		
+		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo(".pseudoDivWrapper");
+
+		widths = [];
+		$("th", "#tableId").each(function(d) {
+			widths.push(this.getBoundingClientRect().width);
+		});
+
+		var headerOffset = $(".pseudoDivWrapper").position().left;
+
+		$("th", ".pseudoHeader").each(function(i, d) {
+			$(this).css("min-width", Math.floor(widths[i]));
+			
+		});
+
+		$(".pseudoHeader").css({"overflow-x":"hidden", "max-width":"100%"});
+		$(".pseudoDivWrapper").css({"position":"absolute", "overflow-x" : "hidden", "top": 0, "left": 156.5});
+		$("#tableId").scroll(function() {
+			$(".pseudoDivWrapper").css({"left" : headerOffset - $(this).scrollLeft()});
+			console.log($(".pseudoHeader").position());
+		});
+	}
+
 
 	/*
 	 * Update the mini map 
