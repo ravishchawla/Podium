@@ -32,6 +32,7 @@
 	var showAllRows = true;
 	var colorOverlay = true;
 	var fishEyeOverlay = true;
+    var isDragging = true;
    
    
 	
@@ -261,6 +262,7 @@
 			var tableObj = document.getElementById("miniChart");
 			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
 				mapBarHeight--;
+				$("svg", "#miniChart").height(mapBarHeight);
 				$("svg", "#miniChart").height(mapBarHeight);
 			}
 
@@ -964,33 +966,70 @@
 		clickAndDragRows(); 
 		addArrows(); 
         tablelens2();
-        updateClickedItem();
-        
-        $("tr").attr("onmousedown", "removeClickedItem(event)");
+        handleClickedRow();
 		
 	}
     
     
     
+  function handleClickedRow(){
+   var defFontWeight = $("#tr1").css('font-weight');
+       
+       updateClickedItem();
+       updateRowFont(selectedRows);   
+    $('tr').click(function(event) {
+         
+    //console.log("isDragging state is : " + isDragging);
+    if (event.shiftKey) {
+        var item = $(this).index();
+        console.log("item value is : " + item);
+        isDragging  = false;
+         var teamName ="";
+         var tx =0;
+            $('.School').each(function() {
+                tx += 1;
+                if(item == tx-2){                    
+                    teamName = $(this).text(); 
+                    
+                }
+                });
+        
+        var index = selectedRows.indexOf(teamName);
+        //console.log("index found is : " + index);
+        if(index>-1){
+            selectedRows.splice(index, 1);
+            updateRowFont(selectedRows);
+        }
+         //console.log("teamName is : " + teamName)
+        // console.log("Selected Row Array is : " + selectedRows)
+   
+             //console.log("pressed shift")
+             } else{
+                 //console.log("not pressed shift")
+                 isDragging = true;
+                 
+             }
+        });
+
     
-    function updateClickedItem(){
-        
-        var isDragging = false;   
-        
+         
+     }
+    
+ 
+    function updateClickedItem(){   
         $('tr').mousedown(function() {
-        //console.log("dragging"); 
-        isDragging = true;
+         isDragging = true;
          var item = $(this).index(); 
          highlightItems(item);
         $("#discard_button").removeAttr("disabled");
     })
-    .mouseup(function() {
-       //console.log("dropped");  
-            
+    .mouseup(function() {  
+        shiftMode = true;
+  
     });        
         
         function highlightItems(item){
-        if(isDragging == true){
+        if(isDragging == true ){
            
             var teamName ="";
             var tx =0;
@@ -1004,6 +1043,9 @@
         // console.log("The team is : " + teamName);
          $("#tr"+item).attr("id",teamName);
          selectedRows.push(teamName);
+            selectedRows = selectedRows.filter(function(item, pos) {
+            return selectedRows.indexOf(item) == pos;
+            });
          updateRowFont(selectedRows);
         }
         }        
