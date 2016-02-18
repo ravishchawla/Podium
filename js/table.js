@@ -9,6 +9,7 @@
 	var numericalAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
+	var tooltipAttribute;
 
 	var lastChangedRow;
 	var changedRows = [];
@@ -34,7 +35,7 @@
 	var fishEyeOverlay = true;
     var isDragging = true;
    
-   
+    var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
 	
 	
 	/**********************************LOAD THE TABLE**********************************/
@@ -104,9 +105,18 @@
 							}
 						}
 						columns.push({ head: attrName, cl: attrName, html: ƒ(attrName)});
-						categoricalAttributeMap[attrName] = attrMap; 
+						categoricalAttributeMap[attrName] = attrMap;
+
+						/*
+						 *The first categorical attribute will be shown on the tooltip for 
+						 *Fisheye by convention.
+						 */
+						if(!tooltipAttribute) {
+							tooltipAttribute = attrName;
+						}
+
 					}
-					normalizeAttribute(data, attrName, true);
+					normalizeAttribute(data, attrName, attributeStates.HIGH);
 				}
 			}
 			ial.init(data, 0);
@@ -207,7 +217,6 @@
 
 			minimap_width = $("#auxContentDiv").width();
 			console_width = $("#auxContentDiv").width();
-			console.log(minimap_width);
 			// append mini map cells
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
@@ -230,11 +239,7 @@
 				.append("td")
 				.html(function(d) {
 					attributeWeights[d.id] = d.amount;
-					return "<p class=columnChartName id=col" + d.id + " name=" + d.name + ">" + d.name + "</p>"; 
-					/*
-					//Attribute weight percentages
-					+ "<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>"
-					*/
+					return "<p class=columnChartName id=col" + d.id + ">" + d.name + "</p>"; 
 				})
 				.append("svg")
 				.append("rect")
@@ -260,12 +265,6 @@
 					d.amount = ((new_width)/console_width).toFixed(2);
 					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.visibleWidth);
-					
-					/*
-					//Attribute weight percentages
-					d3.select("#colVal" + d.id).html(
-						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
-					*/
 				}));
 
 
@@ -281,9 +280,8 @@
 				$("svg", "#miniChart").height(mapBarHeight);
 			}
 
-			$("td.interactionWeight").addClass("tableSeperator")			
+			$("td.interactionWeight").addClass("tableSeperator");
 			addFunctionality(); 
-			addPseudoHeader();
 			$("#discard_button").attr("disabled","disabled");
 			console.log("table.js: table appended");
 		}
@@ -330,14 +328,24 @@
 			.transition()
 			.duration(1000);
 
-		$("td.interactionWeight").addClass("tableSeperator")			
+		$("td.interactionWeight").addClass("tableSeperator")		
+		widths = [];
+		$("th", "#tableId").each(function(d) {
+			widths.push(this.getBoundingClientRect().width);
+		});
+
+		$("th", ".pseudoHeader").each(function(i, d) {
+			$(this).css("min-width", widths[i]);
+			
+		});	
 	}
 
 	/*
 	 * Adds a pseudo header that floats above the table when scrolling.
 	 */
 	
-	function addPseudoHeader() {
+	function addFixedHeader() {
+		$("#tableId header").css({"color":"white"});
 		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
 
 		widths = [];
@@ -387,8 +395,9 @@
 				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
 				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];*/
             return [
-				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width="${minimap_width}"><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="5" fill="' + barColor + '"/></svg>' }];
+				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
+				        '><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
+				        	+ ' height="50" fill="' + barColor + '"/></svg>' }];
 	
 			})
 			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -586,7 +595,7 @@
 	 * Private
 	 * Normalize the data according to the given attribute
 	 */
-	function normalizeAttribute(dataset, attr, isHighValGood) {
+	function normalizeAttribute(dataset, attr, attributeState) {
 		if (numericalAttributes.indexOf(attr) > -1) {
 			var min = Number.MAX_VALUE; 
 			var max = Number.MIN_VALUE; 
@@ -600,10 +609,10 @@
 					max = currentVal;
 			}
 			
-			if (isHighValGood) {
+			if (attributeState == attributeStates.HIGH) {
 				for (var i = 0; i < len; i++)
 					dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min);
-			} else {
+			} else if (attributeState == attributeStates.LOW) {
 				for (var i = 0; i < len; i++)
 					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
 			}
@@ -618,6 +627,7 @@
 					max = currentVal;
 			}
 			
+
 			for (var i = 0; i < len; i++) {
 				dataset[i][attr + "Norm"] = (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
 			}
@@ -916,7 +926,7 @@
 		htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
         
         setTimeout(function(){       
-            $('tr').animate({backgroundColor: "white"}, 1000);
+            $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
           
         }, timeDie);
         $("#discard_button").attr("disabled","disabled");
@@ -959,8 +969,8 @@
 	mar.changeToConsole = function() {
 		toggleActiveTab();
 		
-		$("#miniChart").attr("hidden", "hidden");
-		$("#consoleChart").removeAttr("hidden");
+		$("#miniChart").css({"display":"none"});
+		$("#consoleChart").css({"display":"block"});
 		
 	}
 
@@ -969,8 +979,9 @@
 	 */
 	mar.changeToMinimap = function() {
 		toggleActiveTab();
-		$("#miniChart").removeAttr('hidden');
-		$("#consoleChart").attr("hidden", "hidden");
+
+		$("#consoleChart").css({"display":"none"});
+		$("#miniChart").css({"display":"block"});
 	}
 	
 	
@@ -989,6 +1000,7 @@
 		addArrows(); 
         tablelens2();
         handleClickedRow();
+        addFixedHeader();
 		
 	}
     
@@ -1008,7 +1020,7 @@
         isDragging  = false;
          var teamName ="";
          var tx =0;
-            $('.School').each(function() {
+            $('.' + tooltipAttribute).each(function() {
                 tx += 1;
                 if(item == tx-2){                    
                     teamName = $(this).text(); 
@@ -1055,7 +1067,7 @@
            
             var teamName ="";
             var tx =0;
-            $('.School').each(function() {
+            $('.' + tooltipAttribute).each(function() {
                 tx += 1;
                 if(item == tx-2){
                     teamName = $(this).text();   
@@ -1082,7 +1094,7 @@
              $("tr").css("font-size",defFontSize);
              $("tr").css("font-weight",defFontWeight);
             for(var i=0;i<arSelRow.length;i++){
-             $('.School').each(function() {                
+             $('.' + tooltipAttribute).each(function() {
                 if(arSelRow[i] == $(this).text()){
                     
                     var idValTr = $(this).closest('tr');
@@ -1113,10 +1125,10 @@
             
             ////////////////////////////////////////////////////////////////////
             var clickedRow = $(this).index();
-            $('.School').attr("id", "school"+clickedRow);
+            $('.' + tooltipAttribute).attr("id", tooltipAttribute + clickedRow);
             var teamName ="";
             var tn =0;
-            $('.School').each(function() {
+            $('.' + tooltipAttribute).each(function() {
                 tn += 1;
                 if(clickedRow == tn-2){
                     teamName = $(this).text();   
@@ -1212,7 +1224,7 @@
         }
             
         },function(){
-            $("tr").css("color", "black");
+            $("#miniChart tr").css("color", "black");
         });
         
         
@@ -1307,7 +1319,7 @@
 	 * Private
 	 * Toggle the arrow for the given attribute to be up or down
 	 */
-	function toggleRowItemClass(clickedObj) {
+	function toggleRowItemState(clickedObj) {
 		if (clickedObj.hasClass("directionUp")) {
 			clickedObj.removeClass("directionUp");
 			clickedObj.addClass("directionDown");
@@ -1332,29 +1344,29 @@
 			if (i > 0) { // don't add to Rank col
 				var html_text = $(this).html();
 				if (numericalAttributes.indexOf(html_text) > -1) {
-					conrow = $('#consoleChart td p[name="' + html_text + '"]');
-					conrow = conrow[0];
+					consoleRow = $("#consoleChart td p").filter(function() {
+						return $(this).text() === html_text;
+					});
 					//$(this).html(html_text);
 					html_text = '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>' + html_text;
-					$(conrow).html(html_text);
-					$(conrow).click(function() {
+					$(consoleRow).html(html_text);
+					$(consoleRow).click(function() {
 						var clickedObj = $(this).find("input")[0];
-						var clickedObjClasses = $(clickedObj).attr('class').split(' ');
-						// assumes the first class is the name of the attribute - make sure we don't change this convention
-						var clickedObjAttribute = clickedObjClasses[0];
-						toggleRowItemClass($(clickedObj));
+						var clickedRowName = $(clickedObj).parent().text();
+						toggleRowItemState($(clickedObj));
 						if ($(clickedObj).hasClass('directionUp')) {
 							$(clickedObj).attr('src', 'img/arrow-up.png');
 							$((($(this).parent())[0])).removeClass("disabledAttribute")
 							// re-normalize the attribute
-							normalizeAttribute(data, clickedObjAttribute, true);
+							normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
 						} else if ($(clickedObj).hasClass('directionDown')) {
 							$(clickedObj).attr('src', 'img/arrow-down.png');
 							// re-normalize the attribute
-							normalizeAttribute(data, clickedObjAttribute, false);
+							normalizeAttribute(data, clickedRowName, attributeStates.LOW);
 						} else if ($(clickedObj).hasClass('unusedRow')) {
 							$(clickedObj).attr('src', 'img/remove.png');
 							$((($(this).parent())[0])).addClass("disabledAttribute")
+							//normalizeAttribute(data, clickedObjAttribute, )
 						}
 		
 					});

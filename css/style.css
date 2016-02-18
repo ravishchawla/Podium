@@ -11,7 +11,7 @@
 
 #tableId {
 	/*border-collapse: collapse;*/
-	border: 0px #f2f2f2 solid;
+	border: 2px #f2f2f2 solid;
 	font: 12px sans-serif;
 	overflow-y: scroll;
 	max-width: 100%;
@@ -21,8 +21,17 @@
 
 #miniChart {
 	overflow-y: scroll;
+	max-height: 100%;
+	max-width: 100%;
+	display: block;
 }
 
+#consoleChart {
+	overflow-y: scroll;
+	max-height: 100%;
+	max-width: 100%;
+	display: none;
+}
 
 #auxContentDiv table {
 	border: none;
@@ -33,6 +42,7 @@
 	height: 90vh;
 	float:right;
 }
+
 
 #tableId td{
 	padding: 0px;	
@@ -51,15 +61,15 @@ svg {
 }
 
 .focalRow {
-	border: 0px #000 solid;
+	border: 2px #000 solid;
 }
 
 .disabledAttribute {
 	opacity: 0.3;
 }
 
-td {
-	border: 0px #f2f2f2 solid;
+#tableId td {
+	border: 1px #f2f2f2 solid;
 	padding: 10px;
 }
 
@@ -79,6 +89,10 @@ td {
 	display:none;
 }
 
+.visible {
+	display: block;
+}
+
 .tooltipTest {
     font-size:5em;
     height:100px;
@@ -87,10 +101,6 @@ td {
     color:white; 
     z-index: 99;
     bottom: 10px;
-}
-
-.header {
-	color: white;
 }
 
 .pseudoHeader {
@@ -102,7 +112,7 @@ td {
 	border: 0px white solid;
 }
 
-tbody:before {
+#tableId tbody:before {
 	content: "_";
 	color:white;
 }
