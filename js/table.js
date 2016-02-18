@@ -7,6 +7,7 @@
 	var opacityScale;
 	var columns = [];
 	var numericalAttributes = [];
+	var userAdjustedAttributes = [];
 	var unusedAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
@@ -37,7 +38,6 @@
     var isDragging = true;
    
     var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
-	
 	
 	/**********************************LOAD THE TABLE**********************************/
 	
@@ -71,6 +71,7 @@
 					data[i]["rank"] = counter + 1;
 					data[i]["oldIndex"] = counter + 1; 
 					data[i]["rankScore"] = 0;
+					data[i]["interactionWeight"] = 1;
 					counter++;
 				}
 				
@@ -78,8 +79,16 @@
 				columns.push({ head: "Rank Score", cl: "rankScore", html: function(row, i) { return data[i]["rankScore"]; } });
 				columns.push({ head: "Old Index", cl: "hidden oldIndex", html: function(row, i) { return data[i]["oldIndex"]; } });
 				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
-				columns.push({ head: "Interaction", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
+				columns.push({ head: "interactionWeight", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
 				
+
+				userAdjustedAttributes = ["interactionWeight"];
+				for(var attr = 0; attr < userAdjustedAttributes.length; attr++) {
+					var attrName = userAdjustedAttributes[attr];
+					numericalAttributes.push(attrName);
+					normalizeAttribute(data, attrName, attributeStates.HIGH);
+				}
+
 				// find numerical and categorical attributes
 				for (var attr = 0; attr < keys.length; attr++) {
 					var attrName = keys[attr];
@@ -214,7 +223,7 @@
 				.attr("class", ƒ("cl"));			
 			
 			var num_rows = cells.length;
-			var num_cols = numericalAttributes.length;
+			var num_cols = numericalAttributes.length - userAdjustedAttributes.length;
 
 			minimap_width = $("#auxContentDiv").width();
 			console_width = $("#auxContentDiv").width();
@@ -232,10 +241,13 @@
 				.html(function(d) { return d.value; })
 				.attr("height", "10px");
 
-
 			console_rows.selectAll("td")
 				.data(function(column, i) {
-					return [{id: i, name: column, amount: (1/num_cols)}];
+					colWidth = (1/num_cols);
+					if(column === "interactionWeight")
+						colWidth = 0.5;
+
+					return [{id: i, name: column, amount: colWidth}];
 				}).enter()
 				.append("td")
 				.html(function(d) {
@@ -255,7 +267,6 @@
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
 					var new_width = d.width + d3.event.dx;
-
 					if(new_width < 0)
 						new_width = 0;
 
@@ -268,11 +279,13 @@
 					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.visibleWidth);
 					d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
-				}));
-					//function(d) {
-					
-				//}));
 
+					if(d.name === "interactionWeight") {
+						for(var i = 0; i < data.length; i++)
+							data[i].ial.weightNorm = d.amount;
+					}
+
+				}));
 
 			$("td", "#miniChart").attr("height", "1");
 			$("td", "#consoleChart").attr("height", "1");
@@ -370,10 +383,6 @@
 				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
 				if (row["rank"] == row["oldIndex"])
 					opacity = 1;
-/*
-				return [
-				        { column: "svg", value: '<svg width="50"><rect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="5" fill="' + barColor + '" fill-opacity="' + opacity + '"/></svg>' }];*/
             return [
 				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
 				        '><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
@@ -390,7 +399,7 @@
 	
 	
 	/************************************RANK UTILITY************************************/
-	
+
 	/*
 	 * Private 
 	 * Update the weights of the attributes based on changes to the bar width
@@ -400,21 +409,29 @@
 		totalPercentage = 0;
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
-				if(unusedAttributes.indexOf(i) < 0)
-					totalPercentage = totalPercentage + Number(d.amount);
+				if(unusedAttributes.indexOf(i) < 0 &&
+					userAdjustedAttributes.indexOf($(this).text()) < 0)
+						totalPercentage = totalPercentage + Number(d.amount);
 			});
 		}
 
+		//The weights array does not include any user adjusted atrribute weights
+		//so they have to be offset so that the iteration index matches correctly.
+		offset = userAdjustedAttributes.length;
 		d3.selectAll("#consoleChart td").each(function(d, i) {
+			if(userAdjustedAttributes.indexOf($(this).text()) >= 0)
+				return;
+
 			if(unusedAttributes.indexOf(i) >= 0)
 				d.amount = 0;
 			else if (weights == null)
 				d.amount = d.amount/totalPercentage;
-			else
-				d.amount = weights[i];
-
+			else {
+				d.amount = weights[i - offset];			
+			}
 
 			attributeWeights[d.id] = d.amount;
+
 			d.width = (console_width * d.amount);
 			d.visibleWidth = (d.width < 10 ? 10 : d.width);
 			$(this).find("rect").attr("width", d.visibleWidth);
@@ -452,7 +469,7 @@
 			console.log("table.js: cannot get more than " + data.length + " rows");
 			return [];
 		}
-			
+		
 		var rowsForSVD = clickedRows.slice();
 		var numSurrounding = Math.ceil((numRows - clickedRows.length) / clickedRows.length); 
 		
@@ -517,18 +534,24 @@
 	 */
 	function getMatrix(rowNums) {
 		var matrix = []; 
-		var uniqueIds = []; 
+		var uniqueIds = [];
 		for (var i = 0; i < rowNums.length; i++) {
 			var row = []; 
 			var rowData = $('tr', '#tablePanel').eq(rowNums[i]);
 			var id = rowData.find("td.uniqueId").html();
-			var currentData = getDataByUniqueId(id); 
+			var currentData = getDataByUniqueId(id);
 			if (useCategorical) {
 				for (var j = 0; j < keys.length; j++)
-					row.push(currentData[keys[j] + "Norm"]);
+					if(unusedAttributes.indexOf(j) < 0 
+						&& userAdjustedAttributes.indexOf(keys[j]) < 0)
+							row.push(currentData[keys[j] + "Norm"]);
 			} else {
 				for (var j = 0; j < numericalAttributes.length; j++)
-					row.push(currentData[numericalAttributes[j] + "Norm"]);
+					if(userAdjustedAttributes.indexOf(numericalAttributes[j]) >= 0)
+						continue;
+					else if(unusedAttributes.indexOf(j) < 0 ) {
+							row.push(currentData[numericalAttributes[j] + "Norm"]);
+					}
 			}
 			uniqueIds.push(id);
 			matrix.push(row); 
@@ -553,11 +576,14 @@
 			var currentData = getDataByUniqueId(id); 
 			if (useCategorical) {
 				for (var j = 0; j < keys.length; j++)
-					row.push(currentData[keys[j] + "Norm"]);
+					if(unusedAttributes.indexOf(j) < 0 && 
+						userAdjustedAttributes.indexOf(keys[j]) < 0)
+							row.push(currentData[keys[j] + "Norm"]);
 			} else {
 				for (var j = 0; j < numericalAttributes.length; j++)
-					if(unusedAttributes.indexOf(j) < 0)
-						row.push(currentData[numericalAttributes[j] + "Norm"]);
+					if(unusedAttributes.indexOf(j) < 0 && 
+						userAdjustedAttributes.indexOf(numericalAttributes[j]) < 0)
+							row.push(currentData[numericalAttributes[j] + "Norm"]);
 			}
 			row.push(data.length + 1 - rowNums[i]); // maps everything [1, n] -> [n, 1]
 			uniqueIds.push(id); 
@@ -594,7 +620,7 @@
 					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
 			}
 		} else {
-			var min = 0; 
+			var min = 0;
 			var max = Number.MIN_VALUE; 
 			var len = dataset.length;
 			for (var key in categoricalAttributeMap[attr]) {
@@ -679,22 +705,22 @@
 		var allRows = []; 
 		for (var i = 1; i <= data.length; i++)
 			allRows.push(i);
+
+		normalizeInteractions(); // normalize weights and values
 		var matrixResult = getMatrix(allRows);
-		
+
 		var matrix = matrixResult[0]; 
 		var uniqueIds = matrixResult[1]; 
 		var ranked = []; 
 		
-		normalizeInteractions(); // normalize weights and values
-		
 		for (var i = 0; i < matrix.length; i++) {
 			var id = uniqueIds[i];
-			var obj = getDataByUniqueId(Number(id)); 
+			var obj = getDataByUniqueId(Number(id));
 			var attrVals = matrix[i];
 			var dotProd = Number(numeric.dot(attrVals, weights));
 			var interactionWeight = Number(obj.ial.weightNorm);
 			var interactionVal = Number(obj.rankNorm);
-			var result = (interactionWeight * interactionVal) + ((1.0 - interactionWeight) * dotProd); 
+			var result = (interactionWeight * interactionVal) + ((1.0 - interactionWeight) * dotProd);
 			obj["rankScore"] = result;
 			ranked.push({ id: id, val: result });
 		}
@@ -722,7 +748,9 @@
 		if (b.length <= keys.length) {
 			// make sure the weights are updated
 			updateColumnWeights();
-			return attributeWeights;
+			retArray = attributeWeights.slice();
+			retArray.splice(0, 1);
+			return retArray;
 		}
 		
 		// don't recompute SVD unless something has been moved
@@ -909,8 +937,7 @@
 		
 		changedRows = []; // reset changed rows
 
-		updateColumnWeights(normalizedWeights);
-		
+		updateColumnWeights(normalizedWeights.slice());		
 
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
@@ -1015,7 +1042,7 @@
 	 */
 	
 	function addFixedHeader() {
-		$("#tableId header").css({"color":"white"});
+		$("#tableId .header").css({"color":"white"});
 		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
 
 		widths = [];
@@ -1043,7 +1070,7 @@
        updateClickedItem();
        updateRowFont(selectedRows);   
 
-    $('.table tr').click(function(event) {
+    $('#tableId tr').click(function(event) {
     //console.log("isDragging state is : " + isDragging);
     if (event.shiftKey) {
         var item = $(this).index();
@@ -1082,7 +1109,7 @@
     
  
     function updateClickedItem(){   
-        $('.table tr').mousedown(function() {
+        $('#tableId tr').mousedown(function() {
          isDragging = true;
          var item = $(this).index(); 
          highlightItems(item);
@@ -1391,9 +1418,8 @@
 							$((($(this).parent())[0])).removeClass("disabledAttribute");
 
 							//Column ids are represented as col0, col1.., so this regex parses that
-							unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
 							id = $(this).attr("id");
-
+							unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
 						} else if ($(clickedObj).hasClass('directionDown')) {
