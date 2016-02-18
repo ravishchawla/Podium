@@ -7,6 +7,7 @@
 	var opacityScale;
 	var columns = [];
 	var numericalAttributes = [];
+	var unusedAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
 	var tooltipAttribute;
@@ -234,7 +235,7 @@
 
 			console_rows.selectAll("td")
 				.data(function(column, i) {
-					return [{id: i, name: column, amount: (1/num_cols).toFixed(2)}];
+					return [{id: i, name: column, amount: (1/num_cols)}];
 				}).enter()
 				.append("td")
 				.html(function(d) {
@@ -250,6 +251,7 @@
 					d.visibleWidth = d.width;
 					return d.width + "px";
 				})
+				.attr("title", function(d) { return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
 					var new_width = d.width + d3.event.dx;
@@ -262,10 +264,14 @@
 
 					d.width = new_width;
 					d.visibleWidth = (d.width < 10 ? 10 : d.width);
-					d.amount = ((new_width)/console_width).toFixed(2);
+					d.amount = new_width/console_width;
 					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.visibleWidth);
+					d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
 				}));
+					//function(d) {
+					
+				//}));
 
 
 			$("td", "#miniChart").attr("height", "1");
@@ -340,32 +346,6 @@
 		});	
 	}
 
-	/*
-	 * Adds a pseudo header that floats above the table when scrolling.
-	 */
-	
-	function addFixedHeader() {
-		$("#tableId header").css({"color":"white"});
-		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
-
-		widths = [];
-		$("th", "#tableId").each(function(d) {
-			widths.push(this.getBoundingClientRect().width);
-		});
-
-		$("th", ".pseudoHeader").each(function(i, d) {
-			$(this).css("min-width", widths[i]);
-			
-		});
-		$(".pseudoHeader").parent().css({"position": "relative"});
-		$(".pseudoHeader").css({"top": 0, "position" : "fixed"});
-		$(".pseudoHeader").css({"overflow-x":"hidden", "max-width":"100%"});
-
-		$("#tableId").scroll(function() {
-			$(".pseudoHeader").scrollLeft($(this).scrollLeft());
-		});
-	}
-
 
 	/*
 	 * Update the mini map 
@@ -415,35 +395,31 @@
 	 * Private 
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
-	function updateColumnWeights(weights) {
-        weights = null;
+	function updateColumnWeights(weights = null) {
 
 		totalPercentage = 0;
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
-				totalPercentage = totalPercentage + Number(d.amount);
+				if(unusedAttributes.indexOf(i) < 0)
+					totalPercentage = totalPercentage + Number(d.amount);
 			});
 		}
 
 		d3.selectAll("#consoleChart td").each(function(d, i) {
-			if (weights == null)
-				d.amount = ((d.amount/totalPercentage)).toFixed(2);
+			if(unusedAttributes.indexOf(i) >= 0)
+				d.amount = 0;
+			else if (weights == null)
+				d.amount = d.amount/totalPercentage;
 			else
-				d.amount = (weights[i]).toFixed(2);
+				d.amount = weights[i];
 
 
 			attributeWeights[d.id] = d.amount;
 			d.width = (console_width * d.amount);
 			d.visibleWidth = (d.width < 10 ? 10 : d.width);
-			
-			d3.select("#rect" + d.id).attr("width", d.visibleWidth);
-			
-			/*
-			//Attribute weight percentages
-			d3.select("#colVal" + d.id).html(
-						"<p class=columnChartVal id=colVal" + d.id + ">" + (d.amount * 100) + "%</p>");
-			*/
-		});
+			$(this).find("rect").attr("width", d.visibleWidth);
+			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
+		})
 	}
 	
 	
@@ -580,7 +556,8 @@
 					row.push(currentData[keys[j] + "Norm"]);
 			} else {
 				for (var j = 0; j < numericalAttributes.length; j++)
-					row.push(currentData[numericalAttributes[j] + "Norm"]);
+					if(unusedAttributes.indexOf(j) < 0)
+						row.push(currentData[numericalAttributes[j] + "Norm"]);
 			}
 			row.push(data.length + 1 - rowNums[i]); // maps everything [1, n] -> [n, 1]
 			uniqueIds.push(id); 
@@ -669,8 +646,10 @@
 		var minMax = getMinAndMax(input); 
 		var min = minMax[0];
 		var max = minMax[1];
+
 		for (var i = 0; i < input.length; i++)
 			result.push((input[i] - min) / (max - min));
+
 		
 		// now normalize so the components sum to 1
 		var sum = getSum(result);
@@ -678,6 +657,15 @@
 		
 		for (var i = 0; i < len; i++)
 			result[i] = result[i] / sum; 
+
+
+		// Resplice the unused attributes into the results with a weight of 0
+		for(var i = 0; i < attributeWeights.length; i++) {
+			if(unusedAttributes.indexOf(i) >= 0) {
+				result.splice(i, 0, 0);
+			}
+		}
+		
 		
 		return result;
 	}
@@ -733,7 +721,7 @@
 
 		if (b.length <= keys.length) {
 			// make sure the weights are updated
-			updateColumnWeights(); 
+			updateColumnWeights();
 			return attributeWeights;
 		}
 		
@@ -744,7 +732,6 @@
 		}
 		
 		var A = getAugmentedMatrix(b)[0];
-		
 		var SVD = numeric.svd(A); 
 		var U = SVD.U; 
 		var S = SVD.S; 
@@ -895,7 +882,7 @@
 			obj["oldIndex"] = obj["rank"]; 
 			obj["rank"] = i + 1;
 		}
-		
+
 		// update the table order and color the rows
 		mar.updateData(ranking);
 		mar.updateMinimap();
@@ -1001,17 +988,50 @@
         tablelens2();
         handleClickedRow();
         addFixedHeader();
-		
+        enableConsoleChartTooltips();
 	}
-    
-    
-    
+
+	/*
+	 * Enables tooltips on the console chart
+	 */
+	function enableConsoleChartTooltips() {
+		$("#consoleChart svg").tooltip({
+				track:true
+		});
+	}
+
+	/*
+	 * Adds a pseudo header that floats above the table when scrolling.
+	 */
+	
+	function addFixedHeader() {
+		$("#tableId header").css({"color":"white"});
+		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
+
+		widths = [];
+		$("th", "#tableId").each(function(d) {
+			widths.push(this.getBoundingClientRect().width);
+		});
+
+		$("th", ".pseudoHeader").each(function(i, d) {
+			$(this).css("min-width", widths[i]);
+			
+		});
+		$(".pseudoHeader").parent().css({"position": "relative"});
+		$(".pseudoHeader").css({"top": 0, "position" : "fixed"});
+		$(".pseudoHeader").css({"overflow-x":"hidden", "max-width":"100%"});
+
+		$("#tableId").scroll(function() {
+			$(".pseudoHeader").scrollLeft($(this).scrollLeft());
+		});
+	}
+
   function handleClickedRow(){
    var defFontWeight = $("#tr1").css('font-weight');
        
        updateClickedItem();
        updateRowFont(selectedRows);   
-    $('tr').click(function(event) {
+    $('#tableId tr').click(function(event) {
          
     //console.log("isDragging state is : " + isDragging);
     if (event.shiftKey) {
@@ -1344,19 +1364,24 @@
 			if (i > 0) { // don't add to Rank col
 				var html_text = $(this).html();
 				if (numericalAttributes.indexOf(html_text) > -1) {
-					consoleRow = $("#consoleChart td p").filter(function() {
-						return $(this).text() === html_text;
+					consoleRow = $("#consoleChart td").filter(function() {
+						return $(this).find("p").text() === html_text;
 					});
 					//$(this).html(html_text);
 					html_text = '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>' + html_text;
-					$(consoleRow).html(html_text);
-					$(consoleRow).click(function() {
+					$(consoleRow.find("p")).html(html_text);
+					$(consoleRow.find("p")).click(function() {
 						var clickedObj = $(this).find("input")[0];
-						var clickedRowName = $(clickedObj).parent().text();
+						var clickedRowName = $(consoleRow).text();
 						toggleRowItemState($(clickedObj));
 						if ($(clickedObj).hasClass('directionUp')) {
 							$(clickedObj).attr('src', 'img/arrow-up.png');
-							$((($(this).parent())[0])).removeClass("disabledAttribute")
+							$((($(this).parent())[0])).removeClass("disabledAttribute");
+
+							//Column ids are represented as col0, col1.., so this regex parses that
+							unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
+							id = $(this).attr("id");
+
 							// re-normalize the attribute
 							normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
 						} else if ($(clickedObj).hasClass('directionDown')) {
@@ -1365,10 +1390,11 @@
 							normalizeAttribute(data, clickedRowName, attributeStates.LOW);
 						} else if ($(clickedObj).hasClass('unusedRow')) {
 							$(clickedObj).attr('src', 'img/remove.png');
-							$((($(this).parent())[0])).addClass("disabledAttribute")
-							//normalizeAttribute(data, clickedObjAttribute, )
+							$((($(this).parent())[0])).addClass("disabledAttribute");
+
+							id = $(this).attr("id");
+							unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
 						}
-		
 					});
 				}
 			}
