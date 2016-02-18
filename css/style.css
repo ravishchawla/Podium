@@ -1,3 +1,29 @@
+#titlePanel{
+    width:100%;
+    position:relative;
+    height:5vh;
+    margin: 5px;
+  
+}
+
+
+.titleText
+{
+    text-shadow:1px 1px 1px rgba(56,56,56,0.8);
+    font-weight:bold;
+    text-transform:uppercase;
+    color:#000000;
+    letter-spacing:2pt;
+    word-spacing:6pt;
+    font-size:50px;
+    text-align:left;
+    font-family:arial, helvetica, sans-serif;
+    line-height:1;
+   
+    margin: 5px;
+}
+
+
 #auxPanel {
 	width: 20%;
 	height: 90vh;

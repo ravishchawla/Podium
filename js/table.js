@@ -862,6 +862,13 @@
 	mar.discardButtonClicked = function() {
 		console.log("table.js: Discarding Changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
+        selectedRows = [];
+        handleClickedRow();
+         setTimeout(function(){       
+            $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
+          
+        }, timeDie);
+        $("#discard_button").attr("disabled","disabled");
 	}
 	
 	
@@ -870,6 +877,7 @@
 	 */
 	mar.rankButtonClicked = function() {
 		console.log("table.js: Ranking");
+         htmlTableToCache = $("#tablePanel tbody").html(); 
 		
 		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
@@ -910,14 +918,16 @@
 		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
 		
 		  updateRowFont(selectedRows);
-		htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
+		  //htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
         
         setTimeout(function(){       
             $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
           
         }, timeDie);
-        $("#discard_button").attr("disabled","disabled");
+        //$("#discard_button").attr("disabled","disabled");
+        $("#discard_button").removeAttr("disabled");
 	}
+    
     
 
 	/*
@@ -1027,12 +1037,13 @@
 	}
 
   function handleClickedRow(){
+    htmlTableToCache = $("#tablePanel tbody").html(); 
    var defFontWeight = $("#tr1").css('font-weight');
        
        updateClickedItem();
        updateRowFont(selectedRows);   
-    $('#tableId tr').click(function(event) {
-         
+
+    $('.table tr').click(function(event) {
     //console.log("isDragging state is : " + isDragging);
     if (event.shiftKey) {
         var item = $(this).index();
@@ -1065,13 +1076,13 @@
              }
         });
 
-    
+  
          
      }
     
  
     function updateClickedItem(){   
-        $('tr').mousedown(function() {
+        $('.table tr').mousedown(function() {
          isDragging = true;
          var item = $(this).index(); 
          highlightItems(item);
@@ -1083,6 +1094,7 @@
     });        
         
         function highlightItems(item){
+            
         if(isDragging == true ){
            
             var teamName ="";
