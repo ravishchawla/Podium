@@ -1011,7 +1011,7 @@
        
        updateClickedItem();
        updateRowFont(selectedRows);   
-    $('tr').click(function(event) {
+    $('.table tr').click(function(event) {
          
     //console.log("isDragging state is : " + isDragging);
     if (event.shiftKey) {
@@ -1051,7 +1051,7 @@
     
  
     function updateClickedItem(){   
-        $('tr').mousedown(function() {
+        $('.table tr').mousedown(function() {
          isDragging = true;
          var item = $(this).index(); 
          highlightItems(item);
