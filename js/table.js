@@ -1042,29 +1042,36 @@
 		});
 	}
 
+
 	/*
 	 * Adds a pseudo header that floats above the table when scrolling.
 	 */
 	
+	
 	function addFixedHeader() {
 		$("#tableId .header").css({"color":"white"});
-		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo("#tableId");
+		d3.select("#tableId").append("div").attr("class", "pseudoDivWrapper");		
+		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo(".pseudoDivWrapper");
 
 		widths = [];
 		$("th", "#tableId").each(function(d) {
 			widths.push(this.getBoundingClientRect().width);
 		});
 
+		var headerOffset = $(".pseudoDivWrapper").position().left;
+		var headerStart = $("#tablePanel").position().left;
+
 		$("th", ".pseudoHeader").each(function(i, d) {
-			$(this).css("min-width", widths[i]);
+			$(this).css("min-width", Math.floor(widths[i]));
 			
 		});
-		$(".pseudoHeader").parent().css({"position": "relative"});
-		$(".pseudoHeader").css({"top": 0, "position" : "fixed"});
-		$(".pseudoHeader").css({"overflow-x":"hidden", "max-width":"100%"});
 
+		$("#tablePanel table").scrollTop(0)
+		$(".pseudoHeader").css({"overflow-x":"hidden", "max-width":"100%"});
+		$("#tablePanel .pseudoDivWrapper").css({"height" : $("#tablePanel tbody").position().top});
+		$(".pseudoDivWrapper").css({"position":"absolute", "overflow-x" : "hidden", "top": 0, "left": headerStart});
 		$("#tableId").scroll(function() {
-			$(".pseudoHeader").scrollLeft($(this).scrollLeft());
+			$(".pseudoDivWrapper").css({"left" : headerOffset - $(this).scrollLeft()});
 		});
 	}
 

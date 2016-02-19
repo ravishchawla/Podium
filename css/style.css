@@ -1,6 +1,9 @@
 #titlePanel{
     width:100%;
     display: block;
+    position: relative;
+    z-index: 20;
+    background-color: white;
 }
 
 
@@ -26,6 +29,9 @@
 	height: 90vh;
 	float: left;
 	overflow-x: hidden;
+	background-color: white;
+	position: relative;
+	z-index: 20;
 }
 
 #auxContentDiv {
@@ -126,16 +132,11 @@ svg {
     bottom: 10px;
 }
 
+.pseudoDivWrapper {
+	background-color: #555;
+}
+
 .pseudoHeader {
 	color: #FFF;
 	background-color: #555;	
-}
-
-.pseudoHeader th {
-	border: 0px white solid;
-}
-
-#tableId tbody:before {
-	content: "_";
-	color:white;
 }
