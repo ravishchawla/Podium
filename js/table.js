@@ -16,6 +16,7 @@
 	var lastChangedRow;
 	var changedRows = [];
     var selectedRows = [];
+    var interactionValueArray =[]
 	
 	var tolerance; 
 	var mapBarHeight;
@@ -39,7 +40,6 @@
     var isDragging = true;
    
     var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
-	var interactionArray=[];
 	/**********************************LOAD THE TABLE**********************************/
 	
 	/*
@@ -405,8 +405,8 @@
 	 * Private 
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
-	function updateColumnWeights(weights) {
-        weights = null;
+	function updateColumnWeights(weights = null) {
+        //weights = null;
 
 		totalPercentage = 0;
 		if (weights == null) {
@@ -924,6 +924,7 @@
 			
 			obj["oldIndex"] = obj["rank"]; 
 			obj["rank"] = i + 1;
+			obj["rank"] = i + 1;
 		}
 
 		// update the table order and color the rows
@@ -931,6 +932,7 @@
 		mar.updateMinimap();
 		mar.updateTable(); 
 		colorRows();
+        
 		
 		// update oldIndex to match rank after it has been used to color rows
 		for (var i = 0; i < ranking.length; i++) {
@@ -950,9 +952,12 @@
 		//console.log("b (" + b.length + "): " + b);
 		//console.log("Weight: " + weights);
 		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
-		
-		  updateRowFont(selectedRows);
-		  //htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
+        
+		var normArray = normalizeArray(interactionValueArray)
+        enableBarsOnCols(normArray); 
+        
+        updateRowFont(selectedRows);
+        //htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
         
         setTimeout(function(){       
             $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
@@ -1034,7 +1039,9 @@
         addFixedHeader();
         enableConsoleChartTooltips();
         if(count == 0){
-            //enableBarsOnCols("null");
+            getInteractionWeights();
+            var normArray = normalizeArray(interactionValueArray)
+            enableBarsOnCols(normArray);
             count +=1;
         }
 
@@ -1043,49 +1050,53 @@
      function getInteractionWeights(){
         var classInteractionCol = ".interactionWeight.tableSeperator";
         var classRankScore = "rankScore";
-       
-        var interactionValueArray =[]
          $(classInteractionCol).each(function() {
                 var interWeight = $(this).text(); 
                 interactionValueArray.push(parseFloat(interWeight));               
-                });
-               
+                });  
+    }
     
-        var maxWeight =  parseFloat(Math.max.apply(Math, interactionValueArray));
-        //console.log("Max value is : " + maxWeight);
+    function normalizeArray(arrObject){
+           var maxWeight =  parseFloat(Math.max.apply(Math, interactionValueArray));
+            //console.log("Max value is : " + maxWeight);
         
-        var normalizedInterWtArray = interactionValueArray.map(function(x) { 
+            var normalizedArray = interactionValueArray.map(function(x) { 
             //console.log("After Multiplication : " + (x/maxWeight));
             return x / maxWeight; });
          
-        //console.log("Array normalized is : " + normalizedInterWtArray);         
-        return normalizedInterWtArray;
-        
+            //console.log("Array normalized is : " + normalizedInterWtArray);         
+            return normalizedArray;
     }
     
     
 
     function enableBarsOnCols(normalizedInterWtArray){
-        
-        if(normalizedInterWtArray == "null"){
-            normalizedInterWtArray = getInteractionWeights();
-            console.log("its found as null")
-        }
-    
         var classInteractionCol = ".interactionWeight.tableSeperator";
         var item =0;
-        $(classInteractionCol).each(function() {
-                
-                 var foundText = $(this).text(); 
-                 var tdWidth = $(this).width()*normalizedInterWtArray[item];            
-                
-                 console.log("width is : " + tdWidth);
+        $(classInteractionCol).each(function() {               
+                 
+                 var tdWidth = $(this).width()*normalizedInterWtArray[item];   
                  var content = "<svg class = 'interSvg' id = 'inter'  width = "+tdWidth+"><rect id = 'something' class = 'some' width="+tdWidth+" height= 50 fill='#337ab7'/></svg>"
                  
-                 $(this).html(content);
-                 item += 1;                
+                $(this).html(content);
+                ttText = "Interaction Weight is : " + interactionValueArray[item] + "";
+                //console.log("INTER VALUE : " + interactionValueArray[item]);
+              
+                $( this).tooltip();        
+                $(this).attr("title",ttText);            
+                $(this).tooltip({
+                tooltipClass: "tooltipInteraction",
+                });
+                $(this).tooltip({
+                  position: {
+                    my: "left top",
+                    at: "center top"
+                  }
+                });                
+                item += 1;
                
                 });
+        
     }
 
 
@@ -1380,24 +1391,17 @@
 		};
 		
 		var updateIndex = function(e, ui) {
-			
 			var id = Number(ui.item.find("td.uniqueId").html());
 			var dataItem = getDataByUniqueId(Number(id));
            
 			var w = interactionIncrement; 
 			if (Number(dataItem["oldIndex"]) == Number(ui.item.index())) 
 				w = 0;
-			ial.incrementItemWeight(dataItem, w);
-            interactionArray.push(dataItem.ial.weight);
-            //console.log("interaction values are : " + dataItem.ial.weight);
-            /*
-            for(var k=0;k<interactionArray.length;k++){
-                //console.log("interaction array items are : " + interactionArray[k]);                
+            if(w == interactionIncrement){
+                interactionValueArray[Number(ui.item.index())] += interactionIncrement;
             }
-            */
-            
-            //console.log("interaction length : " + interactionArray.length);
-			
+			ial.incrementItemWeight(dataItem, w);
+     
 			ui.item.find("td.interactionWeight").html(dataItem.ial.weight);
             
 			$('tr', ui.item.parent()).each(function(i) {
@@ -1411,10 +1415,8 @@
 			});	
 
 			colorRows();
-            console.log("trying normalization");
-            var interWeights = getInteractionWeights();
-            //enableBarsOnCols(interWeights);
-
+            var normArray = normalizeArray(interactionValueArray)
+            enableBarsOnCols(normArray);            
 		};
 
 
