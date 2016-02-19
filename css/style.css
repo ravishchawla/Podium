@@ -1,9 +1,6 @@
 #titlePanel{
     width:100%;
-    position:relative;
-    height:5vh;
-    margin: 5px;
-  
+    display: block;
 }
 
 
