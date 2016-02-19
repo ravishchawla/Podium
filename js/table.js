@@ -21,7 +21,8 @@
 	var mapBarHeight;
 	var minimap_width = 50;
 	var console_width = 150;
-
+    var count =0;
+    
 	var keys;
 	var htmlTableToCache;
 	var table, header, rows, cells;
@@ -38,7 +39,7 @@
     var isDragging = true;
    
     var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
-	
+	var interactionArray=[];
 	/**********************************LOAD THE TABLE**********************************/
 	
 	/*
@@ -404,7 +405,8 @@
 	 * Private 
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
-	function updateColumnWeights(weights = null) {
+	function updateColumnWeights(weights) {
+        weights = null;
 
 		totalPercentage = 0;
 		if (weights == null) {
@@ -1031,7 +1033,61 @@
         handleClickedRow();
         addFixedHeader();
         enableConsoleChartTooltips();
+        if(count == 0){
+            //enableBarsOnCols("null");
+            count +=1;
+        }
+
 	}
+    
+     function getInteractionWeights(){
+        var classInteractionCol = ".interactionWeight.tableSeperator";
+        var classRankScore = "rankScore";
+       
+        var interactionValueArray =[]
+         $(classInteractionCol).each(function() {
+                var interWeight = $(this).text(); 
+                interactionValueArray.push(parseFloat(interWeight));               
+                });
+               
+    
+        var maxWeight =  parseFloat(Math.max.apply(Math, interactionValueArray));
+        //console.log("Max value is : " + maxWeight);
+        
+        var normalizedInterWtArray = interactionValueArray.map(function(x) { 
+            //console.log("After Multiplication : " + (x/maxWeight));
+            return x / maxWeight; });
+         
+        //console.log("Array normalized is : " + normalizedInterWtArray);         
+        return normalizedInterWtArray;
+        
+    }
+    
+    
+
+    function enableBarsOnCols(normalizedInterWtArray){
+        
+        if(normalizedInterWtArray == "null"){
+            normalizedInterWtArray = getInteractionWeights();
+            console.log("its found as null")
+        }
+    
+        var classInteractionCol = ".interactionWeight.tableSeperator";
+        var item =0;
+        $(classInteractionCol).each(function() {
+                
+                 var foundText = $(this).text(); 
+                 var tdWidth = $(this).width()*normalizedInterWtArray[item];            
+                
+                 console.log("width is : " + tdWidth);
+                 var content = "<svg class = 'interSvg' id = 'inter'  width = "+tdWidth+"><rect id = 'something' class = 'some' width="+tdWidth+" height= 50 fill='#337ab7'/></svg>"
+                 
+                 $(this).html(content);
+                 item += 1;                
+               
+                });
+    }
+
 
 	/*
 	 * Enables tooltips on the console chart
@@ -1327,22 +1383,37 @@
 			
 			var id = Number(ui.item.find("td.uniqueId").html());
 			var dataItem = getDataByUniqueId(Number(id));
+           
 			var w = interactionIncrement; 
 			if (Number(dataItem["oldIndex"]) == Number(ui.item.index())) 
 				w = 0;
 			ial.incrementItemWeight(dataItem, w);
+            interactionArray.push(dataItem.ial.weight);
+            //console.log("interaction values are : " + dataItem.ial.weight);
+            /*
+            for(var k=0;k<interactionArray.length;k++){
+                //console.log("interaction array items are : " + interactionArray[k]);                
+            }
+            */
+            
+            //console.log("interaction length : " + interactionArray.length);
 			
 			ui.item.find("td.interactionWeight").html(dataItem.ial.weight);
-
+            
 			$('tr', ui.item.parent()).each(function(i) {
 				// update the rank attribute
 				id = Number($(this).find("td.uniqueId").html());
 				dataItem = getDataByUniqueId(Number(id));
+                
 				dataItem["rank"] = i + 1;
 				$(this).find("td.rank.index").html(i + 1);
+                
 			});	
 
 			colorRows();
+            console.log("trying normalization");
+            var interWeights = getInteractionWeights();
+            //enableBarsOnCols(interWeights);
 
 		};
 
