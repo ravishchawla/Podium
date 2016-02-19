@@ -793,16 +793,21 @@
 	 * Private
 	 * Update the opacity of the given row object based on the change in index
 	 */
-	function updateColorAndOpacity(rowObj, oldIndex, newIndex) {
+	function updateColorAndOpacity(rowObj, miniRowObj, oldIndex, newIndex) {
 		var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
 		if (newIndex == oldIndex)
 			opacity = 0;
 
+		color = '';
+
+		if(rowObj.hasClass('greenColorChange'))
+			color = 'rgba(88, 218, 91, ';
+		else if (rowObj.hasClass('redColorChange'))
+			color = 'rgba(88, 91, 88, ' ;
+
 		if (colorOverlay) {
-			if (rowObj.hasClass('greenColorChange')) 
-				rowObj.css("background-color", 'rgba(88, 218, 91, ' + opacity + ')');
-			else if (rowObj.hasClass('redColorChange'))
-				rowObj.css("background-color", 'rgba(218, 91, 88, ' + opacity + ')');
+				rowObj.css("background-color", color + opacity + ')');
+				miniRowObj.css("fill", color + '1)');
 		}
 	}
 	
@@ -1370,7 +1375,8 @@
 				$(this).addClass('greenColorChange');
 			}
 			
-			updateColorAndOpacity($(this), oldIndex, newIndex);
+			miniRow = $("#miniChart #tr" + i + " rect");
+			updateColorAndOpacity($(this), miniRow, oldIndex, newIndex);
 		});
 	}
 	
