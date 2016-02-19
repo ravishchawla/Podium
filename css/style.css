@@ -1,3 +1,7 @@
+body {
+	overflow: hidden;
+}
+
 #titlePanel{
     width:100%;
     display: block;
