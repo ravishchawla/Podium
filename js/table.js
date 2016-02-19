@@ -407,7 +407,7 @@
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
 	function updateColumnWeights(weights = null) {
-       // weights = null;
+       //weights = null;
 
 		totalPercentage = 0;
 		if (weights == null) {
@@ -1364,8 +1364,9 @@
             $('.rankScore').each(function() {
                 rs += 1;
                 if(clickedRow == rs-2){
-                    rankScore = $(this).text();   
-                    rankScore = parseFloat(rankScore).toFixed(2);
+                    //rankScore = $(this).text();   
+                    //rankScore = parseFloat(rankScore).toFixed(2);
+                    rankScore = rankScoreValueArray[clickedRow+1];
                 }
                 });
           
