@@ -296,9 +296,9 @@
 			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
 				mapBarHeight--;
 				$("svg", "#miniChart").height(mapBarHeight);
-				$("svg", "#miniChart").height(mapBarHeight);
 			}
 
+			console.log(mapBarHeight);
 			$("td.interactionWeight").addClass("tableSeperator");
 			addFunctionality(); 
 			$("#discard_button").attr("disabled","disabled");
@@ -803,7 +803,7 @@
 		if(rowObj.hasClass('greenColorChange'))
 			color = 'rgba(88, 218, 91, ';
 		else if (rowObj.hasClass('redColorChange'))
-			color = 'rgba(88, 91, 88, ' ;
+			color = 'rgba(218, 91, 88, ' ;
 
 		if (colorOverlay) {
 				rowObj.css("background-color", color + opacity + ')');
@@ -1289,6 +1289,8 @@
             
         },function(){
             $("#miniChart tr").css("color", "black");
+            $("#miniChart svg").css("height", mapBarHeight);
+			$("#miniChart rect").css("height", mapBarHeight);
         });
         
         
