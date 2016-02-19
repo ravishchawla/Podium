@@ -16,7 +16,8 @@
 	var lastChangedRow;
 	var changedRows = [];
     var selectedRows = [];
-    var interactionValueArray =[]
+    var interactionValueArray =[];
+    var rankScoreValueArray = [];
 	
 	var tolerance; 
 	var mapBarHeight;
@@ -406,7 +407,7 @@
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
 	function updateColumnWeights(weights = null) {
-        //weights = null;
+       // weights = null;
 
 		totalPercentage = 0;
 		if (weights == null) {
@@ -953,9 +954,12 @@
 		//console.log("Weight: " + weights);
 		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
         
-		var normArray = normalizeArray(interactionValueArray)
-        enableBarsOnCols(normArray); 
+		var normInterArray = normalizeArray(interactionValueArray)
+        enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
         
+        getRankScores();
+        var normRankArray = normalizeArray(rankScoreValueArray);
+        enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray,1);
         updateRowFont(selectedRows);
         //htmlTableToCache = $("#tablePanel tbody").html(); // cache the new table
         
@@ -1038,18 +1042,43 @@
         handleClickedRow();
         addFixedHeader();
         enableConsoleChartTooltips();
-        if(count == 0){
-            getInteractionWeights();
-            var normArray = normalizeArray(interactionValueArray)
-            enableBarsOnCols(normArray);
-            count +=1;
-        }
+        drawBars();
 
 	}
     
+    function drawBars(){
+          if(count == 0){
+            
+            //handle bars for interaction weights
+            getInteractionWeights();
+            var normInterArray = normalizeArray(interactionValueArray)
+            enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
+            
+            //handle bars for rank scores
+            getRankScores();
+            var normRankArray = normalizeArray(rankScoreValueArray);
+            enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray,1);
+            count +=1;
+        }
+    }
+    
+    function getRankScores(){
+        var classRankScore = ".rankScore";
+        var ind = 0;
+        rankScoreValueArray = [];
+         $(classRankScore).each(function() {
+                if(ind>0 && ind<=interactionValueArray.length){ 
+                var rankScoreValue = $(this).text(); 
+                rankScoreValueArray.push(parseFloat(rankScoreValue));                 
+                }             
+                ind += 1;
+                }); 
+        // console.log("RankScore Array is : " + rankScoreValueArray);
+        // console.log("RankScore length is : " + rankScoreValueArray.length);
+    }
+    
      function getInteractionWeights(){
         var classInteractionCol = ".interactionWeight.tableSeperator";
-        var classRankScore = "rankScore";
          $(classInteractionCol).each(function() {
                 var interWeight = $(this).text(); 
                 interactionValueArray.push(parseFloat(interWeight));               
@@ -1057,47 +1086,103 @@
     }
     
     function normalizeArray(arrObject){
-           var maxWeight =  parseFloat(Math.max.apply(Math, interactionValueArray));
-            //console.log("Max value is : " + maxWeight);
-        
-            var normalizedArray = interactionValueArray.map(function(x) { 
-            //console.log("After Multiplication : " + (x/maxWeight));
+            var epsilon = 1;
+            var epsilon2 = 0.75;
+            var maxWeight =  parseFloat(Math.max.apply(Math, arrObject));           
+            if ( maxWeight == 0) maxWeight = epsilon;
+            //console.log("Max value is : " + maxWeight); 
+            var normalizedArray = arrObject.map(function(x) { 
+            
+            if (x == 0) x = epsilon2;
             return x / maxWeight; });
-         
-            //console.log("Array normalized is : " + normalizedInterWtArray);         
+            //console.log("normalized rank score array is " + normalizedArray);
             return normalizedArray;
     }
     
     
 
-    function enableBarsOnCols(normalizedInterWtArray){
-        var classInteractionCol = ".interactionWeight.tableSeperator";
+    function enableBarsOnCols(selector,normalizedArray,itemArray,tag){
+        //var classInteractionCol = ".interactionWeight.tableSeperator";
+        //var classRankScore = "rankScore";
+        var colorValue = "";
+        var str = "";
+        if (tag == 0){
+            //interaction weight
+            str = "Interaction Weight";
+            colorValue = "a";
+        }else{
+            //rank score
+            str = "Rank Score";
+            colorValue = "f";
+        }
         var item =0;
-        $(classInteractionCol).each(function() {               
+        var prevWidth = 0;
+        $(selector).each(function() {
+            
+                if(tag== 0){
+                             var tdWidth = $(this).width()*normalizedArray[item];
+                             if (isNaN(tdWidth)) {tdWidth = prevWidth;}
+
+                             var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = "+tdWidth+"><rect id = 'something' class = 'some' width="+tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>"
+
+                            $(this).html(content);
+                            ttText = str + " is : " + itemArray[item] + "";
+                            //console.log("INTER VALUE : " + interactionValueArray[item]);
+
+                            $( this).tooltip();        
+                            $(this).attr("title",ttText);            
+                            $(this).tooltip({
+                            tooltipClass: "tooltipInteraction",
+                            });
+                            $(this).tooltip({
+                              position: {
+                                my: "left top",
+                                at: "center top"
+                              }
+                            });                
+                            item += 1;
+                            prevWidth = tdWidth;
+                    
+                }else {
+                    
+                    if(item>0 && item<=interactionValueArray.length){
                  
-                 var tdWidth = $(this).width()*normalizedInterWtArray[item];   
-                 var content = "<svg class = 'interSvg' id = 'inter'  width = "+tdWidth+"><rect id = 'something' class = 'some' width="+tdWidth+" height= 50 fill='#337ab7'/></svg>"
+                             var tdWidth = $(this).width()*normalizedArray[item];
+                             if (isNaN(tdWidth)) {tdWidth = prevWidth;}
+                             var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = "+tdWidth+"><rect id = 'something' class = 'some' width="+tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>"
+
+                            $(this).html(content);
+                            if(itemArray[item] == undefined) itemArray[item] = itemArray[item-1];
+                            ttText = str + " is : " + itemArray[item] + "";
+                            //console.log("INTER VALUE : " + interactionValueArray[item]);
+
+                            $( this).tooltip();        
+                            $(this).attr("title",ttText);            
+                            $(this).tooltip({
+                            tooltipClass: "tooltipInteraction",
+                            });
+                            $(this).tooltip({
+                              position: {
+                                my: "left top",
+                                at: "center top"
+                              }
+                            });                
+                            
+                            prevWidth = tdWidth;
+                        
+                    }
+                    
+                    item += 1;
+                    
+                }
                  
-                $(this).html(content);
-                ttText = "Interaction Weight is : " + interactionValueArray[item] + "";
-                //console.log("INTER VALUE : " + interactionValueArray[item]);
-              
-                $( this).tooltip();        
-                $(this).attr("title",ttText);            
-                $(this).tooltip({
-                tooltipClass: "tooltipInteraction",
-                });
-                $(this).tooltip({
-                  position: {
-                    my: "left top",
-                    at: "center top"
-                  }
-                });                
-                item += 1;
-               
+          
                 });
         
     }
+    
+    
+
 
 
 	/*
@@ -1415,8 +1500,8 @@
 			});	
 
 			colorRows();
-            var normArray = normalizeArray(interactionValueArray)
-            enableBarsOnCols(normArray);            
+            var normInterArray = normalizeArray(interactionValueArray)
+            enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
 		};
 
 
