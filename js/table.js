@@ -12,6 +12,7 @@
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
 	var tooltipAttribute;
+    var classNameConsoleAttr = ".conTr";
 
 	var lastChangedRow;
 	var changedRows = [];
@@ -24,6 +25,9 @@
 	var minimap_width = 50;
 	var console_width = 150;
     var count =0;
+    var m = -1;
+    var n = -1;
+    var o = -1;
     
 	var keys;
 	var htmlTableToCache;
@@ -141,8 +145,7 @@
 	 * Private
 	 * Display the table
 	 */
-    var m = -1;
-    var n = -1;
+    
 	function displayTable(displayData) {
 		if (displayData != undefined && displayData.length != 0) {
 
@@ -195,13 +198,18 @@
                 .attr("id",function(){
                 m += 1;
                 return "tr"+m;
-                });;
+                });
  
 			console_rows = consolePanel.append("tbody")
 				.selectAll("tr")
 				.data(numericalAttributes)
 				.enter()
-				.append("tr");
+				.append("tr")
+                .attr("class",classNameConsoleAttr)
+                .attr("id",function(){
+                 o += 1;
+                return "consoleTr"+o;
+                });
 
 			// append the cells
 			cells = rows.selectAll("td")
@@ -406,8 +414,8 @@
 	 * Private 
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
-	function updateColumnWeights(weights = null) {
-       //weights = null;
+	function updateColumnWeights(weights) {
+        weights = null;
 
 		totalPercentage = 0;
 		if (weights == null) {
@@ -967,7 +975,7 @@
             $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
           
         }, timeDie);
-        //$("#discard_button").attr("disabled","disabled");
+        //sortSequenceOfConsoleRows();
         $("#discard_button").removeAttr("disabled");
 	}
     
@@ -1043,8 +1051,149 @@
         addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
-
+        
+        //sortSequenceOfConsoleRows();
+        
 	}
+    
+    
+ 
+   
+    function sortSequenceOfConsoleRows(){
+         console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+         console.log("new output +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+         var consoleAttributesWidthArray =[];
+         var consoleAttrHtmlArray =[];
+         var sortedHtmlArray=[];
+         var htmlIndices = [];
+        
+         var htmlArrayPlusIndex =[];
+         var consoleAttrWidthPlusIndex =[];
+        
+         var multiData =[];
+        
+        //classNameConsoleAttr
+       // var classConsoleAttr = ".conTr";
+        //console.log("function called")
+        
+        $("#consoleChart tr").each(function(i, d) {
+            //console.log("this is : "+ i + "  " + $(this).text());
+            var rectWidth = $(this).find("rect").attr("width");
+            var htmlThis = $(this).html();
+            consoleAttrHtmlArray.push(htmlThis);
+            htmlArrayPlusIndex.push([htmlThis,i]); 
+            htmlIndices.push(i);
+            consoleAttributesWidthArray.push(parseFloat(rectWidth));
+            
+            multiData.push([parseFloat(rectWidth),htmlThis]);
+            //console.log("Svg width is : " + rectWidth);
+			//console.log("This Html is : " + htmlThis);
+            
+		});
+        
+        //console.log("Html Index Array is : " + htmlArrayPlusIndex);
+        //console.log("Array of html is : " + consoleAttrHtmlArray);
+        //console.log("Un Sorted Array : " + consoleAttrHtmlArray);
+        //console.log("------------------------------------------------------");
+        
+        var sortedArrayItem = consoleAttributesWidthArray.slice();
+        sortedArrayItem.sort();
+        //sortedHtmlArray = sortBasedonArray(consoleAttrHtmlArray,consoleAttributesWidthArray,sortedArrayItem);      //sortBasedonArray(itemsArray,unSortingArr, sortingArr)
+        //sortedHtmlArray = sortIt(sortedArrayItem,htmlIndices);
+        //sortedHtmlArray = sortAnotherArray(sortedArrayItem,htmlIndices);
+        //sortedHtmlArray = getSorted(htmlIndices,sortedArrayItem);
+         //var sortedHtmlArray = sortTwoArrays(htmlArrayPlusIndex,sortedArrayItem,consoleAttrHtmlArray);
+        
+        /*
+        for(var i =0;i<sortedHtmlArray.length;i++){
+            console.log("Old Width is : " + consoleAttributesWidthArray[i]);
+            console.log("Sorted Width is : " + sortedArrayItem[i]);
+            console.log('---------------------------------------------------------');
+            console.log("Old Html is : " + consoleAttrHtmlArray[i]);
+            console.log('---------------------------------------------------------');
+            console.log('---------------------------------------------------------');
+            console.log("New Html is : " + consoleAttrHtmlArray[sortedHtmlArray[i]]);
+            console.log("Sorted New Html Indices is : " + sortedHtmlArray[i]);            
+            //console.log("Soredt Html Indices are : " + sortedHtmlArray[i]);
+            
+            console.log('++++++++++++++++++++++++++++++++');
+            console.log('++++++++++++++++++++++++++++++++');
+            console.log('++++++++++++++++++++++++++++++++');
+        }
+        */
+        
+        
+        multiData.sort(sortFunction).reverse();
+        for(var i=0;i<multiData.length;i++){
+            //console.log("Multi Data is : " + multiData[i]);
+            //console.log('/////////////////////////////////////////////////////////////////');
+        }
+        
+        /*
+        for(var i=0; multiData.length;i++){
+            console.log("Multi Data is : " + multiData[i]);
+            console.log('/////////////////////////////////////////////////////////////////');
+        }
+        */
+        
+        /*
+        console.log("Old Width is : " + consoleAttributesWidthArray);
+        console.log("Original Indices are : " + htmlIndices);
+        console.log("New Width is : " + sortedArrayItem);
+        console.log("Shuffled Indices are : " + sortedHtmlArray);
+        console.log('++++++++++++++++++++++++++++++++');
+        console.log('++++++++++++++++++++++++++++++++');
+        console.log('++++++++++++++++++++++++++++++++');
+        */
+        
+        /*
+         var newText ="";
+        
+        for(var i=0; i< sortedHtmlArray.length;i++){
+            newText += sortedHtmlArray[i];
+        }
+         
+        $("#consoleChart tbody").each(function(i, d) {
+            $(this).html(newText);
+            
+		});
+        
+        */
+        
+        
+        
+        
+        
+        $("#consoleChart tr").each(function(i, d) {
+            //$(this).html(sortedHtmlArray[i]);
+            //$(this).html(consoleAttrHtmlArray[sortedHtmlArray[i]]);
+            $(this).html(consoleAttrHtmlArray[multiData[i][0]]);
+		});   
+        
+        
+        $("#consoleChart tr").hover(function() {
+
+        }, function(){
+
+
+        });
+
+
+                
+        
+    }
+    
+
+    function sortFunction(a, b) {
+        if (a[0] === b[0]) {
+            return 0;
+        }
+        else {
+            return (a[0] < b[0]) ? -1 : 1;
+        }
+    }
+    
+    
     
     function drawBars(){
           if(count == 0){
@@ -1192,6 +1341,8 @@
 		$("#consoleChart svg").tooltip({
 				track:true
 		});
+        
+       
 	}
 
 
