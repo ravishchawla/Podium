@@ -13,12 +13,15 @@
 	var attributeWeights = [];
 	var tooltipAttribute;
     var classNameConsoleAttr = ".conTr";
-
+    var cachePrevContent="";
+    var cacheNewContent="";
+    
 	var lastChangedRow;
 	var changedRows = [];
     var selectedRows = [];
     var interactionValueArray =[];
     var rankScoreValueArray = [];
+    
 	
 	var tolerance; 
 	var mapBarHeight;
@@ -314,6 +317,8 @@
 			$("#discard_button").attr("disabled","disabled");
 			console.log("table.js: table appended");
 		}
+        
+        
 	}
 	
 	/*
@@ -415,6 +420,10 @@
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
 	function updateColumnWeights(weights) {
+        
+        //console.log("Previous stuffss ++++++++++++++++++++++++++++++++++++++++ : " + cachePrevContent);
+        
+        //$("#consoleChart tbody").html(cachePrevContent);
         weights = null;
 
 		totalPercentage = 0;
@@ -422,7 +431,7 @@
 			d3.selectAll("#consoleChart td").each(function(d, i) {
 				if(unusedAttributes.indexOf(i) < 0 &&
 					userAdjustedAttributes.indexOf($(this).text()) < 0)
-						totalPercentage = totalPercentage + Number(d.amount);
+						totalPercentage = totalPercentage + Number(d.amount);                       
 			});
 		}
 
@@ -448,6 +457,8 @@
 			$(this).find("rect").attr("width", d.visibleWidth);
 			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
 		})
+        
+       //$("#consoleChart tbody").html(cacheNewContent);
 	}
 	
 	
@@ -921,8 +932,8 @@
 	 */
 	mar.rankButtonClicked = function() {
 		console.log("table.js: Ranking");
-         htmlTableToCache = $("#tablePanel tbody").html(); 
-		
+        htmlTableToCache = $("#tablePanel tbody").html(); 
+        sortSequenceOfConsoleRows();
 		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 
@@ -975,7 +986,9 @@
             $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
           
         }, timeDie);
-        //sortSequenceOfConsoleRows();
+        
+      
+        
         $("#discard_button").removeAttr("disabled");
 	}
     
@@ -1051,7 +1064,7 @@
         addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
-        
+        cachePrevContent = $('#consoleChart tbody').html(); 
         //sortSequenceOfConsoleRows();
         
 	}
@@ -1060,8 +1073,8 @@
  
    
     function sortSequenceOfConsoleRows(){
-         console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-         console.log("new output +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+         //console.log("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+         //console.log("new output +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
          var consoleAttributesWidthArray =[];
          var consoleAttrHtmlArray =[];
          var sortedHtmlArray=[];
@@ -1072,9 +1085,9 @@
         
          var multiData =[];
         
-        //classNameConsoleAttr
-       // var classConsoleAttr = ".conTr";
-        //console.log("function called")
+        cachePrevContent = "";
+        cachePrevContent = $('#consoleChart tbody').html();
+        console.log("Previous Content : " + cachePrevContent);
         
         $("#consoleChart tr").each(function(i, d) {
             //console.log("this is : "+ i + "  " + $(this).text());
@@ -1086,8 +1099,6 @@
             consoleAttributesWidthArray.push(parseFloat(rectWidth));
             
             multiData.push([parseFloat(rectWidth),htmlThis]);
-            //console.log("Svg width is : " + rectWidth);
-			//console.log("This Html is : " + htmlThis);
             
 		});
         
@@ -1124,51 +1135,11 @@
         
         
         multiData.sort(sortFunction).reverse();
-        for(var i=0;i<multiData.length;i++){
-            //console.log("Multi Data is : " + multiData[i]);
-            //console.log('/////////////////////////////////////////////////////////////////');
-        }
-        
-        /*
-        for(var i=0; multiData.length;i++){
-            console.log("Multi Data is : " + multiData[i]);
-            console.log('/////////////////////////////////////////////////////////////////');
-        }
-        */
-        
-        /*
-        console.log("Old Width is : " + consoleAttributesWidthArray);
-        console.log("Original Indices are : " + htmlIndices);
-        console.log("New Width is : " + sortedArrayItem);
-        console.log("Shuffled Indices are : " + sortedHtmlArray);
-        console.log('++++++++++++++++++++++++++++++++');
-        console.log('++++++++++++++++++++++++++++++++');
-        console.log('++++++++++++++++++++++++++++++++');
-        */
-        
-        /*
-         var newText ="";
-        
-        for(var i=0; i< sortedHtmlArray.length;i++){
-            newText += sortedHtmlArray[i];
-        }
-         
-        $("#consoleChart tbody").each(function(i, d) {
-            $(this).html(newText);
-            
-		});
-        
-        */
-        
-        
-        
-        
-        
+       
         $("#consoleChart tr").each(function(i, d) {
-            //$(this).html(sortedHtmlArray[i]);
-            //$(this).html(consoleAttrHtmlArray[sortedHtmlArray[i]]);
-            $(this).html(consoleAttrHtmlArray[multiData[i][0]]);
-		});   
+            $(this).html(multiData[i][1]);
+            
+		});  
         
         
         $("#consoleChart tr").hover(function() {
@@ -1177,9 +1148,9 @@
 
 
         });
-
-
-                
+        cacheNewContent = "";
+        cacheNewContent = $('#consoleChart tbody').html();
+             
         
     }
     
