@@ -34,6 +34,8 @@
 	var keys;
 	var htmlTableToCache;
 	var table, header, rows, cells;
+	var minimap, minimap_rows;
+	var consolePanel, console_rows;
 
 	var useCategorical = false; 
 	var interactionIncrement = 1; 
@@ -291,7 +293,6 @@
 					d.visibleWidth = (d.width < 10 ? 10 : d.width);
 					d.amount = new_width / console_width;
 					attributeWeights[d.id] = d.amount;
-					console.log("Attribute Weights: " + attributeWeights);
 					d3.select(this).attr("width", d.visibleWidth);
 					d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
 
@@ -311,7 +312,6 @@
 				$("svg", "#miniChart").height(mapBarHeight);
 			}
 
-			console.log(mapBarHeight);
 			$("td.interactionWeight").addClass("tableSeperator");
 			addFunctionality(); 
 			$("#discard_button").attr("disabled", "disabled");
@@ -409,7 +409,7 @@
 		$("td", "#miniChart").attr("height", "1");
 		$("svg", "#miniChart").height(mapBarHeight);
 	}
-	
+
 	
 	/************************************RANK UTILITY************************************/
 
@@ -423,7 +423,6 @@
 		totalPercentage = 0;
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
-				console.log("D: " + JSON.stringify(d));
 				if (unusedAttributes.indexOf(i) < 0 &&
 						userAdjustedAttributes.indexOf($(this).text()) < 0)
 					totalPercentage = totalPercentage + Number(d.amount);                   
@@ -938,7 +937,6 @@
 	mar.rankButtonClicked = function() {
 		console.log("table.js: Ranking");
         htmlTableToCache = $("#tablePanel tbody").html(); 
-        sortSequenceOfConsoleRows();
 		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 
@@ -957,6 +955,7 @@
 		mar.updateMinimap();
 		mar.updateTable(); 
 		colorRows();
+		//sortSequenceOfConsoleRows();
         
 		// update oldIndex to match rank after it has been used to color rows
 		for (var i = 0; i < ranking.length; i++) {
@@ -1556,12 +1555,13 @@
 			var dataItem = getDataByUniqueId(Number(id));
            
 			var w = interactionIncrement; 
-			if (Number(dataItem["oldIndex"]) == Number(ui.item.index())) 
+			if (Number(dataItem["rank"]) == Number(ui.item.index()) + 1) 
 				w = 0;
-            if(w == interactionIncrement){
+           
+			if (w == interactionIncrement)
                 interactionValueArray[Number(ui.item.index())] += interactionIncrement;
-            }
-			ial.incrementItemWeight(dataItem, w);
+			
+            ial.incrementItemWeight(dataItem, w);
      
 			ui.item.find("td.interactionWeight").html(dataItem.ial.weight);
             
@@ -1649,7 +1649,7 @@
 	function addArrows() {
 		consoleRows = $("#consoleChart td p");
 		$("#tablePanel th").each(function(i) {
-			if (i > 0) { // don't add to Rank col
+			if (i > 4) { // don't add arrows for the attributes we define
 				var html_text = $(this).html();
 				if (numericalAttributes.indexOf(html_text) > -1) {
 					consoleRow = $("#consoleChart td").filter(function() {
