@@ -68,9 +68,9 @@
 	function loadData(fileName) {
 		d3.csv(fileName, function(dataset) {
 			data = dataset;
-			opacityScale = d3.scale.quantize()
+			opacityScale = d3.scale.linear()
 				.domain([0, data.length])
-				.range([0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95, 1]); 
+				.range([0.25, 1.0]); 
 			tolerance = data.length / 10;
 			if (data.length > 0) {
 				
