@@ -2,8 +2,8 @@ body {
 	overflow: hidden;
 }
 
-#titlePanel{
-    width:100%;
+#titlePanel {
+    width: 100%;
     display: block;
     position: relative;
     z-index: 20;
@@ -11,17 +11,16 @@ body {
 }
 
 
-.titleText
-{
-    text-shadow:1px 1px 1px rgba(56,56,56,0.8);
-    font-weight:bold;
-    text-transform:uppercase;
-    color:#000000;
-    letter-spacing:2pt;
-    word-spacing:6pt;
-    font-size:50px;
-    text-align:left;
-    font-family:arial, helvetica, sans-serif;
+.titleText {
+    text-shadow: 1px 1px 1px rgba(56,56,56,0.8);
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #000000;
+    letter-spacing: 2pt;
+    word-spacing: 6pt;
+    font-size: 50px;
+    text-align: left;
+    font-family: arial, helvetica, sans-serif;
     line-height:1;
    
     margin: 5px;
@@ -30,7 +29,7 @@ body {
 
 #auxPanel {
 	width: 20%;
-	height: 90vh;
+	height: 100vh;
 	float: left;
 	overflow-x: hidden;
 	background-color: white;
@@ -43,7 +42,6 @@ body {
 }
 
 #tableId {
-	/*border-collapse: collapse;*/
 	border: 2px #f2f2f2 solid;
 	font: 12px sans-serif;
 	overflow-y: scroll;
@@ -72,12 +70,12 @@ body {
 
 #tablePanel {
 	width: 80%;
-	height: 90vh;
-	float:right;
+	height: 100vh;
+	float: right;
 }
 
 
-#tableId td{
+#tableId td {
 	padding: 0px;	
 	overflow: hidden;;
 }
@@ -127,11 +125,11 @@ svg {
 }
 
 .tooltipTest {
-    font-size:5em;
-    height:100px;
-    width:150px;
-    padding:50px;
-    color:white; 
+    font-size: 5em;
+    height: 100px;
+    width: 150px;
+    padding: 50px;
+    color: white; 
     z-index: 99;
     bottom: 10px;
 }

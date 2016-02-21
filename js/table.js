@@ -82,7 +82,7 @@
 					data[i]["uniqueId"] = counter + 1; 
 					data[i]["rank"] = counter + 1;
 					data[i]["oldIndex"] = counter + 1; 
-					data[i]["rankScore"] = 0;
+					data[i]["rankScore"] = (data.length - counter + 1) / data.length;
 					data[i]["interactionWeight"] = 1;
 					counter++;
 				}
@@ -91,7 +91,7 @@
 				columns.push({ head: "Rank Score", cl: "rankScore", html: function(row, i) { return data[i]["rankScore"]; } });
 				columns.push({ head: "Old Index", cl: "hidden oldIndex", html: function(row, i) { return data[i]["oldIndex"]; } });
 				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
-				columns.push({ head: "interactionWeight", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
+				columns.push({ head: "Interaction Weight", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
 				
 				userAdjustedAttributes = ["interactionWeight"];
 				for(var attr = 0; attr < userAdjustedAttributes.length; attr++) {
@@ -263,8 +263,10 @@
 			console_rows.selectAll("td")
 				.data(function(column, i) {
 					colWidth = (1 / num_cols);
-					if (column === "interactionWeight")
+					if (column === "interactionWeight") {
 						colWidth = 0.5;
+						column = "Maximum Interaction Weight";
+					}
 					return [{ id: i, name: column, amount: colWidth }];
 				}).enter()
 				.append("td")
