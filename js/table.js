@@ -420,8 +420,6 @@
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
 	function updateColumnWeights(weights) {
-		weights = null;
-
 		totalPercentage = 0;
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
@@ -775,7 +773,7 @@
 
 		if (b.length <= keys.length) {
 			// make sure the weights are updated
-			updateColumnWeights();
+			updateColumnWeights(null);
 			retArray = attributeWeights.slice();
 			retArray.splice(0, 1);
 			return retArray;
