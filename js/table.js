@@ -1329,7 +1329,11 @@
 		var defFontWeight = $("#tr1").css('font-weight');
 
 		updateClickedItem();
-		updateRowFont(selectedRows);   
+		updateRowFont(selectedRows);  
+        
+        
+        
+        
 
 		$('#tableId tr').click(function(event) {
 			if (event.shiftKey) {
@@ -1399,20 +1403,27 @@
 	function updateRowFont(arSelRow) {
 		var defFontSize = $("#tr1").css('font-size');
 		var defFontWeight = $("#tr1").css('font-weight');
-		$("tr").css("font-size", defFontSize);
+		//$("tr").css("font-size", defFontSize);
 		$("tr").css("font-weight", defFontWeight);
-		
+		$("tr .rank.index.null").css("background", "white");
+        $("tr .rank.index.null").css("color", "black");
 		for (var i = 0; i < arSelRow.length; i++) {
 			$('.' + tooltipAttribute).each(function() {
 				if (arSelRow[i] == $(this).text()) {
 					var idValTr = $(this).closest('tr');
-					
+                    
+                    
+					var rankCol = $(this).closest('tr').find('.rank.index.null');
 					if (i == arSelRow.length - 1) {
 						idValTr.css("color", "black");
 						idValTr.css("font-weight", "900");
+                        rankCol.css("background", "#636363");
+                        rankCol.css("color", "white");
 					} else {
-						idValTr.css("color", "#636363");
-						idValTr.css("font-weight", "900");
+						//idValTr.css("color", "#636363");
+						//idValTr.css("font-weight", "900");
+                        rankCol.css("background", "#bdbdbd");
+                        rankCol.css("color", "black");
 					}
 				}
 			});
