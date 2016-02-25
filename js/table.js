@@ -975,11 +975,11 @@
 		//console.log("b (" + b.length + "): " + b);
 		//console.log("Weight: " + weights);
 		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
-        
-		var normInterArray = normalizeArray(interactionValueArray)
-        enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);
-        
+             
         getRankScores();
+        getInteractionWeights();
+        var normInterArray = normalizeArray(interactionValueArray)
+        enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
         updateRowFont(selectedRows);
@@ -1167,11 +1167,14 @@
      * Populate interactionValueArray
      */
     function getInteractionWeights() {
+        interactionValueArray = [];
     	var classInteractionCol = ".interactionWeight.tableSeperator";
     	$(classInteractionCol).each(function() {
     		var interWeight = $(this).text(); 
-    		interactionValueArray.push(parseFloat(interWeight));               
+    		interactionValueArray.push(parseFloat(interWeight));   
+            //console.log("Weight is : " + parseFloat(interWeight));
     	});  
+        //console.log("################################################################");
     }
     
     
@@ -1405,8 +1408,19 @@
 		var defFontWeight = $("#tr1").css('font-weight');
 		//$("tr").css("font-size", defFontSize);
 		$("tr").css("font-weight", defFontWeight);
-		$("tr .rank.index.null").css("background", "white");
-        $("tr .rank.index.null").css("color", "black");
+		//$("tr .rank.index.null").css("background", "white");
+        //$("tr .rank.index.null").css("color", "black");
+        
+                
+        var iter =0;
+        $("tr .rank.index.null").each(function() {
+            if(iter>1){
+                $(this).css("background", "white");
+                $(this).css("color", "black");
+            }  
+            iter += 1;
+            });
+        
 		for (var i = 0; i < arSelRow.length; i++) {
 			$('.' + tooltipAttribute).each(function() {
 				if (arSelRow[i] == $(this).text()) {
@@ -1587,6 +1601,8 @@
 			});	
 
 			colorRows();
+            //getInteractionWeights();
+            //console.log("Interaction Value Array now is : " + interactionValueArray);
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
 		};
