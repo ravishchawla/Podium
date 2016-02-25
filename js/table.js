@@ -19,6 +19,7 @@
 	var lastChangedRow;
 	var changedRows = [];
     var selectedRows = [];
+    var selectedRowsIndex = [];
     var interactionValueArray =[];
     var rankScoreValueArray = [];
 	
@@ -1059,6 +1060,7 @@
 		addArrows(); 
         tablelens();
         handleClickedRow();
+        
         addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
@@ -1332,13 +1334,10 @@
 		var defFontWeight = $("#tr1").css('font-weight');
 
 		updateClickedItem();
-		updateRowFont(selectedRows);  
-        
-        
-        
-        
+		updateRowFont(selectedRows);
 
 		$('#tableId tr').click(function(event) {
+            
 			if (event.shiftKey) {
 				var item = $(this).index();
 				//console.log("item value is : " + item);
@@ -1356,10 +1355,12 @@
 				var index = selectedRows.indexOf(teamName);
 				if (index > -1) {
 					selectedRows.splice(index, 1);
+                    selectedRowsIndex.splice(index, 1);
 					updateRowFont(selectedRows);
 				}
 			} else
 				isDragging = true;
+                
 		});
 	}
 
@@ -1390,9 +1391,11 @@
 
 				$("#tr" + item).attr("id", teamName);
 				selectedRows.push(teamName);
+                selectedRowsIndex.push(item);
 				selectedRows = selectedRows.filter(function(item, pos) {
 					return selectedRows.indexOf(item) == pos;
 				});
+                //console.log("Selected rows now are : " + selectedRows);
 				updateRowFont(selectedRows);
 			}
 		}
@@ -1442,8 +1445,26 @@
 				}
 			});
 		} 
+        
+        //updateMiniBars();
 	}
 	
+    
+    function updateMiniBars(newIndex,oldIndex){
+        for(var i=0; i<selectedRowsIndex.length;i++){
+            var value = oldIndex-1;
+            if(value == selectedRowsIndex[i] ){
+                 var id = (newIndex-1);
+                 $("#rec" + id).css("fill", "#bdbdbd");
+                //$("#rec" + selectedRowsIndex[i]).css("style", "");
+                
+            }
+            //console.log("minimap Called for : " + selectedRowsIndex[i]);
+           
+        }
+      
+        //console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    }
 	
 	/*
 	 * Private
@@ -1477,7 +1498,7 @@
 			});
 
 			$(".miniTr" ).tooltip();        
-			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScore;
+			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score : " + rankScore;
 			$(".miniTr" ).attr("title", toolText);
 
 			$('.miniTr').tooltip({
@@ -1647,6 +1668,9 @@
 			
 			miniRow = $("#miniChart #tr" + i + " rect");
 			updateColorAndOpacity($(this), miniRow, oldIndex, newIndex);
+            //console.log("oldindex is : " + oldIndex);
+            //console.log("newindex is : " + newIndex);
+            updateMiniBars(newIndex,oldIndex);
 		});
 	}
 	
