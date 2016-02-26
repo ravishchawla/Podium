@@ -48,6 +48,9 @@
 	var colorOverlay = true;
 	var fishEyeOverlay = true;
     var isDragging = true;
+    var rankButtonPressed = false;
+    
+    var miniChartCache = "";
    
     var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
     
@@ -936,6 +939,7 @@
 	 * Rank!
 	 */
 	mar.rankButtonClicked = function() {
+        rankButtonPressed = true;
 		console.log("table.js: Ranking");
         htmlTableToCache = $("#tablePanel tbody").html(); 
 		var normalizedWeights = runSVD();
@@ -984,7 +988,8 @@
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
         updateRowFont(selectedRows);
-        
+        selectionUpdatedMiniBar();
+        rankButtonPressed = false;
         setTimeout(function() {       
             $('#tablePanel tbody tr').animate({ backgroundColor: "white" }, 1000);
         }, timeDie);
@@ -1362,6 +1367,9 @@
 				isDragging = true;
                 
 		});
+        
+        
+        
 	}
 
 
@@ -1401,6 +1409,35 @@
 		}
 	}    
 
+    /*
+	 * Private
+	 * Updates the rows of mini bar as grey color, when main table rows are selected
+	 */
+    function selectionUpdatedMiniBar(){
+        miniChartCache = $("tr .rank.index.null").html();
+        var iter =0;
+        $("tr .rank.index.null").each(function() {
+                var backColor = $(this).css("background-color");
+                var backColor2 = $(this).css("background");
+                backColor2 = backColor2.substring(0,15);
+                //console.log("backColor is : " + backColor2);
+                if(backColor == "rgb(255, 255, 255)" || backColor == "rgba(0, 0, 0, 0)"){
+                   
+                }else{
+                     var id = iter - 1;
+                     $("#rec" + id).css("fill", "#bdbdbd");
+                }
+            
+            if(backColor2 === "rgb(99, 99, 99)"){
+                     var id2 = iter - 1;
+                     //$("#rec" + id2).css("fill", "#686868");
+                        
+                } 
+            
+            iter += 1;
+            });
+        
+    }
 	
 	/*
 	 * Private
@@ -1416,7 +1453,7 @@
         
                 
         var iter =0;
-        $("tr .rank.index.null").each(function() {
+        $("tbody tr .rank.index.null").each(function() {
             if(iter>1){
                 $(this).css("background", "white");
                 $(this).css("color", "black");
@@ -1431,6 +1468,10 @@
                     
                     
 					var rankCol = $(this).closest('tr').find('.rank.index.null');
+                    var idThis = $(this).closest('tr').attr('id');
+                    //console.log("this id is : " + idThis);
+                    
+                    
 					if (i == arSelRow.length - 1) {
 						idValTr.css("color", "black");
 						idValTr.css("font-weight", "900");
@@ -1446,26 +1487,10 @@
 			});
 		} 
         
-        //updateMiniBars();
+      
 	}
 	
-    
-    function updateMiniBars(newIndex,oldIndex){
-        for(var i=0; i<selectedRowsIndex.length;i++){
-            var value = oldIndex-1;
-            if(value == selectedRowsIndex[i] ){
-                 var id = (newIndex-1);
-                 $("#rec" + id).css("fill", "#bdbdbd");
-                //$("#rec" + selectedRowsIndex[i]).css("style", "");
-                
-            }
-            //console.log("minimap Called for : " + selectedRowsIndex[i]);
-           
-        }
-      
-        //console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-    }
-	
+   
 	/*
 	 * Private
 	 * Add the fisheye effect to the mini-map
@@ -1513,7 +1538,7 @@
 			});
 
 
-			if (fishEyeOverlay) {
+			if (!fishEyeOverlay) {
 				var trThis = $(".miniTr").get(clickedRow);
 				var size = $(".miniTr").length;
 				var upInd = clickedRow;
@@ -1668,10 +1693,15 @@
 			
 			miniRow = $("#miniChart #tr" + i + " rect");
 			updateColorAndOpacity($(this), miniRow, oldIndex, newIndex);
-            //console.log("oldindex is : " + oldIndex);
-            //console.log("newindex is : " + newIndex);
-            updateMiniBars(newIndex,oldIndex);
+          
+           
 		});
+        
+        if(!rankButtonPressed){
+           selectionUpdatedMiniBar();
+        }
+         
+         
 	}
 	
 	/*
