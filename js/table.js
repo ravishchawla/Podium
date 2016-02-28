@@ -7,7 +7,8 @@
 	var opacityScale;
 	var columns = [];
 	var numericalAttributes = [];
-	var userAdjustedAttributes = [];
+	var userAdjustedAttributesKeys = [];
+	var userAdjustedAttributesValues = [];
 	var unusedAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
@@ -49,6 +50,7 @@
 	var fishEyeOverlay = true;
     var isDragging = true;
     var rankButtonPressed = false;
+    var disallowWeightAdjustment = false;
     
     var miniChartCache = "";
    
@@ -97,11 +99,12 @@
 				columns.push({ head: "Unique ID", cl: "hidden uniqueId", html: function(row, i) { return data[i]["uniqueId"]; } });
 				columns.push({ head: "Interaction Weight", cl: "interactionWeight", html: function(row, i) { return data[i]["ial"]["weight"]; } });
 				
-				userAdjustedAttributes = ["interactionWeight"];
-				for(var attr = 0; attr < userAdjustedAttributes.length; attr++) {
-					var attrName = userAdjustedAttributes[attr];
+				userAdjustedAttributesKeys.push("interactionWeight");
+				userAdjustedAttributesValues.push("Maximum Interaction Weight");
+				for(var attr = 0; attr < userAdjustedAttributesKeys.length; attr++) {
+					var attrName = userAdjustedAttributesKeys[attr];
 					numericalAttributes.push(attrName);
-					normalizeAttribute(data, attrName, attributeStates.HIGH);
+					normalizeAttribute(data, attrName, attributeStates.HIGH);	
 				}
 
 				// find numerical and categorical attributes
@@ -244,7 +247,7 @@
 				.attr("class", ƒ("cl"));			
 			
 			var num_rows = cells.length;
-			var num_cols = numericalAttributes.length - userAdjustedAttributes.length;
+			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
 
 			minimap_width = $("#auxContentDiv").width();
 			console_width = $("#auxContentDiv").width();
@@ -276,7 +279,7 @@
 				.append("td")
 				.html(function(d) {
 					attributeWeights[d.id] = d.amount;
-					return "<p class=columnChartName id=col" + d.id + ">" + d.name + "</p>"; 
+					return "<p class=columnChartName id=col" + d.id + " title=" + d.title + ">" + d.name + "</p>"; 
 				}).append("svg")
 				.append("rect")
 				.attr("fill", "#337ab7")
@@ -288,6 +291,9 @@
 				}).attr("title", function(d) { return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
+					if(d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
+						return;
+
 					var new_width = d.width + d3.event.dx;
 					if (new_width < 0)
 						new_width = 0;
@@ -296,16 +302,25 @@
 						new_width = console_width;
 
 					d.width = new_width;
-					d.visibleWidth = (d.width < 10 ? 10 : d.width);
+					//d.visibleWidth = (d.width < 10 ? 10 : d.width);
+					d.visibleWidth = d.width;
 					d.amount = new_width / console_width;
 					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.visibleWidth);
 					d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
 
-					if (d.name === "interactionWeight")
+					if (d.name === "Maximum Interaction Weight")
 						maxInteractionWeight = d.amount; 
 
-				}));
+				}))
+				.on('mouseover', function(d) {
+					if(d.visibleWidth >= 10) return;
+
+					d3.select(this).attr("width", d.visibleWidth + 10);
+					setTimeout(function(ref) {
+						d3.select(ref).attr("width", d.visibleWidth);
+					}, 200, this);
+				});
 
 			$("td", "#miniChart").attr("height", "1");
 			$("td", "#consoleChart").attr("height", "1");
@@ -428,16 +443,16 @@
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
 				if (unusedAttributes.indexOf(i) < 0 &&
-						userAdjustedAttributes.indexOf($(this).text()) < 0)
+						userAdjustedAttributesValues.indexOf($(this).text()) === -1)
 					totalPercentage = totalPercentage + Number(d.amount);                   
 			});
 		}
 
 		// The weights array does not include any user adjusted atrribute weights
 		// so they have to be offset so that the iteration index matches correctly.
-		offset = userAdjustedAttributes.length;
+		offset = userAdjustedAttributesValues.length;
 		d3.selectAll("#consoleChart td").each(function(d, i) {
-			if(userAdjustedAttributes.indexOf($(this).text()) >= 0)
+			if(userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
 				return;
 
 			if(unusedAttributes.indexOf(i) >= 0)
@@ -451,7 +466,8 @@
 			attributeWeights[d.id] = d.amount;
 
 			d.width = (console_width * d.amount);
-			d.visibleWidth = (d.width < 10 ? 10 : d.width);
+			//d.visibleWidth = (d.width < 10 ? 10 : d.width);
+			d.visibleWidth = d.width;
 			$(this).find("rect").attr("width", d.visibleWidth);
 			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
 		});
@@ -561,11 +577,11 @@
 			if (useCategorical) {
 				for (var j = 0; j < keys.length; j++)
 					if(unusedAttributes.indexOf(j) < 0 
-						&& userAdjustedAttributes.indexOf(keys[j]) < 0)
+						&& userAdjustedAttributesKeys.indexOf(keys[j]) < 0)
 							row.push(currentData[keys[j] + "Norm"]);
 			} else {
 				for (var j = 0; j < numericalAttributes.length; j++)
-					if(userAdjustedAttributes.indexOf(numericalAttributes[j]) >= 0)
+					if(userAdjustedAttributesKeys.indexOf(numericalAttributes[j]) >= 0)
 						continue;
 					else if(unusedAttributes.indexOf(j) < 0 ) {
 							row.push(currentData[numericalAttributes[j] + "Norm"]);
@@ -595,12 +611,12 @@
 			if (useCategorical) {
 				for (var j = 0; j < keys.length; j++)
 					if(unusedAttributes.indexOf(j) < 0 && 
-						userAdjustedAttributes.indexOf(keys[j]) < 0)
+						userAdjustedAttributesKeys.indexOf(keys[j]) < 0)
 							row.push(currentData[keys[j] + "Norm"]);
 			} else {
 				for (var j = 0; j < numericalAttributes.length; j++)
 					if(unusedAttributes.indexOf(j) < 0 && 
-						userAdjustedAttributes.indexOf(numericalAttributes[j]) < 0)
+						userAdjustedAttributesKeys.indexOf(numericalAttributes[j]) < 0)
 							row.push(currentData[numericalAttributes[j] + "Norm"]);
 			}
 			row.push(data.length + 1 - rowNums[i]); // maps everything [1, n] -> [n, 1]
@@ -940,6 +956,7 @@
 	 */
 	mar.rankButtonClicked = function() {
         rankButtonPressed = true;
+        greyMinibars(false);
 		console.log("table.js: Ranking");
         htmlTableToCache = $("#tablePanel tbody").html(); 
 		var normalizedWeights = runSVD();
@@ -1609,13 +1626,13 @@
 	 */
 	function clickAndDragRows() {
 		var fixHelperModified = function(e, tr) {
-
 			var $originals = tr.children();
 			var $helper = tr.clone();
 			$helper.children().each(function(index) {
 				$(this).width($originals.eq(index).width())
 			});
 
+			greyMinibars(true);
 			lastChangedRow = tr;
 			changedRows.push(tr.find("td.uniqueId").html());
 			return $helper;
@@ -1702,6 +1719,24 @@
         }
          
          
+	}
+
+	function greyMinibars(greyOut) {
+		disallowWeightAdjustment = greyOut;
+		var blueColor = "#337ab7";
+		var greyColor = "rgb(88, 91, 88)";
+
+		$("#consoleChart rect").each(function(i, d) {
+            
+			if(i < userAdjustedAttributesKeys.length) return;
+
+			if(greyOut) {
+				$(this).attr("fill", greyColor);
+			} else {
+				$(this).attr("fill", blueColor);
+			}
+
+		});
 	}
 	
 	/*
