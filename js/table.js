@@ -738,17 +738,21 @@
 		var min = minMax[0];
 		var max = minMax[1];
 
-		for (var i = 0; i < input.length; i++)
-			result.push((input[i] - min) / (max - min));
+		for (var i = 0; i < input.length; i++) { 	
+			if(max == min) {
+				result.push((1.0)/input.length);
+			} else {
+				result.push((input[i] - min) / (max - min));
+			}
+		}
 
-		
+
 		// now normalize so the components sum to 1
 		var sum = getSum(result);
 		var len = result.length;
 		
 		for (var i = 0; i < len; i++)
 			result[i] = result[i] / sum; 
-
 
 		// Resplice the unused attributes into the results with a weight of 0
 		for (var i = 0; i < attributeWeights.length; i++) {
@@ -830,6 +834,7 @@
 			return normalizedWeights;
 		}
 		
+		//TODO: THIS HAS TO RETURN SOMETHING OR BE CHECKED BY CALLER!!
 		// don't recompute SVD unless something has been moved
 		if (getChangedRows().length < 1) {
 			console.log("table.js: No changes have been made!");
@@ -987,7 +992,6 @@
 
 		prevStates = [];
 		d3.selectAll("#consoleChart rect").each(function(d, i) {
-			console.log(htmlConsoleToCache);
 			d.name = htmlConsoleToCache[i].name;
 			d.amount = htmlConsoleToCache[i].amount;
 			d.width = htmlConsoleToCache[i].width;
@@ -1002,9 +1006,6 @@
 			} else {
 				prevStates.push(htmlConsoleToCache[i].direction);
 			}
-
-			console.log(d.name == "Maximum Interaction Weight", d.name);
-			console.log(prevStates);
 		});
 
 		handleArrowClicks(null, prevStates);
