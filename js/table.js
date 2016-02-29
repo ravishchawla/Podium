@@ -514,7 +514,6 @@
 	 * Input is an array of unique ids
 	 */
 	function getRowsForSVD(clickedRows, numRows) {
-		
 		// use the rank values of the rows with the given unique ids
 		clickedRows = getRankValues(clickedRows); 
 		
@@ -522,7 +521,6 @@
 			console.log("table.js: cannot get more than " + data.length + " rows");
 			return [];
 		}
-		
 		var rowsForSVD = clickedRows.slice();
 		var numSurrounding = Math.ceil((numRows - clickedRows.length) / clickedRows.length); 
 		
@@ -810,7 +808,18 @@
 	function runSVD() {
 		// use SVD to compute w = V * D_0^−1 * U^T * b
 		var minRows = useCategorical ? keys.length + 1 : numericalAttributes.length + 1;
-		var b = getRowsForSVD(getChangedRows(), keys.length + 1); 
+		
+		var selectedRowIds = []; 
+		for (var i = 0; i < selectedRows.length; i++)
+			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
+		
+		var changedRowIdsForSVD = getChangedRows();
+		for (var i = 0; i < selectedRowIds.length; i++) {
+			if (changedRowIdsForSVD.indexOf(Number(selectedRowIds[i])) < 0)
+				changedRowIdsForSVD.push(Number(selectedRowIds[i]));
+		}
+		
+		var b = getRowsForSVD(changedRowIdsForSVD, numericalAttributes.length + 1); 
 
 		if (b.length <= keys.length) {
 			// make sure the weights are updated
@@ -903,6 +912,18 @@
 	function getDataByUniqueId(id) {
 		for (var i = 0; i < data.length; i++) {
 			if (data[i]["uniqueId"] == id)
+				return data[i];
+		}
+	}
+	
+	
+	/*
+	 * Private
+	 * Get the data item using its first categorical attribute
+	 */
+	function getDataByFirstCategoricalAttr(attrVal) {
+		for (var i = 0; i < data.length; i++) {
+			if (data[i][tooltipAttribute] == attrVal)
 				return data[i];
 		}
 	}
@@ -1699,7 +1720,7 @@
 
 			greyMinibars(true);
 			lastChangedRow = tr;
-			changedRows.push(tr.find("td.uniqueId").html());
+			changedRows.push(Number(tr.find("td.uniqueId").html()));
 			return $helper;
 		};
 		
@@ -1757,7 +1778,7 @@
 
 			var movedRowIndex = movedRow.find("td.rank.index").html();
 
-			if ((showAllRows == false && changedRows.indexOf(uniqueId) == -1) ||
+			if ((showAllRows == false && changedRows.indexOf(Number(uniqueId)) == -1) ||
 					(newIndex == oldIndex)) {
 				$(this).removeClass('greenColorChange');
 				$(this).removeClass('redColorChange');
