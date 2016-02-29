@@ -289,7 +289,8 @@
 					d.width = (console_width * d.amount);
 					d.visibleWidth = d.width;
 					return d.width + "px";
-				}).attr("title", function(d) { return (d.amount * 100).toFixed(0) + "%"; })
+				}).attr("title", function(d) { 
+					return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
 					if (d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
@@ -340,7 +341,19 @@
 			$("#discard_button").attr("disabled", "disabled");
 			
 			htmlTableToCache = $("#tablePanel tbody").html(); 
-	        htmlConsoleToCache = $("#consoleChart tbody").html();
+			htmlConsoleToCache = [];
+			d3.selectAll("#consoleChart td").each(function(d) {
+				htmlConsoleToCache.push(
+				 	{
+						"amount" : d.amount,
+						"width" : d.width,
+						"visibleWidth" : d.visibleWidth,
+						"name" : d.name,
+						"direction" : "directionUp"
+					}
+				);
+			});
+
 			console.log("table.js: table appended");
 		}
 	}
@@ -950,8 +963,32 @@
 	mar.discardButtonClicked = function() {
 		console.log("table.js: Discarding Changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
-		$("#auxPanel #auxContentDiv #consoleChart tbody").html(htmlConsoleToCache);
-		greyMinibars(false); // make sure the attribute weights are adjustable again
+
+		prevStates = [];
+		d3.selectAll("#consoleChart rect").each(function(d, i) {
+			console.log(htmlConsoleToCache);
+			d.name = htmlConsoleToCache[i].name;
+			d.amount = htmlConsoleToCache[i].amount;
+			d.width = htmlConsoleToCache[i].width;
+			d.visibleWidth = htmlConsoleToCache[i].visibleWidth;
+
+			attributeWeights[d.id] = d.amount;
+			d3.select(this).attr("width", d.visibleWidth);
+			d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
+
+			if (d.name == "Maximum Interaction Weight") {
+				maxInteractionWeight = d.amount; 
+			} else {
+				prevStates.push(htmlConsoleToCache[i].direction);
+			}
+
+			console.log(d.name == "Maximum Interaction Weight", d.name);
+			console.log(prevStates);
+		});
+
+		handleArrowClicks(null, prevStates);
+
+		//greyMinibars(false); // make sure the attribute weights are adjustable again
 		selectedRows = [];
         handleClickedRow();
         setTimeout(function() {       
@@ -1021,7 +1058,28 @@
         }, timeDie);
         
         htmlTableToCache = $("#tablePanel tbody").html(); 
-        htmlConsoleToCache = $("#auxPanel #auxContentDiv #consoleChart tbody").html();
+        htmlConsoleToCache = [];
+		d3.selectAll("#consoleChart td").each(function(d) {
+        	direction = "directionUp";
+        	pObj = $(this).find("input");
+        	if(pObj.hasClass("directionUp"))
+        		direction = "directionUp";
+        	else if (pObj.hasClass("directionDown"))
+        		direction = "directionDown";
+        	else if (pObj.hasClass("unusedRow"))
+        		direction = "unusedRow";
+
+
+        	htmlConsoleToCache.push(
+        			 	{
+						"amount" : d.amount,
+						"width" : d.width,
+						"visibleWidth" : d.visibleWidth,
+						"name" : d.name,
+						"direction" : direction
+					});
+        });
+
         $("#discard_button").attr("disabled", "disabled");
 	}
     
@@ -1745,7 +1803,17 @@
 	 * Private
 	 * Toggle the arrow for the given attribute to be up or down
 	 */
-	function toggleRowItemState(clickedObj) {
+	function toggleRowItemState(clickedObj, toState) {
+
+		if(toState != null) {
+			clickedObj.removeClass("directionUp");
+			clickedObj.removeClass("directionDown");
+			clickedObj.removeClass("unusedRow");
+			clickedObj.addClass(toState);
+			return;
+		}
+
+
 		if (clickedObj.hasClass("directionUp")) {
 			clickedObj.removeClass("directionUp");
 			clickedObj.addClass("directionDown");
@@ -1775,35 +1843,79 @@
 					});
 					html_text = '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>' + html_text;
 					$(consoleRow.find("p")).html(html_text);
-					$(consoleRow.find("p")).click(function() {
-						var clickedObj = $(this).find("input")[0];
-						var clickedRowName = $(consoleRow).text();
-						toggleRowItemState($(clickedObj));
-						if ($(clickedObj).hasClass('directionUp')) {
-							$(clickedObj).attr('src', 'img/arrow-up.png');
-							$((($(this).parent())[0])).removeClass("disabledAttribute");
-
-							// Column ids are represented as col0, col1.., so this regex parses that
-							id = $(this).attr("id");
-							unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
-							// re-normalize the attribute
-							normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
-						} else if ($(clickedObj).hasClass('directionDown')) {
-							$(clickedObj).attr('src', 'img/arrow-down.png');
-							// re-normalize the attribute
-							normalizeAttribute(data, clickedRowName, attributeStates.LOW);
-						} else if ($(clickedObj).hasClass('unusedRow')) {
-							$(clickedObj).attr('src', 'img/remove.png');
-							$((($(this).parent())[0])).addClass("disabledAttribute");
-
-							id = $(this).attr("id");
-							unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
-						}
-						
-						$("#discard_button").removeAttr("disabled");
-					});
+					handleArrowClicks(consoleRow, null);
+					
 				}
 			}
 		});
 	}
+
+	function handleArrowClicks(consoleRow, states) {
+		if(states == null) {
+			$(consoleRow.find("p")).off("click");
+			$(consoleRow.find("p")).click(function() {
+				var clickedObj = $(this).find("input")[0];
+				var clickedRowName = $(consoleRow).text();
+				if(states == null)
+					toggleRowItemState($(clickedObj), null);
+
+				if ($(clickedObj).hasClass('directionUp')) {
+					$(clickedObj).attr('src', 'img/arrow-up.png');
+					$((($(this).parent())[0])).removeClass("disabledAttribute");
+
+					// Column ids are represented as col0, col1.., so this regex parses that
+					id = $(this).attr("id");
+					unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
+					// re-normalize the attribute
+					normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
+				} else if ($(clickedObj).hasClass('directionDown')) {
+					$(clickedObj).attr('src', 'img/arrow-down.png');
+					// re-normalize the attribute
+					normalizeAttribute(data, clickedRowName, attributeStates.LOW);
+				} else if ($(clickedObj).hasClass('unusedRow')) {
+					$(clickedObj).attr('src', 'img/remove.png');
+					$((($(this).parent())[0])).addClass("disabledAttribute");
+
+					id = $(this).attr("id");
+					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+				}
+				
+				$("#discard_button").removeAttr("disabled");
+			});
+		}
+
+		//quick hack to get direction caching to work. this should be integrated
+		//with the above code because its just a duplicate - TODO
+		if(states != null) {
+			$("#consoleChart").find("input").each(function(i) {
+				var clickedObj = $(this);
+				var pObj = $(this).parent();
+				var clickedRowName = pObj.text();
+				toggleRowItemState($(clickedObj), states[i]);
+				if ($(clickedObj).hasClass('directionUp')) {
+					$(clickedObj).attr('src', 'img/arrow-up.png');
+					$(((pObj.parent())[0])).removeClass("disabledAttribute");
+
+					// Column ids are represented as col0, col1.., so this regex parses that
+					id = pObj.attr("id");
+					unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
+					// re-normalize the attribute
+					normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
+				} else if ($(clickedObj).hasClass('directionDown')) {
+					$(clickedObj).attr('src', 'img/arrow-down.png');
+					// re-normalize the attribute
+					normalizeAttribute(data, clickedRowName, attributeStates.LOW);
+				} else if ($(clickedObj).hasClass('unusedRow')) {
+					$(clickedObj).attr('src', 'img/remove.png');
+					$(((pObj.parent())[0])).addClass("disabledAttribute");
+
+					id = pObj.attr("id");
+					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+				}
+
+			});
+		}
+	}
+
+
 })();
