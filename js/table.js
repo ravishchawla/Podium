@@ -292,7 +292,7 @@
 				}).attr("title", function(d) { return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
-					if(d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
+					if (d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
 						return;
 
 					var new_width = d.width + d3.event.dx;
@@ -312,7 +312,8 @@
 
 					if (d.name === "Maximum Interaction Weight")
 						maxInteractionWeight = d.amount; 
-
+					
+					$("#discard_button").removeAttr("disabled");
 				}))
 				.on('mouseover', function(d) {
 					if(d.visibleWidth >= 10) return;
@@ -337,6 +338,9 @@
 			$("td.interactionWeight").addClass("tableSeperator");
 			addFunctionality(); 
 			$("#discard_button").attr("disabled", "disabled");
+			
+			htmlTableToCache = $("#tablePanel tbody").html(); 
+	        htmlConsoleToCache = $("#consoleChart tbody").html();
 			console.log("table.js: table appended");
 		}
 	}
@@ -421,7 +425,7 @@
             return [
 				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
 				        '><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="50" fill="' + barColor + '"/></svg>' }];
+				        	+ ' height="50" fill="' + barColor + '" opacity="' + opacity + '"/></svg>' }];
 	
 			})
 			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -820,7 +824,6 @@
 		var UT = numeric.transpose(U);
 		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
 		var normalizedWeights = normalize(weights);
-		console.log("normalized weights; " + normalizedWeights);
 
 		return normalizedWeights;
 	}
@@ -947,12 +950,12 @@
 	mar.discardButtonClicked = function() {
 		console.log("table.js: Discarding Changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
-		$("#consoleChart tbody").html(htmlConsoleToCache);
-        selectedRows = [];
+		$("#auxPanel #auxContentDiv #consoleChart tbody").html(htmlConsoleToCache);
+		greyMinibars(false); // make sure the attribute weights are adjustable again
+		selectedRows = [];
         handleClickedRow();
-         setTimeout(function(){       
-            $('#tablePanel tbody tr').animate({backgroundColor: "white"}, 1000);
-          
+        setTimeout(function() {       
+            $('#tablePanel tbody tr').animate({ backgroundColor: "white" }, 1000);
         }, timeDie);
         $("#discard_button").attr("disabled","disabled");
 	}
@@ -964,9 +967,7 @@
 	mar.rankButtonClicked = function() {
         rankButtonPressed = true;
         greyMinibars(false);
-		console.log("table.js: Ranking");
-        htmlTableToCache = $("#tablePanel tbody").html(); 
-        htmlConsoleToCache = $("#consoleChart tbody").html(); 
+		console.log("table.js: Ranking"); 
 		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 
@@ -1018,7 +1019,10 @@
         setTimeout(function() {       
             $('#tablePanel tbody tr').animate({ backgroundColor: "white" }, 1000);
         }, timeDie);
-        $("#discard_button").removeAttr("disabled");
+        
+        htmlTableToCache = $("#tablePanel tbody").html(); 
+        htmlConsoleToCache = $("#auxPanel #auxContentDiv #consoleChart tbody").html();
+        $("#discard_button").attr("disabled", "disabled");
 	}
     
     
@@ -1360,7 +1364,6 @@
 	 * Handler for clicked row
 	 */
 	function handleClickedRow() {
-		htmlTableToCache = $("#tablePanel tbody").html(); 
 		var defFontWeight = $("#tr1").css('font-weight');
 
 		updateClickedItem();
@@ -1377,9 +1380,8 @@
 				
 				$('.' + tooltipAttribute).each(function() {
 					tx += 1;
-					if(item == tx - 2){                    
+					if (item == tx - 2)              
 						teamName = $(this).text(); 
-					}
 				});
 
 				var index = selectedRows.indexOf(teamName);
@@ -1680,8 +1682,6 @@
 		    helper: fixHelperModified,
 		    stop: updateIndex
 		}).disableSelection();
-
-		htmlTableToCache = $("#tablePanel tbody").html();
 	}
 	
 
@@ -1703,7 +1703,7 @@
 					(newIndex == oldIndex)) {
 				$(this).removeClass('greenColorChange');
 				$(this).removeClass('redColorChange');
-				$(this).animate({backgroundColor: "transparent"}, 1000);
+				$(this).animate({ backgroundColor: "transparent" }, 1000);
 				return true;
 			} else if (newIndex > oldIndex) {
 				$(this).removeClass('greenColorChange');
@@ -1714,33 +1714,30 @@
 			}
 			
 			miniRow = $("#miniChart #tr" + i + " rect");
-			updateColorAndOpacity($(this), miniRow, oldIndex, newIndex);
-          
-           
+			updateColorAndOpacity($(this), miniRow, oldIndex, newIndex);  
 		});
         
-        if(!rankButtonPressed){
-           selectionUpdatedMiniBar();
-        }
-         
-         
+        if (!rankButtonPressed)
+           selectionUpdatedMiniBar();  
 	}
 
+	/*
+	 * Private
+	 * grey out the bars on the mini map and disable drag interaction
+	 */
 	function greyMinibars(greyOut) {
 		disallowWeightAdjustment = greyOut;
 		var blueColor = "#337ab7";
 		var greyColor = "rgb(88, 91, 88)";
 
 		$("#consoleChart rect").each(function(i, d) {
-            
-			if(i < userAdjustedAttributesKeys.length) return;
+			if (i < userAdjustedAttributesKeys.length) 
+				return;
 
-			if(greyOut) {
+			if (greyOut)
 				$(this).attr("fill", greyColor);
-			} else {
+			else
 				$(this).attr("fill", blueColor);
-			}
-
 		});
 	}
 	
@@ -1802,6 +1799,8 @@
 							id = $(this).attr("id");
 							unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
 						}
+						
+						$("#discard_button").removeAttr("disabled");
 					});
 				}
 			}
