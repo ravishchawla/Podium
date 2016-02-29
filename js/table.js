@@ -341,8 +341,8 @@
 						new_width = console_width;
 
 					d.width = new_width;
-					//d.visibleWidth = (d.width < 10 ? 10 : d.width);
-					d.visibleWidth = d.width;
+					d.visibleWidth = (d.width < 3 ? 3 : d.width);
+					//d.visibleWidth = d.width;
 					d.amount = new_width / console_width;
 					attributeWeights[d.id] = d.amount;
 					d3.select(this).attr("width", d.visibleWidth);
@@ -353,14 +353,21 @@
 					
 					$("#discard_button").removeAttr("disabled");
 				}))
+
+
+				d3.selectAll("#consoleChart svg")
 				.on('mouseover', function(d) {
 					if(d.visibleWidth >= 10) return;
 
-					d3.select(this).attr("width", d.visibleWidth + 10);
-					setTimeout(function(ref) {
-						d3.select(ref).attr("width", d.visibleWidth);
-					}, 200, this);
-				});
+					$(this).find("rect").attr("width", d.visibleWidth + 10);
+					//d3.select(this).attr("width", d.visibleWidth + 10);
+				})
+				.on('mouseout', function(d) {
+					//setTimeout(function(ref) {
+						//d3.select(this).attr("width", d.visibleWidth);
+					$(this).find("rect").attr("width", d.visibleWidth);
+					//}, 200, this);
+				})
 
 			$("td", "#miniChart").attr("height", "1");
 			$("td", "#consoleChart").attr("height", "1");
@@ -524,8 +531,8 @@
 			attributeWeights[d.id] = d.amount;
 
 			d.width = (console_width * d.amount);
-			//d.visibleWidth = (d.width < 10 ? 10 : d.width);
-			d.visibleWidth = d.width;
+			d.visibleWidth = (d.width < 3 ? 3 : d.width);
+			//d.visibleWidth = d.width;
 			$(this).find("rect").attr("width", d.visibleWidth);
 			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
 		});
