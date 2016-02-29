@@ -35,6 +35,7 @@
     
 	var keys;
 	var htmlTableToCache;
+	var htmlConsoleToCache; 
 	var table, header, rows, cells;
 	var minimap, minimap_rows;
 	var consolePanel, console_rows;
@@ -443,8 +444,9 @@
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
 				if (unusedAttributes.indexOf(i) < 0 &&
-						userAdjustedAttributesValues.indexOf($(this).text()) === -1)
-					totalPercentage = totalPercentage + Number(d.amount);                   
+						userAdjustedAttributesValues.indexOf($(this).text()) === -1) {
+					totalPercentage = totalPercentage + Number(d.amount);             
+				}
 			});
 		}
 
@@ -452,10 +454,10 @@
 		// so they have to be offset so that the iteration index matches correctly.
 		offset = userAdjustedAttributesValues.length;
 		d3.selectAll("#consoleChart td").each(function(d, i) {
-			if(userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
+			if (userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
 				return;
 
-			if(unusedAttributes.indexOf(i) >= 0)
+			if (unusedAttributes.indexOf(i) >= 0)
 				d.amount = 0;
 			else if (weights == null)
 				d.amount = d.amount/totalPercentage;
@@ -563,8 +565,7 @@
 	
 	/*
 	 * Private 
-	 * Get the matrix for the rows that changed
-	 * Assumes attribute names don't have special characters or spaces
+	 * Get the matrix for the given set of row numbers
 	 */
 	function getMatrix(rowNums) {
 		var matrix = []; 
@@ -576,15 +577,15 @@
 			var currentData = getDataByUniqueId(id);
 			if (useCategorical) {
 				for (var j = 0; j < keys.length; j++)
-					if(unusedAttributes.indexOf(j) < 0 
+					if (unusedAttributes.indexOf(j) < 0 
 						&& userAdjustedAttributesKeys.indexOf(keys[j]) < 0)
 							row.push(currentData[keys[j] + "Norm"]);
 			} else {
 				for (var j = 0; j < numericalAttributes.length; j++)
-					if(userAdjustedAttributesKeys.indexOf(numericalAttributes[j]) >= 0)
+					if (userAdjustedAttributesKeys.indexOf(numericalAttributes[j]) >= 0)
 						continue;
-					else if(unusedAttributes.indexOf(j) < 0 ) {
-							row.push(currentData[numericalAttributes[j] + "Norm"]);
+					else if (unusedAttributes.indexOf(j) < 0 ) {
+						row.push(currentData[numericalAttributes[j] + "Norm"]);
 					}
 			}
 			uniqueIds.push(id);
@@ -682,7 +683,7 @@
 		var weightMin = Number.MAX_VALUE; 
 		var weightMax = Number.MIN_VALUE; 
 		var rankMin = Number.MAX_VALUE; 
-		var rankMax = Number.MIN_VALUE; 
+		var rankMax = Number.MIN_VALUE;
 		
 		for (var i = 0; i < len; i++) { 
 			var currentWeight = Number(data[i].ial.weight);
@@ -700,7 +701,10 @@
 		}
 		
 		for (var i = 0; i < len; i++) {
-			data[i].ial.weightNorm = maxInteractionWeight * (data[i].ial.weight - weightMin) / (weightMax - weightMin);
+			if (weightMin == weightMax)
+				data[i].ial.weightNorm = 0;
+			else
+				data[i].ial.weightNorm = maxInteractionWeight * (Number(data[i].ial.weight) - weightMin) / (weightMax - weightMin);
 			data[i].rankNorm = 1.0 - (data[i].rank - rankMin) / (rankMax - rankMin);
 		}
 	}
@@ -732,12 +736,11 @@
 
 
 		// Resplice the unused attributes into the results with a weight of 0
-		for(var i = 0; i < attributeWeights.length; i++) {
-			if(unusedAttributes.indexOf(i) >= 0) {
+		for (var i = 0; i < attributeWeights.length; i++) {
+			if (unusedAttributes.indexOf(i) >= 0) {
 				result.splice(i, 0, 0);
 			}
 		}
-		
 		
 		return result;
 	}
@@ -752,7 +755,8 @@
 		for (var i = 1; i <= data.length; i++)
 			allRows.push(i);
 
-		normalizeInteractions(); // normalize weights and values
+		normalizeInteractions(); // normalize interaction weights and values
+		weights = normalize(weights); // normalize weights
 		var matrixResult = getMatrix(allRows);
 
 		var matrix = matrixResult[0]; 
@@ -796,7 +800,8 @@
 			updateColumnWeights(null);
 			retArray = attributeWeights.slice();
 			retArray.splice(0, 1);
-			return retArray;
+			var normalizedWeights = normalize(retArray);
+			return normalizedWeights;
 		}
 		
 		// don't recompute SVD unless something has been moved
@@ -812,9 +817,10 @@
 		var V = SVD.V; 
 		
 		var D0 = numeric.inv(numeric.diag(S)[0]); 
-		var UT = numeric.transpose(U); 
+		var UT = numeric.transpose(U);
 		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
 		var normalizedWeights = normalize(weights);
+		console.log("normalized weights; " + normalizedWeights);
 
 		return normalizedWeights;
 	}
@@ -941,6 +947,7 @@
 	mar.discardButtonClicked = function() {
 		console.log("table.js: Discarding Changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
+		$("#consoleChart tbody").html(htmlConsoleToCache);
         selectedRows = [];
         handleClickedRow();
          setTimeout(function(){       
@@ -959,6 +966,7 @@
         greyMinibars(false);
 		console.log("table.js: Ranking");
         htmlTableToCache = $("#tablePanel tbody").html(); 
+        htmlConsoleToCache = $("#consoleChart tbody").html(); 
 		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 
@@ -1106,7 +1114,7 @@
         
         cachePrevContent = "";
         cachePrevContent = $('#consoleChart tbody').html();
-        //console.log("Previous Content : " + cachePrevContent);
+        //console.log("Previous Content: " + cachePrevContent);
         
         $("#consoleChart tr").each(function(i, d) {
             var rectWidth = $(this).find("rect").attr("width");
@@ -1196,7 +1204,7 @@
     	$(classInteractionCol).each(function() {
     		var interWeight = $(this).text(); 
     		interactionValueArray.push(parseFloat(interWeight));   
-            //console.log("Weight is : " + parseFloat(interWeight));
+            //console.log("Weight: " + parseFloat(interWeight));
     	});  
         //console.log("################################################################");
     }
@@ -1362,7 +1370,7 @@
             
 			if (event.shiftKey) {
 				var item = $(this).index();
-				//console.log("item value is : " + item);
+				//console.log("item value: " + item);
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1384,9 +1392,6 @@
 				isDragging = true;
                 
 		});
-        
-        
-        
 	}
 
 
@@ -1420,7 +1425,7 @@
 				selectedRows = selectedRows.filter(function(item, pos) {
 					return selectedRows.indexOf(item) == pos;
 				});
-                //console.log("Selected rows now are : " + selectedRows);
+                //console.log("Selected rows: " + selectedRows);
 				updateRowFont(selectedRows);
 			}
 		}
@@ -1437,7 +1442,7 @@
                 var backColor = $(this).css("background-color");
                 var backColor2 = $(this).css("background");
                 backColor2 = backColor2.substring(0,15);
-                //console.log("backColor is : " + backColor2);
+                //console.log("backColor: " + backColor2);
                 if(backColor == "rgb(255, 255, 255)" || backColor == "rgba(0, 0, 0, 0)"){
                    
                 }else{
@@ -1486,7 +1491,7 @@
                     
 					var rankCol = $(this).closest('tr').find('.rank.index.null');
                     var idThis = $(this).closest('tr').attr('id');
-                    //console.log("this id is : " + idThis);
+                    //console.log("id: " + idThis);
                     
                     
 					if (i == arSelRow.length - 1) {
@@ -1540,7 +1545,7 @@
 			});
 
 			$(".miniTr" ).tooltip();        
-			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score : " + rankScore;
+			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScore;
 			$(".miniTr" ).attr("title", toolText);
 
 			$('.miniTr').tooltip({
