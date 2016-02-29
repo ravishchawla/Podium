@@ -12,6 +12,7 @@
 	var unusedAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
+	var legendItems = {};
 	var tooltipAttribute;
     var classNameConsoleAttr = ".conTr";
     var cachePrevContent="";
@@ -151,6 +152,13 @@
 			ial.init(data, 0);
 			displayTable(data);
 		});
+
+		legendItems = [["#337ab7", "No Changes"],
+					   ["rgb(88,218,91)" , "Row has moved up"],
+					   ["rgb(218, 91, 88)" ,  "Row has moved sown"],
+					   ["rgb(88, 91, 88)" , "Row has been moved"]
+					  ];
+
 	}
 	
 	
@@ -177,6 +185,11 @@
 			consolePanel = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "consoleChart")
+				.attr("hidden", "hidden");
+
+			legendPanel = d3.select("#auxContentDiv")
+				.append("table")
+				.attr("id", "legendChart")
 				.attr("hidden", "hidden");
 
 			// append the table header
@@ -226,6 +239,14 @@
                 	return "consoleTr" + o;
                 });
 
+            legend_rows = legendPanel.append("tbody")
+            	.selectAll("tr")
+            	.data(legendItems)
+            	.enter()
+            	.append("tr")
+            	.attr("class", "legendItem")
+            	.style("border-bottom", "10px solid white");
+
 			// append the cells
 			cells = rows.selectAll("td")
 				.data(function(row, i) {
@@ -253,6 +274,22 @@
 			minimap_width = $("#auxContentDiv").width();
 			console_width = $("#auxContentDiv").width();
 			
+			legend_rows.selectAll("td")
+				.data(function(row, i) {
+					return [{"fill" : legendItems[i][0], "description" : "Color"},
+					{"fill" : "none", "description" : legendItems[i][1]}];
+				}).enter()
+				  .append("td")
+				  .html(function(d) { return d.description; })
+				  .attr("height", "10px")
+				  .attr("min-width", "50px")
+				  .style("color", function(d) { 
+				  	if(d.description == "Color") return d.fill;
+				  	else return "black";
+				  })
+				  .style("background-color", function(d) { return d.fill; })
+				  .style("border-right", "5px solid white");
+
 			// append mini map cells
 			minimap_rows.selectAll("td")
 				.data(function(row, i) {
@@ -353,6 +390,7 @@
 					}
 				);
 			});
+
 
 			console.log("table.js: table appended");
 		}
@@ -978,6 +1016,9 @@
 
 		minimapTab = $("#auxPanel #minimapTab");
 		minimapTab.toggleClass("active");	
+
+		legendTab = $("#auxPanel #legendTab");
+		legendTab.toggleClass("active");
 	}	
 	
 	
@@ -1141,6 +1182,7 @@
 	mar.changeToConsole = function() {
 		toggleActiveTab();
 		
+		$("#legendChart").css({"display" : "none"});
 		$("#miniChart").css({"display":"none"});
 		$("#consoleChart").css({"display":"block"});
 	}
@@ -1151,10 +1193,18 @@
 	mar.changeToMinimap = function() {
 		toggleActiveTab();
 
+		$("#legendChart").css({"display" : "none"});
 		$("#consoleChart").css({"display":"none"});
 		$("#miniChart").css({"display":"block"});
 	}
 	
+
+	mar.changeToLegend = function() {
+		toggleActiveTab();
+		$("#consoleChart").css({"display":"none"});
+		$("#miniChart").css({"display":"none"});
+		$("#legendChart").css({"display" : "block"});
+	}
 	
 	
 	/***********************************TABLE EFFECTS***********************************/
