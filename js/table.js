@@ -364,6 +364,7 @@
 
 			$("td", "#miniChart").attr("height", "1");
 			$("td", "#consoleChart").attr("height", "1");
+			$("p", "#consoleChart").css({"min-width" : $("#auxContentDiv").width()});
 
 			mapBarHeight = $("svg").height();
 
