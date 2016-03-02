@@ -358,15 +358,10 @@
 				d3.selectAll("#consoleChart svg")
 				.on('mouseover', function(d) {
 					if(d.visibleWidth >= 10) return;
-
 					$(this).find("rect").attr("width", d.visibleWidth + 10);
-					//d3.select(this).attr("width", d.visibleWidth + 10);
 				})
 				.on('mouseout', function(d) {
-					//setTimeout(function(ref) {
-						//d3.select(this).attr("width", d.visibleWidth);
 					$(this).find("rect").attr("width", d.visibleWidth);
-					//}, 200, this);
 				})
 
 			$("td", "#miniChart").attr("height", "1");
@@ -921,7 +916,7 @@
 	 * Private
 	 * Update the opacity of the given row object based on the change in index
 	 */
-	function updateColorAndOpacity(rowObj, miniRowObj, oldIndex, newIndex) {
+	function updateColorAndOpacity(rowObj, oldMiniRowObj, newMiniRowObj, oldIndex, newIndex) {
 		var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
 		if (newIndex == oldIndex)
 			opacity = 0;
@@ -935,8 +930,12 @@
 
 		if (colorOverlay) {
 				rowObj.css("background-color", color + opacity + ')');
-				miniRowObj.css("fill", color + '1)');
+				newMiniRowObj.css("fill", color + '1)');
 		}
+
+		oldWidth = newMiniRowObj.attr("width");
+		newMiniRowObj.attr("width", oldMiniRowObj.attr("width"));
+		oldMiniRowObj.attr("width", oldWidth);
 	}
 	
 	
@@ -1851,8 +1850,9 @@
 				$(this).addClass('greenColorChange');
 			}
 			
-			miniRow = $("#miniChart #tr" + i + " rect");
-			updateColorAndOpacity($(this), miniRow, oldIndex, newIndex);  
+			oldMiniRow = $("#miniChart #tr" + (oldIndex - 1) + " rect");
+			newMiniRow = $("#miniChart #tr" + (newIndex - 1) + " rect");
+			updateColorAndOpacity($(this), oldMiniRow, newMiniRow, oldIndex, newIndex);  
 		});
         
         if (!rankButtonPressed)
