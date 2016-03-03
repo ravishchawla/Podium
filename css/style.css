@@ -80,7 +80,8 @@ body {
 
 #tableId td {
 	padding: 0px;	
-	overflow: hidden;;
+	overflow: hidden;
+	padding: 10px;
 }
 
 #tableId tr {
@@ -102,14 +103,14 @@ svg {
 	opacity: 0.3;
 }
 
-#tableId td {
-	border: 1px #f2f2f2 solid;
-	padding: 10px;
+.tableSeperator {
+	border-right: 0px #555  solid;
 }
 
-.tableSeperator {
-	border-right: 0px grey solid;
+#tableId td:not(.tableSeperator) {
+	border: 1px #f2f2f2 solid;
 }
+
 
 .columnChartName {
 	float: left;

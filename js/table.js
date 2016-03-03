@@ -122,7 +122,7 @@
 					}
 					
 					if (isNumerical) {
-						columns.push({ head: attrName, cl: attrName + " numericalAttribute", html: ƒ(attrName)});
+						columns.push({ head: attrName, cl: attrName.replace(" ", "_", "g") + " numericalAttribute", html: ƒ(attrName)});
 						numericalAttributes.push(attrName);
 					} else {
 						var attrMap = {}; 
@@ -266,7 +266,7 @@
 				.append("td")
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.html(ƒ("html"))
-				.attr("class", ƒ("cl"));			
+				.attr("class", ƒ("cl"));
 			
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
@@ -377,6 +377,8 @@
 			}
 
 			$("td.interactionWeight").addClass("tableSeperator");
+			$("th.interactionWeight").addClass("tableSeperator")
+
 			addFunctionality(); 
 			$("#discard_button").attr("disabled", "disabled");
 			
@@ -440,7 +442,8 @@
 			.transition()
 			.duration(1000);
 
-		$("td.interactionWeight").addClass("tableSeperator")		
+		$("td.interactionWeight").addClass("tableSeperator");
+		$("th.interactionWeight").addClass("tableSeperator")
 		widths = [];
 		$("th", "#tableId").each(function(d) {
 			widths.push(this.getBoundingClientRect().width);
@@ -1117,7 +1120,7 @@
         getRankScores();
         getInteractionWeights();
         var normInterArray = normalizeArray(interactionValueArray)
-        enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
+        enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
         updateRowFont(selectedRows);
@@ -1232,7 +1235,7 @@
         tablelens();
         handleClickedRow();
         
-        addFixedHeader();
+        //addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
         cachePrevContent = $('#consoleChart tbody').html();
@@ -1304,15 +1307,27 @@
           if (count == 0) {
             
             // handle bars for interaction weights
+            tag = 0;
             getInteractionWeights();
             var normInterArray = normalizeArray(interactionValueArray)
-            enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);
+            enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, tag^=1);
             
             // handle bars for rank scores
             getRankScores();
             var normRankArray = normalizeArray(rankScoreValueArray);
-            enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
+            enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, tag^=1);
             count +=1;
+
+
+            for(var attr = userAdjustedAttributesKeys.length; attr < 
+            	numericalAttributes.length;
+            	 attr++) {
+            	attrSelector = "td." + numericalAttributes[attr].replace(" ", "_", "g");
+            	var attrValues = getValueArrayByColumn(attrSelector);
+            	var normAttrValues = normalizeArray(attrValues);
+            	enableBarsOnCols(attrSelector, normAttrValues, attrValues, tag^=1);
+            }
+
         }
     }
     
@@ -1322,7 +1337,7 @@
      * Populate rankScoreValueArray
      */
     function getRankScores() {
-    	var classRankScore = ".rankScore";
+    	var classRankScore = "td.rankScore";
     	var ind = 0;
     	rankScoreValueArray = [];
     	$(classRankScore).each(function() {
@@ -1334,6 +1349,15 @@
     	});
     }
     
+    function getValueArrayByColumn(selector) {
+    	arr = [];
+    	$(selector).each(function() {
+    		var val = $(this).text();
+    		arr.push(parseFloat(val));
+    	});
+
+    	return arr;
+    }
     
     /*
      * Private
@@ -1341,7 +1365,7 @@
      */
     function getInteractionWeights() {
         interactionValueArray = [];
-    	var classInteractionCol = ".interactionWeight.tableSeperator";
+    	var classInteractionCol = "td.interactionWeight.tableSeperator";
     	$(classInteractionCol).each(function() {
     		var interWeight = $(this).text(); 
     		interactionValueArray.push(parseFloat(interWeight));   
@@ -1381,11 +1405,9 @@
     	
     	if (tag == 0) {
     		// interaction weight
-    		str = "Interaction Weight";
     		colorValue = "a";
     	} else {
     		// rank score
-    		str = "Rank Score";
     		colorValue = "f";
     	}
     	
@@ -1393,63 +1415,30 @@
     	var prevWidth = 0;
     	
     	$(selector).each(function() {
-    		if (tag == 0) {
-    			var tdWidth = $(this).width() * normalizedArray[item];
-    			if (isNaN(tdWidth)) 
-    				tdWidth = prevWidth;
+			var tdWidth = $(this).width() * normalizedArray[item];
+			if (isNaN(tdWidth)) 
+				tdWidth = prevWidth;
 
-    			var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+			var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
 
-    			$(this).html(content);
-    			ttText = str + ": " + itemArray[item];
+			$(this).html(content);
+			ttText = itemArray[item];
 
-    			$(this).tooltip();        
-    			$(this).attr("title", ttText);            
-    			$(this).tooltip({
-    				tooltipClass: "tooltipInteraction",
-    			});
-    			
-    			$(this).tooltip({
-    				position: {
-    					my: "left top",
-    					at: "center top"
-    				}
-    			});
-    			
-    			item += 1;
-    			prevWidth = tdWidth;
-    		} else {
-
-    			if (item > 0 && item <= interactionValueArray.length) {
-
-    				var tdWidth = $(this).width() * normalizedArray[item];
-    				if (isNaN(tdWidth)) 
-    					tdWidth = prevWidth;
-    				var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth + "><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
-
-    				$(this).html(content);
-    				if (itemArray[item] == undefined) 
-    					itemArray[item] = itemArray[item-1];
-    				
-    				ttText = str + ": " + itemArray[item];
-
-    				$(this).tooltip();        
-    				$(this).attr("title", ttText);            
-    				$(this).tooltip({
-    					tooltipClass: "tooltipInteraction",
-    				});
-    				
-    				$(this).tooltip({
-    					position: {
-    						my: "left top",
-    						at: "center top"
-    					}
-    				});                
-
-    				prevWidth = tdWidth;
-    			}
-    			item += 1;       
-    		}
+			$(this).tooltip();        
+			$(this).attr("title", ttText);            
+			$(this).tooltip({
+				tooltipClass: "tooltipInteraction",
+			});
+			
+			$(this).tooltip({
+				position: {
+					my: "left top",
+					at: "center top"
+				}
+			});
+			
+			item += 1;
+			prevWidth = tdWidth;
     	});
     }
     
@@ -1811,7 +1800,7 @@
             //getInteractionWeights();
             //console.log("Interaction Value Array now is : " + interactionValueArray);
             var normInterArray = normalizeArray(interactionValueArray)
-            enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
+            enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
 		};
 
 
