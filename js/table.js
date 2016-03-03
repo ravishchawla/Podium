@@ -21,7 +21,6 @@
 	var lastChangedRow;
 	var changedRows = [];
     var selectedRows = [];
-    var selectedRowsIndex = [];
     var interactionValueArray =[];
     var rankScoreValueArray = [];
 	
@@ -1120,7 +1119,7 @@
         enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
-        updateRowFont(selectedRows);
+        updateRowFont("");
         selectionUpdatedMiniBar();
         rankButtonPressed = false;
         setTimeout(function() {       
@@ -1504,7 +1503,7 @@
 		var defFontWeight = $("#tr1").css('font-weight');
 
 		updateClickedItem();
-		updateRowFont(selectedRows);
+		//updateRowFont("");
 
 		$('#tableId tr').click(function(event) {
             
@@ -1524,8 +1523,7 @@
 				var index = selectedRows.indexOf(teamName);
 				if (index > -1) {
 					selectedRows.splice(index, 1);
-                    selectedRowsIndex.splice(index, 1);
-					updateRowFont(selectedRows);
+					updateRowFont(teamName);
 				}
 			} else
 				isDragging = true;
@@ -1559,13 +1557,13 @@
 				});
 
 				$("#tr" + item).attr("id", teamName);
+                editSelectedRowItems(teamName);
 				selectedRows.push(teamName);
-                selectedRowsIndex.push(item);
-				selectedRows = selectedRows.filter(function(item, pos) {
-					return selectedRows.indexOf(item) == pos;
+				selectedRows = selectedRows.filter(function(item, ps) {
+					return selectedRows.indexOf(item) == ps;
 				});
                 //console.log("Selected rows: " + selectedRows);
-				updateRowFont(selectedRows);
+				updateRowFont(teamName);
 			}
 		}
 	}    
@@ -1581,7 +1579,6 @@
                 var backColor = $(this).css("background-color");
                 var backColor2 = $(this).css("background");
                 backColor2 = backColor2.substring(0,15);
-                //console.log("backColor: " + backColor2);
                 if(backColor == "rgb(255, 255, 255)" || backColor == "rgba(0, 0, 0, 0)"){
                    
                 }else{
@@ -1591,7 +1588,7 @@
             
             if(backColor2 === "rgb(99, 99, 99)"){
                      var id2 = iter - 1;
-                     //$("#rec" + id2).css("fill", "#686868");
+                
                         
                 } 
             
@@ -1599,12 +1596,34 @@
             });
         
     }
+    /*
+	 * Private
+	 * Updates the selected row array based on if you have clicked on a watched row again or not
+	 */
+    function editSelectedRowItems(teamName){
+        var index  = -1;
+        for(var i=0;i<selectedRows.length;i++){
+            if(teamName == selectedRows[i]){
+                //console.log("found the team name which was before : " + teamName + "index is : " + i);
+                index = i;
+            }
+        }
+        
+        if(index>-1){
+            //console.log("selected row before : " + selectedRows);
+            selectedRows.splice(index, 1);
+            selectedRows.push(teamName);
+            //console.log("selected row after : " + selectedRows);
+        }
+    }
 	
 	/*
 	 * Private
 	 * Update the font of the given row
 	 */
-	function updateRowFont(arSelRow) {
+	function updateRowFont(teamName) {
+        var greyColor = "#bdbdbd";
+        var darkGreyColor = "#636363";
 		var defFontSize = $("#tr1").css('font-size');
 		var defFontWeight = $("#tr1").css('font-weight');
 		//$("tr").css("font-size", defFontSize);
@@ -1616,34 +1635,43 @@
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
             if(iter>1){
-                $(this).css("background", "white");
-                $(this).css("color", "black");
+               $(this).css("background", "white");
+               $(this).css("color", "black");
             }  
             iter += 1;
             });
         
-		for (var i = 0; i < arSelRow.length; i++) {
+		for (var i = 0; i < selectedRows.length; i++) {
 			$('.' + tooltipAttribute).each(function() {
-				if (arSelRow[i] == $(this).text()) {
+				if (selectedRows[i] == $(this).text()) {
 					var idValTr = $(this).closest('tr');
                     
                     
 					var rankCol = $(this).closest('tr').find('.rank.index.null');
                     var idThis = $(this).closest('tr').attr('id');
-                    //console.log("id: " + idThis);
+                  
+                   
+                   
                     
+                    //ELSE CURRENT ROW IS NOT GREY
                     
-					if (i == arSelRow.length - 1) {
+					if (i == selectedRows.length - 1) {
 						idValTr.css("color", "black");
 						idValTr.css("font-weight", "900");
-                        rankCol.css("background", "#636363");
-                        rankCol.css("color", "white");
+                        
+                        var styleContent = "color: rgb(255, 255, 255); background: rgb(99, 99, 99);"
+                        rankCol.attr("style", styleContent);
+                        //rankCol.css("background", darkGreyColor);
+                        //rankCol.css("color", "white");
 					} else {
 						//idValTr.css("color", "#636363");
 						//idValTr.css("font-weight", "900");
-                        rankCol.css("background", "#bdbdbd");
-                        rankCol.css("color", "black");
+                        var styleContent = "color: rgb(0, 0, 0); background: rgb(189, 189, 189);"
+                        rankCol.attr("style", styleContent);
+                        //rankCol.css("background", greyColor);
+                        //rankCol.css("color", "black");
 					}
+                    
 				}
 			});
 		} 
