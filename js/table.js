@@ -52,6 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
+    var showBarOverlay = false;
     
     var miniChartCache = "";
    
@@ -246,27 +247,38 @@
             	.attr("class", "legendItem")
             	.style("border-bottom", "10px solid white");
 
-			// append the cells
 			cells = rows.selectAll("td")
 				.data(function(row, i) {
 					return columns.map(function(c) {
 						var cell = {}; 
 						d3.keys(c).forEach(function(k) {
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
+							//console.log(row[c["head"] + "Norm"]);
 							if (c[k] == "rank index" || c[k] == "oldIndex")
 								c[k] = i;
 							if (c[k] == "uniqueId") {
 								c[k] = null;
 							}
 						});
+						cell["norm"] = row[c["head"] + "Norm"];
 						return cell; 
 					});
 				}).enter()
 				.append("td")
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				.html(ƒ("html"))
+				//.html(ƒ("html"))
+				.html(function(d, i) {
+					if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
+						return d.html;
+
+					var tdWidth = $(this).width() * d.norm;
+					var colorValue = (i % 2 == 0 ? 'f' : 'a');
+					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+					return content;
+				})
 				.attr("class", ƒ("cl"));
 			
+						console.log(data);
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
 
@@ -421,10 +433,19 @@
 						if (c[k] == "uniqueId")
 							c[k] = null;
 					});
+					cell["norm"] = row[c["head"] + "Norm"];
 					return cell; 
 				});
 			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-			.html(ƒ("html"))
+			.html(function(d, i) {
+				if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
+						return d.html;
+
+					var tdWidth = $(this).width() * d.norm;
+					var colorValue = (i % 2 == 0 ? 'f' : 'a');
+					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+					return content;
+				})
 			.attr("placeHolder", function(d, i) {
 				// update the rank and old index
 				var rowData = $('tr', '#tablePanel').eq(i);
@@ -1234,10 +1255,11 @@
         tablelens();
         handleClickedRow();
         
-        //addFixedHeader();
+        addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
         cachePrevContent = $('#consoleChart tbody').html();
+
 	}
     
 	
@@ -1316,17 +1338,6 @@
             var normRankArray = normalizeArray(rankScoreValueArray);
             enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, tag^=1);
             count +=1;
-
-
-            for(var attr = userAdjustedAttributesKeys.length; attr < 2;
-            	//numericalAttributes.length;
-            	 attr++) {
-            	attrSelector = "td." + numericalAttributes[attr].replace(" ", "_", "g");
-            	var attrValues = getValueArrayByColumn(attrSelector);
-            	var normAttrValues = normalizeArray(attrValues);
-            	enableBarsOnCols(attrSelector, normAttrValues, attrValues, tag^=1);
-            }
-
         }
     }
     
@@ -1393,6 +1404,40 @@
     	return normalizedArray;
     }
 
+    /*
+     * Private
+     * Normalize the dataset and return all normd columns
+     */
+     function normalizeDataset(datas) {
+     	var epsilon = 1;
+     	var epsilon2 = 0.75;
+     	var normd = [];
+     	var datasetKeys = Object.keys(datas[0]);
+
+     	for(var row = 0; row < datas.length; row++)
+     		normd[row] = {};
+
+     	for(var attrKey = 0; attrKey < datas.length; attrKey++) {
+
+     		var attr = datasetKeys[attrKey];
+     		var maxWeight = parseFloat(Math.max.apply(Math, datas.map(
+     															function(d) {
+     																return d[attr];
+     															})));
+     		if(maxWeight == 0)
+     			maxWeight = epsilon;
+
+     		for(var row = 0; row < datas.length; row++) {
+     			if(datas[row][attr] == 0)
+     				normd[row][attr] = epsilon2/maxWeight;
+     			else
+     				normd[row][attr] = datas[row][attr]/maxWeight;
+     		}
+     	}
+
+     	console.log(normd);
+
+     }
     
     /*
      * Private 
