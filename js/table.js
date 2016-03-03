@@ -1318,8 +1318,8 @@
             count +=1;
 
 
-            for(var attr = userAdjustedAttributesKeys.length; attr < 
-            	numericalAttributes.length;
+            for(var attr = userAdjustedAttributesKeys.length; attr < 2;
+            	//numericalAttributes.length;
             	 attr++) {
             	attrSelector = "td." + numericalAttributes[attr].replace(" ", "_", "g");
             	var attrValues = getValueArrayByColumn(attrSelector);
