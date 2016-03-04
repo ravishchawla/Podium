@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = false;
+    var showBarOverlay = true;
     
     var miniChartCache = "";
    
@@ -253,7 +253,6 @@
 						var cell = {}; 
 						d3.keys(c).forEach(function(k) {
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
-							//console.log(row[c["head"] + "Norm"]);
 							if (c[k] == "rank index" || c[k] == "oldIndex")
 								c[k] = i;
 							if (c[k] == "uniqueId") {
@@ -265,18 +264,24 @@
 					});
 				}).enter()
 				.append("td")
-				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				//.html(ƒ("html"))
-				.html(function(d, i) {
-					if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
-						return d.html;
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; });
 
-					var tdWidth = $(this).width() * d.norm;
-					var colorValue = (i % 2 == 0 ? 'f' : 'a');
-					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
-					return content;
-				})
-				.attr("class", ƒ("cl"));
+				cellWidth = 0;
+				if(!showBarOverlay)
+					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
+				else {
+					cells = cells.html(function(d, i) {
+						if(numericalAttributes.indexOf(d.head) < 1) {
+							return d.html;
+						}
+
+						cellWidth = $(this).width() * d.norm;
+						if(cellWidth < 0) { cellWidth = 50 * d.norm; }
+
+						return "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + cellWidth +"><rect id = 'something' class = 'some' width=" + cellWidth +" height= 50 fill='#" + (i % 2 == 0 ? 'f' : 'a') + "27997'/></svg>";
+					})
+					.attr("class", ƒ("cl"));
+				}
 			
 						console.log(data);
 			var num_rows = cells.length;
@@ -441,9 +446,11 @@
 				if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
 						return d.html;
 
-					var tdWidth = $(this).width() * d.norm;
+					cellWidth = $(this).width() * d.norm;
+					if(cellWidth < 0) { cellWidth = 50 * d.norm; }
+
 					var colorValue = (i % 2 == 0 ? 'f' : 'a');
-					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + cellWidth +"><rect id = 'something' class = 'some' width=" + cellWidth +" height= 50 fill='#" + colorValue + "27997'/></svg>";
 					return content;
 				})
 			.attr("placeHolder", function(d, i) {
@@ -1434,9 +1441,6 @@
      				normd[row][attr] = datas[row][attr]/maxWeight;
      		}
      	}
-
-     	console.log(normd);
-
      }
     
     /*
@@ -1459,6 +1463,7 @@
     	var prevWidth = 0;
     	
     	$(selector).each(function() {
+    		console.log($(this).width());
 			var tdWidth = $(this).width() * normalizedArray[item];
 			if (isNaN(tdWidth)) 
 				tdWidth = prevWidth;

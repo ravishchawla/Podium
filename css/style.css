@@ -107,7 +107,7 @@ svg {
 	border-right: 0px #555  solid;
 }
 
-#tableId td:not(.tableSeperator) {
+#tableId td {
 	border: 1px #f2f2f2 solid;
 }
 
