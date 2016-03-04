@@ -52,10 +52,8 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = false;
     
     var miniChartCache = "";
-   
     var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
     
     
@@ -122,7 +120,7 @@
 					}
 					
 					if (isNumerical) {
-						columns.push({ head: attrName, cl: attrName.replace(" ", "_", "g") + " numericalAttribute", html: ƒ(attrName)});
+						columns.push({ head: attrName, cl: attrName + " numericalAttribute", html: ƒ(attrName)});
 						numericalAttributes.push(attrName);
 					} else {
 						var attrMap = {}; 
@@ -247,38 +245,27 @@
             	.attr("class", "legendItem")
             	.style("border-bottom", "10px solid white");
 
+			// append the cells
 			cells = rows.selectAll("td")
 				.data(function(row, i) {
 					return columns.map(function(c) {
 						var cell = {}; 
 						d3.keys(c).forEach(function(k) {
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
-							//console.log(row[c["head"] + "Norm"]);
 							if (c[k] == "rank index" || c[k] == "oldIndex")
 								c[k] = i;
 							if (c[k] == "uniqueId") {
 								c[k] = null;
 							}
 						});
-						cell["norm"] = row[c["head"] + "Norm"];
 						return cell; 
 					});
 				}).enter()
 				.append("td")
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				//.html(ƒ("html"))
-				.html(function(d, i) {
-					if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
-						return d.html;
-
-					var tdWidth = $(this).width() * d.norm;
-					var colorValue = (i % 2 == 0 ? 'f' : 'a');
-					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
-					return content;
-				})
-				.attr("class", ƒ("cl"));
+				.html(ƒ("html"))
+				.attr("class", ƒ("cl"));			
 			
-						console.log(data);
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
 
@@ -388,8 +375,6 @@
 			}
 
 			$("td.interactionWeight").addClass("tableSeperator");
-			$("th.interactionWeight").addClass("tableSeperator")
-
 			addFunctionality(); 
 			$("#discard_button").attr("disabled", "disabled");
 			
@@ -433,19 +418,10 @@
 						if (c[k] == "uniqueId")
 							c[k] = null;
 					});
-					cell["norm"] = row[c["head"] + "Norm"];
 					return cell; 
 				});
 			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-			.html(function(d, i) {
-				if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
-						return d.html;
-
-					var tdWidth = $(this).width() * d.norm;
-					var colorValue = (i % 2 == 0 ? 'f' : 'a');
-					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
-					return content;
-				})
+			.html(ƒ("html"))
 			.attr("placeHolder", function(d, i) {
 				// update the rank and old index
 				var rowData = $('tr', '#tablePanel').eq(i);
@@ -462,8 +438,7 @@
 			.transition()
 			.duration(1000);
 
-		$("td.interactionWeight").addClass("tableSeperator");
-		$("th.interactionWeight").addClass("tableSeperator")
+		$("td.interactionWeight").addClass("tableSeperator")		
 		widths = [];
 		$("th", "#tableId").each(function(d) {
 			widths.push(this.getBoundingClientRect().width);
@@ -1137,12 +1112,17 @@
 		//console.log("Weight: " + weights);
 		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
              
+        
+        
         getRankScores();
         getInteractionWeights();
         var normInterArray = normalizeArray(interactionValueArray)
-        enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
+        enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
+        
+        
+        
         updateRowFont("");
         selectionUpdatedMiniBar();
         rankButtonPressed = false;
@@ -1259,7 +1239,6 @@
         enableConsoleChartTooltips();
         drawBars();
         cachePrevContent = $('#consoleChart tbody').html();
-
 	}
     
 	
@@ -1328,15 +1307,15 @@
           if (count == 0) {
             
             // handle bars for interaction weights
-            tag = 0;
             getInteractionWeights();
+            console.log("trying draw bars")
             var normInterArray = normalizeArray(interactionValueArray)
-            enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, tag^=1);
+            enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);
             
             // handle bars for rank scores
             getRankScores();
             var normRankArray = normalizeArray(rankScoreValueArray);
-            enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, tag^=1);
+            enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
             count +=1;
         }
     }
@@ -1347,7 +1326,7 @@
      * Populate rankScoreValueArray
      */
     function getRankScores() {
-    	var classRankScore = "td.rankScore";
+    	var classRankScore = ".rankScore";
     	var ind = 0;
     	rankScoreValueArray = [];
     	$(classRankScore).each(function() {
@@ -1359,29 +1338,25 @@
     	});
     }
     
-    function getValueArrayByColumn(selector) {
-    	arr = [];
-    	$(selector).each(function() {
-    		var val = $(this).text();
-    		arr.push(parseFloat(val));
-    	});
-
-    	return arr;
-    }
     
-    /*
+
+    
+        /*
      * Private
      * Populate interactionValueArray
      */
     function getInteractionWeights() {
         interactionValueArray = [];
-    	var classInteractionCol = "td.interactionWeight.tableSeperator";
+    	var classInteractionCol = ".interactionWeight.tableSeperator";
     	$(classInteractionCol).each(function() {
     		var interWeight = $(this).text(); 
+            //console.log("Weight: " + interWeight);
     		interactionValueArray.push(parseFloat(interWeight));   
             //console.log("Weight: " + parseFloat(interWeight));
     	});  
-        //console.log("################################################################");
+        
+       // console.log("interaction value array : " + interactionValueArray);
+       
     }
     
     
@@ -1404,54 +1379,24 @@
     	return normalizedArray;
     }
 
-    /*
-     * Private
-     * Normalize the dataset and return all normd columns
-     */
-     function normalizeDataset(datas) {
-     	var epsilon = 1;
-     	var epsilon2 = 0.75;
-     	var normd = [];
-     	var datasetKeys = Object.keys(datas[0]);
-
-     	for(var row = 0; row < datas.length; row++)
-     		normd[row] = {};
-
-     	for(var attrKey = 0; attrKey < datas.length; attrKey++) {
-
-     		var attr = datasetKeys[attrKey];
-     		var maxWeight = parseFloat(Math.max.apply(Math, datas.map(
-     															function(d) {
-     																return d[attr];
-     															})));
-     		if(maxWeight == 0)
-     			maxWeight = epsilon;
-
-     		for(var row = 0; row < datas.length; row++) {
-     			if(datas[row][attr] == 0)
-     				normd[row][attr] = epsilon2/maxWeight;
-     			else
-     				normd[row][attr] = datas[row][attr]/maxWeight;
-     		}
-     	}
-
-     	console.log(normd);
-
-     }
     
     /*
      * Private 
      * Enable bars in the main table
      */
     function enableBarsOnCols(selector, normalizedArray, itemArray, tag) {
+        
+     
     	var colorValue = "";
     	var str = "";
     	
     	if (tag == 0) {
     		// interaction weight
+    		str = "Interaction Weight";
     		colorValue = "a";
     	} else {
     		// rank score
+    		str = "Rank Score";
     		colorValue = "f";
     	}
     	
@@ -1459,33 +1404,75 @@
     	var prevWidth = 0;
     	
     	$(selector).each(function() {
-			var tdWidth = $(this).width() * normalizedArray[item];
-			if (isNaN(tdWidth)) 
-				tdWidth = prevWidth;
+    		if (tag == 0) {
+    			var tdWidth = $(this).width() * normalizedArray[item];
+    			if (isNaN(tdWidth)) 
+    				tdWidth = prevWidth;
+                var current = $(this).text();
+    			var content = "<p class = 'textToHide'>"+current +"</p><svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+                
+    			$(this).html(content);
+                //$(this).append(content);
+               
+    			ttText = str + ": " + itemArray[item];
 
-			var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+    			$(this).tooltip();        
+    			$(this).attr("title", ttText);            
+    			$(this).tooltip({
+    				tooltipClass: "tooltipInteraction",
+    			});
+    			
+    			$(this).tooltip({
+    				position: {
+    					my: "left top",
+    					at: "center top"
+    				}
+    			});
+    			
+    			item += 1;
+    			prevWidth = tdWidth;
+    		} else {
 
-			$(this).html(content);
-			ttText = itemArray[item];
+    			if (item > 0 && item <= interactionValueArray.length) {
 
-			$(this).tooltip();        
-			$(this).attr("title", ttText);            
-			$(this).tooltip({
-				tooltipClass: "tooltipInteraction",
-			});
-			
-			$(this).tooltip({
-				position: {
-					my: "left top",
-					at: "center top"
-				}
-			});
-			
-			item += 1;
-			prevWidth = tdWidth;
+    				var tdWidth = $(this).width() * normalizedArray[item];
+    				if (isNaN(tdWidth)) 
+    					tdWidth = prevWidth;
+    				var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth + "><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
+
+    				$(this).html(content);
+    				if (itemArray[item] == undefined) 
+    					itemArray[item] = itemArray[item-1];
+    				
+    				ttText = str + ": " + itemArray[item];
+
+    				$(this).tooltip();        
+    				$(this).attr("title", ttText);            
+    				$(this).tooltip({
+    					tooltipClass: "tooltipInteraction",
+    				});
+    				
+    				$(this).tooltip({
+    					position: {
+    						my: "left top",
+    						at: "center top"
+    					}
+    				});                
+
+    				prevWidth = tdWidth;
+    			}
+    			item += 1;       
+    		}
     	});
+  
+       
+         //$(".textToHide").css('font-size', 0);
+         $(".textToHide").hide();
+
+        
     }
     
+
 
 	/*
 	 * Private
@@ -1831,6 +1818,7 @@
 	 * Change color of row based on direction and magnitude of change
 	 */
 	function clickAndDragRows() {
+       
 		var fixHelperModified = function(e, tr) {
 			var $originals = tr.children();
 			var $helper = tr.clone();
@@ -1852,12 +1840,16 @@
 			if (Number(dataItem["rank"]) == Number(ui.item.index()) + 1) 
 				w = 0;
            
-			if (w == interactionIncrement)
+		
+              if (w == interactionIncrement){
                 interactionValueArray[Number(ui.item.index())] += interactionIncrement;
-			
+            }
+			 
             ial.incrementItemWeight(dataItem, w);
      
 			ui.item.find("td.interactionWeight").html(dataItem.ial.weight);
+            
+           
             
 			$('tr', ui.item.parent()).each(function(i) {
 				// update the rank attribute
@@ -1868,12 +1860,14 @@
 				$(this).find("td.rank.index").html(i + 1);
                 
 			});	
+            
+         
+              
 
 			colorRows();
-            //getInteractionWeights();
-            //console.log("Interaction Value Array now is : " + interactionValueArray);
+            getInteractionWeights();
             var normInterArray = normalizeArray(interactionValueArray)
-            enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
+            enableBarsOnCols(".interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
 		};
 
 
