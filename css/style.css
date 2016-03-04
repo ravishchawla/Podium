@@ -82,6 +82,7 @@ body {
 	padding: 0px;	
 	overflow: hidden;
 	padding: 10px;
+	height: 25px;
 }
 
 #tableId tr {
@@ -90,8 +91,18 @@ body {
 	overflow: hidden;
 }
 
-svg {
+#auxContentDiv svg {
 	height: 10px;
+	display: block;
+}
+
+#tablePanel rect {
+	height: 100%;
+	display: block;
+}
+
+#tablePanel svg {
+	height: 25px;
 	display: block;
 }
 

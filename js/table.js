@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = true;
+    var showBarOverlay = false;
     
     var miniChartCache = "";
    
@@ -275,10 +275,19 @@
 							return d.html;
 						}
 
-						cellWidth = $(this).width() * d.norm;
-						if(cellWidth < 0) { cellWidth = 50 * d.norm; }
+						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
+						if(cellWidth < 10 ) { cellWidth = 10 }
+//								
 
-						return "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + cellWidth +"><rect id = 'something' class = 'some' width=" + cellWidth +" height= 50 fill='#" + (i % 2 == 0 ? 'f' : 'a') + "27997'/></svg>";
+						return "<svg class = ' " + d.cl + 
+								"'Svg' id = 'inter'  width = " + cellWidth + ">" +
+								//"<g>" +
+								"<rect id = 'something' class = 'some' width=" 
+								+ cellWidth +" height= 50 fill='#" + 
+								(i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
+								//"<text width=50 font-family = 'Verdana' font-size='55' fill='blue'>Hello</text>"
+								//+ "</g>"
+								+ "</svg>";
 					})
 					.attr("class", ƒ("cl"));
 				}
@@ -1463,13 +1472,12 @@
     	var prevWidth = 0;
     	
     	$(selector).each(function() {
-    		console.log($(this).width());
 			var tdWidth = $(this).width() * normalizedArray[item];
 			if (isNaN(tdWidth)) 
 				tdWidth = prevWidth;
 
-			var content = "<svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>";
-
+			var current = $(this).text();
+			var content = "<p class = 'textToHide'>"+current +"</p><svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>"; 
 			$(this).html(content);
 			ttText = itemArray[item];
 
@@ -1489,6 +1497,9 @@
 			item += 1;
 			prevWidth = tdWidth;
     	});
+    	//$(".textToHide").css('font-size', 0);  
+ 		$(".textToHide").hide();  
+
     }
     
 
@@ -1875,7 +1886,7 @@
 			});	
 
 			colorRows();
-            //getInteractionWeights();
+            getInteractionWeights();
             //console.log("Interaction Value Array now is : " + interactionValueArray);
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
