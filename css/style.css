@@ -157,3 +157,47 @@ body {
 	color: #FFF;
 	background-color: #555;	
 }
+
+.miniMapSv1g{
+    width:100%;
+    float: left;
+}
+
+
+.miniDotSv11g{
+    float: right;
+    width: auto;
+}
+
+
+
+
+
+.miniMapSvg{
+    display: block;
+    /*background:red;*/
+}
+
+
+
+.miniMapRect {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    
+}
+.miniDotSvg {
+    display: inline;
+    margin: 0;
+    padding: 0;
+   
+}
+
+
+
+
+
+
+
+
+
