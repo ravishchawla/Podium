@@ -1684,7 +1684,7 @@
                 
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
-            if(iter>1){
+            if(iter>0){
                $(this).css("background", "white");
                $(this).css("color", "black");
             }  
@@ -1711,15 +1711,10 @@
                         
                         var styleContent = "color: rgb(255, 255, 255); background: rgb(99, 99, 99);"
                         rankCol.attr("style", styleContent);
-                        //rankCol.css("background", darkGreyColor);
-                        //rankCol.css("color", "white");
 					} else {
-						//idValTr.css("color", "#636363");
-						//idValTr.css("font-weight", "900");
                         var styleContent = "color: rgb(0, 0, 0); background: rgb(189, 189, 189);"
                         rankCol.attr("style", styleContent);
-                        //rankCol.css("background", greyColor);
-                        //rankCol.css("color", "black");
+                       
 					}
                     
 				}
