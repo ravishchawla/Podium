@@ -292,7 +292,6 @@
 				}
 
 			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});
-
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
 
@@ -1175,7 +1174,7 @@
         var normInterArray = normalizeArray(interactionValueArray)
         enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
         var normRankArray = normalizeArray(rankScoreValueArray);
-        enableBarsOnCols(".rankScore", normRankArray, rankScoreValueArray, 1);
+        enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
         updateRowFont("");
         selectionUpdatedMiniBar();
         rankButtonPressed = false;
@@ -1384,7 +1383,7 @@
     	var ind = 0;
     	rankScoreValueArray = [];
     	$(classRankScore).each(function() {
-    		if (ind > 0 && ind <= interactionValueArray.length) { 
+    		if (ind > -1 && ind <= interactionValueArray.length) { 
     			var rankScoreValue = $(this).text(); 
     			rankScoreValueArray.push(parseFloat(rankScoreValue));                 
     		}          
@@ -1639,6 +1638,8 @@
 	 * Updates the rows of mini bar as grey color, when main table rows are selected
 	 */
     function selectionUpdatedMiniBar(){
+        
+        
         miniChartCache = $("tr .rank.index.null").html();
         var iter =0;
         $("tr .rank.index.null").each(function() {
@@ -1649,7 +1650,29 @@
                    
                 }else{
                      var id = iter - 1;
-                     $("#rec" + id).css("fill", "#bdbdbd");
+                    
+                    $("#rec" + id).css("fill", "#bdbdbd");
+                    var elemTr = $("#rec" + id).closest('tr');
+                    var elemTrId = elemTr.attr('id');
+                    //console.log("tr id is : " + elemTrId);
+                    //console.log("++++++++++++++++++++++++++++++++++++++++++");
+                    
+                    var dotId = elemTrId+" Dotted";
+                    var ind = elemTrId.indexOf(" Dotted");
+                    if(ind == -1){
+                        var recWidth = $("#rec" + id).attr("width");
+                        var newWidth = 1*recWidth;
+                        $("#rec" + id).css("width",newWidth);
+                        //var recTop = $("#rec" + id).position().top - 210;
+                        //var recLeft = $("#rec" + id).position().left;
+                        var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
+                        //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
+                        var elemTd = $("#rec" + id).closest('svg');
+                        var elemTdHtml = "" + elemTd.html() + addCircle;
+                        elemTd.html(elemTdHtml);
+                        elemTr.attr('id', elemTrId+" Dotted");
+                    }
+                   
                 }
             
             if(backColor2 === "rgb(99, 99, 99)"){
@@ -1661,6 +1684,11 @@
             iter += 1;
             });
         
+        
+        
+            $("#miniChart tr").css("color", "black");
+			$("#miniChart svg").css("height", mapBarHeight);
+			$("#miniChart rect").css("height", mapBarHeight);
     }
     /*
 	 * Private
@@ -1700,7 +1728,7 @@
                 
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
-            if(iter>1){
+            if(iter>0){
                $(this).css("background", "white");
                $(this).css("color", "black");
             }  
@@ -1727,15 +1755,10 @@
                         
                         var styleContent = "color: rgb(255, 255, 255); background: rgb(99, 99, 99);"
                         rankCol.attr("style", styleContent);
-                        //rankCol.css("background", darkGreyColor);
-                        //rankCol.css("color", "white");
 					} else {
-						//idValTr.css("color", "#636363");
-						//idValTr.css("font-weight", "900");
                         var styleContent = "color: rgb(0, 0, 0); background: rgb(189, 189, 189);"
                         rankCol.attr("style", styleContent);
-                        //rankCol.css("background", greyColor);
-                        //rankCol.css("color", "black");
+                       
 					}
                     
 				}
@@ -1773,8 +1796,9 @@
 			$('.rankScore').attr("id", "rankScore" + clickedRow);
 			$('.rankScore').each(function() {
 				rs += 1;
-				if (clickedRow == rs - 2)
-					rankScore = rankScoreValueArray[clickedRow + 1];
+				if (clickedRow == rs -1)
+					rankScore = rankScoreValueArray[clickedRow];
+                    
 			});
 
 			$(".miniTr" ).tooltip();        
@@ -1966,10 +1990,13 @@
 			if (i < userAdjustedAttributesKeys.length) 
 				return;
 
-			if (greyOut)
+			if (greyOut){                
 				$(this).attr("fill", greyColor);
-			else
-				$(this).attr("fill", blueColor);
+                 }
+			else{
+                $(this).attr("fill", blueColor);
+            }
+				
 		});
 	}
 	
