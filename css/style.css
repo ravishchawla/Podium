@@ -83,6 +83,8 @@ body {
 	overflow: hidden;
 	padding: 10px;
 	height: 25px;
+	border: 1px solid grey;
+	width: 100px;
 }
 
 #tableId tr {
@@ -106,6 +108,10 @@ body {
 	display: block;
 }
 
+#tablePanel text {
+	position: relative;
+}
+
 .focalRow {
 	border: 2px #000 solid;
 }
@@ -119,9 +125,13 @@ body {
 }
 
 #tableId td {
+	padding: 0px;
 	border: 1px #f2f2f2 solid;
 }
 
+#tableId .overlayBar {
+	background-color: grey;
+}
 
 .columnChartName {
 	float: left;

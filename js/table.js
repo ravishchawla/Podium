@@ -144,7 +144,6 @@
 						if(!tooltipAttribute) {
 							tooltipAttribute = attrName;
 						}
-
 					}
 					normalizeAttribute(data, attrName, attributeStates.HIGH);
 				}
@@ -277,22 +276,23 @@
 
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
 						if(cellWidth < 10 ) { cellWidth = 10 }
-//								
 
-						return "<svg class = ' " + d.cl + 
-								"'Svg' id = 'inter'  width = " + cellWidth + ">" +
-								//"<g>" +
-								"<rect id = 'something' class = 'some' width=" 
-								+ cellWidth +" height= 50 fill='#" + 
-								(i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
-								//"<text width=50 font-family = 'Verdana' font-size='55' fill='blue'>Hello</text>"
-								//+ "</g>"
+						return "<svg class = ' " + d.cl + "Svg overlayBar"
+								+ " id = 'inter'  "
+								+ " width = " + ($(this).width() < 0 ? 50 : $(this).width()) + ">"
+								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
+								+ "<g>"
+								+ "<rect id = 'something' class = 'some' width=" 
+								+ cellWidth +" height= 50 fill='#"
+								+ (i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
+								+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
+								+ "</g>"
 								+ "</svg>";
-					})
-					.attr("class", ƒ("cl"));
+					}).attr("class", ƒ("cl"));
 				}
-			
-						console.log(data);
+
+			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});
+
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
 
@@ -450,19 +450,36 @@
 					cell["norm"] = row[c["head"] + "Norm"];
 					return cell; 
 				});
-			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-			.html(function(d, i) {
-				if(!showBarOverlay || numericalAttributes.indexOf(d.head) < 0)
-						return d.html;
+			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; });
+			
+		cellWidth = 0;
+		if(!showBarOverlay)
+			cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
+		else {
+			cells = cells.html(function(d, i) {
+				if(numericalAttributes.indexOf(d.head) < 1) {
+					return d.html;
+				}
 
-					cellWidth = $(this).width() * d.norm;
-					if(cellWidth < 0) { cellWidth = 50 * d.norm; }
+				cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
+				if(cellWidth < 10 ) { cellWidth = 10 }
 
-					var colorValue = (i % 2 == 0 ? 'f' : 'a');
-					var content = "<svg class = ' " + d.cl + "'Svg' id = 'inter'  width = " + cellWidth +"><rect id = 'something' class = 'some' width=" + cellWidth +" height= 50 fill='#" + colorValue + "27997'/></svg>";
-					return content;
-				})
-			.attr("placeHolder", function(d, i) {
+				return "<svg class = ' " + d.cl + "Svg overlayBar"
+						+ " id = 'inter'  "
+						+ " width = " + ($(this).width() < 0 ? 50 : $(this).width()) + ">"
+						//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
+						+ "<g>"
+						+ "<rect id = 'something' class = 'some' width=" 
+						+ cellWidth +" height= 50 fill='#"
+						+ (i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
+						+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
+						+ "</g>"
+						+ "</svg>";
+			}).attr("class", ƒ("cl"));
+		}
+
+		cells = 
+			cells.attr("placeHolder", function(d, i) {
 				// update the rank and old index
 				var rowData = $('tr', '#tablePanel').eq(i);
 				var id = rowData.find("td.uniqueId").html(); 
@@ -1271,7 +1288,7 @@
         tablelens();
         handleClickedRow();
         
-        addFixedHeader();
+        //addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
         cachePrevContent = $('#consoleChart tbody').html();
@@ -1470,7 +1487,6 @@
     	
     	var item = 0;
     	var prevWidth = 0;
-    	
     	$(selector).each(function() {
 			var tdWidth = $(this).width() * normalizedArray[item];
 			if (isNaN(tdWidth)) 
