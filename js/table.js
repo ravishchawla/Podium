@@ -1367,7 +1367,7 @@
     	var ind = 0;
     	rankScoreValueArray = [];
     	$(classRankScore).each(function() {
-    		if (ind > 0 && ind <= interactionValueArray.length) { 
+    		if (ind > -1 && ind <= interactionValueArray.length) { 
     			var rankScoreValue = $(this).text(); 
     			rankScoreValueArray.push(parseFloat(rankScoreValue));                 
     		}          
@@ -1457,6 +1457,7 @@
      * Enable bars in the main table
      */
     function enableBarsOnCols(selector, normalizedArray, itemArray, tag) {
+        return;
     	var colorValue = "";
     	var str = "";
     	
@@ -1781,8 +1782,9 @@
 			$('.rankScore').attr("id", "rankScore" + clickedRow);
 			$('.rankScore').each(function() {
 				rs += 1;
-				if (clickedRow == rs - 2)
-					rankScore = rankScoreValueArray[clickedRow + 1];
+				if (clickedRow == rs -1)
+					rankScore = rankScoreValueArray[clickedRow];
+                    
 			});
 
 			$(".miniTr" ).tooltip();        
