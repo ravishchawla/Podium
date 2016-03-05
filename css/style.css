@@ -158,18 +158,6 @@ body {
 	background-color: #555;	
 }
 
-.miniMapSv1g{
-    width:100%;
-    float: left;
-}
-
-
-.miniDotSv11g{
-    float: right;
-    width: auto;
-}
-
-
 
 
 
@@ -182,14 +170,10 @@ body {
 
 .miniMapRect {
     display: inline;
-    margin: 0;
-    padding: 0;
     
 }
 .miniDotSvg {
     display: inline;
-    margin: 0;
-    padding: 0;
    
 }
 
