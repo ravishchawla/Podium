@@ -23,6 +23,7 @@
     var selectedRows = [];
     var interactionValueArray =[];
     var rankScoreValueArray = [];
+    var consolechartSortedData = [];
 	
 	var tolerance; 
 	var mapBarHeight;
@@ -354,6 +355,11 @@
 					return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
+                
+                    if(d == undefined){
+                        console.log("Its Undefinded");
+                        d = consolechartSortedData;
+                    }
 					if (d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
 						return;
 
@@ -567,6 +573,10 @@
 		// so they have to be offset so that the iteration index matches correctly.
 		offset = userAdjustedAttributesValues.length;
 		d3.selectAll("#consoleChart td").each(function(d, i) {
+            
+            if(d == undefined){
+                d = consolechartSortedData;
+            }
 			if (userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
 				return;
 
@@ -1148,7 +1158,7 @@
 		mar.updateMinimap();
 		mar.updateTable(); 
 		colorRows();
-		//sortSequenceOfConsoleRows();
+		
         
 		// update oldIndex to match rank after it has been used to color rows
 		for (var i = 0; i < ranking.length; i++) {
@@ -1160,9 +1170,12 @@
 			rowObj.find("td.oldIndex").html(rank);
 		}
 		
+       
 		changedRows = []; // reset changed rows
-
-		updateColumnWeights(normalizedWeights.slice());		
+        //sortSequenceOfConsoleRows();
+		updateColumnWeights(normalizedWeights.slice());	
+        
+        
 
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
@@ -1185,6 +1198,7 @@
         htmlTableToCache = $("#tablePanel tbody").html(); 
         htmlConsoleToCache = [];
 		d3.selectAll("#consoleChart td").each(function(d) {
+            //console.log(d)
         	direction = "directionUp";
         	pObj = $(this).find("input");
         	if(pObj.hasClass("directionUp"))
@@ -1194,9 +1208,11 @@
         	else if (pObj.hasClass("unusedRow"))
         		direction = "unusedRow";
 
-
+	               if ( d == undefined){
+                            d = consolechartSortedData;
+                    }
         	htmlConsoleToCache.push(
-        			 	{
+                        {
 						"amount" : d.amount,
 						"width" : d.width,
 						"visibleWidth" : d.visibleWidth,
@@ -1206,6 +1222,7 @@
         });
 
         $("#discard_button").attr("disabled", "disabled");
+        console.log("Ranking Done");
 	}
     
     
@@ -1300,6 +1317,21 @@
 	 * Sort attributes in console by weight
 	 */
     function sortSequenceOfConsoleRows() {
+        
+        var dataObj =[];
+        d3.selectAll("#consoleChart td").each(function(d) {
+            
+            dataObj.push(d);
+            //console.log(d);
+            //console.log($(this).text())
+            
+        });
+         
+        
+        //console.log("Keys are : " + userAdjustedAttributesKeys);
+        //console.log("Values are : " + userAdjustedAttributesValues);
+        //return;
+        
          var consoleAttributesWidthArray = [];
          var consoleAttrHtmlArray = [];
          var sortedHtmlArray = [];
@@ -1308,35 +1340,94 @@
          var htmlArrayPlusIndex = [];
          var consoleAttrWidthPlusIndex = [];     
          var multiData =[];
-        
+         var objectData =[];
         cachePrevContent = "";
         cachePrevContent = $('#consoleChart tbody').html();
         //console.log("Previous Content: " + cachePrevContent);
+        //console.log("+++++++++++++++++++++++++++++++++++++++++++");
         
+ 
+        //console.log("User adjusted attribute keys are " + userAdjustedAttributesKeys);
+        interactionWeightHtml =""
         $("#consoleChart tr").each(function(i, d) {
-            var rectWidth = $(this).find("rect").attr("width");
-            var htmlThis = $(this).html();
-            consoleAttrHtmlArray.push(htmlThis);
-            htmlArrayPlusIndex.push([htmlThis,i]); 
-            htmlIndices.push(i);
-            consoleAttributesWidthArray.push(parseFloat(rectWidth));
-            multiData.push([parseFloat(rectWidth),htmlThis]); 
+            
+            if (i < userAdjustedAttributesKeys.length) 
+                {
+                    interactionWeightHtml =  $(this).html();
+                    console.log(i);
+				   
+                }else{
+                    var rectWidth = $(this).find("rect").attr("width");
+                    var htmlThis = $(this).html();
+                    //console.log("Html this : " + htmlThis);
+                    //console.log("+++++++++++++++++++++++++++++++++++++++++++++++++");
+                    consoleAttrHtmlArray.push(htmlThis);
+                    htmlArrayPlusIndex.push([htmlThis,i]); 
+                    htmlIndices.push(i);
+                    //consoleAttributesWidthArray.push(parseFloat(rectWidth));
+                    multiData.push([parseFloat(rectWidth),htmlThis]); 
+                    objectData.push([parseFloat(rectWidth),dataObj[i]]); 
+
+                    
+                    
+                }
+               
+            
+            
+           
 		});
         
-        var sortedArrayItem = consoleAttributesWidthArray.slice();
-        sortedArrayItem.sort();
+        //var sortedArrayItem = consoleAttributesWidthArray.slice();
+        //sortedArrayItem.sort();
         multiData.sort(sortFunction).reverse();
-       
+        objectData.sort(sortFunction).reverse();
+        var iter=0;
         $("#consoleChart tr").each(function(i, d) {
-            $(this).html(multiData[i][1]);
+            if(i==0){
+               $(this).html(interactionWeightHtml); 
+            }else{
+                if(iter< $("#consoleChart tr").length-1){
+                    //console.log("Value is : " + multiData[i][1]);
+                    $(this).html(multiData[iter][1]);
+                }
+                
+            }
+            iter += 1;
+           
 		});  
-
-        $("#consoleChart tr").hover(function() {}, function() {
-
+            for(var i=0;i<multiData.length;i++){
+            //console.log("Data Keys are : " + multiData[i][1]);
+            //console.log("Data Vals are : " + multiData[i][0]);
+            //console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++");
+                
+                //console.log("Well Object is : " + i + " , " + objectData[i][1].name);
+            }
+        
+        
+        consolechartSortedData = [];
+        consolechartSortedData.push(dataObj[0]);
+        for(var i=0; i<multiData.length;i++){
+            consolechartSortedData.push(objectData[i][1]);
+        }
+        
+        
+        
+        for(var i=0; i<consolechartSortedData.length;i++){
+            //console.log("Well Object is : " + i + " , " + consolechartSortedData[i].name);
+        }
+        //console.log("Well Object is : " + objectData);
+        d3.selectAll("#consoleChart td").each(function(d) {
+            
+            //console.log(d);
+            //console.log($(this).text())
+            
         });
         
         cacheNewContent = "";
         cacheNewContent = $('#consoleChart tbody').html();
+        //console.log(" New Content is : " + cacheNewContent);
+        //console.log("+++++++++++++++++++++++++++++++++++++++++++");
+        //$('#consoleChart tbody').html(cachePrevContent);
     }
     
 
