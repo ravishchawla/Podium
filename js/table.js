@@ -14,9 +14,9 @@
 	var attributeWeights = [];
 	var legendItems = {};
 	var tooltipAttribute;
-    var classNameConsoleAttr = ".conTr";
-    var cachePrevContent="";
-    var cacheNewContent="";
+    var classNameFirstConsoleAttr = "1stconTr";
+    var classNameConsoleAttr = "conTr";
+
     
 	var lastChangedRow;
 	var changedRows = [];
@@ -24,15 +24,14 @@
     var interactionValueArray =[];
     var rankScoreValueArray = [];
     var consolechartSortedData = [];
+
+    
 	
 	var tolerance; 
 	var mapBarHeight;
 	var minimap_width = 50;
 	var console_width = 150;
     var count = 0;
-    var m = -1;
-    var n = -1;
-    var o = -1;
     
 	var keys;
 	var htmlTableToCache;
@@ -210,9 +209,8 @@
 				.data(data)
 				.enter()
 				.append("tr")
-				.attr("id",function(){
-					n += 1;
-					return "tr" + n;
+				.attr("id",function(d,i){
+					return "tr" + i;
 				});
 			
 			// append the rows of the mini map
@@ -222,9 +220,8 @@
 				.enter()
 				.append("tr")
                 .attr("class","miniTr")
-                .attr("id",function(){
-                m += 1;
-                return "tr"+m;
+                .attr("id",function(d,i){
+                return "tr"+i;
                 });
  
 			// append the rows in the console for each attribute
@@ -233,10 +230,15 @@
 				.data(numericalAttributes)
 				.enter()
 				.append("tr")
-                .attr("class", classNameConsoleAttr)
-                .attr("id", function() {
-                	o += 1;
-                	return "consoleTr" + o;
+                .attr("class", function(d,i){
+              if(i==0){
+                  return classNameFirstConsoleAttr;
+              }  else{
+                  return classNameConsoleAttr;
+              }
+            })
+                .attr("id", function(d,i) {
+                	return "consoleTr" + i;
                 });
 
             legend_rows = legendPanel.append("tbody")
@@ -355,10 +357,11 @@
 					return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
 				.call(d3.behavior.drag().on('drag', function(d) {
+                    console.log("Hehe :" + d.name);
                 
                     if(d == undefined){
                         console.log("Its Undefinded");
-                        d = consolechartSortedData;
+                        //d = consolechartSortedData;
                     }
 					if (d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
 						return;
@@ -559,9 +562,16 @@
 	 * Update the weights of the attributes based on changes to the bar width
 	 */
 	function updateColumnWeights(weights) {
+        
 		totalPercentage = 0;
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
+                
+                if(d == undefined){
+                    //d=consolechartSortedData;
+                }
+                
+                
 				if (unusedAttributes.indexOf(i) < 0 &&
 						userAdjustedAttributesValues.indexOf($(this).text()) === -1) {
 					totalPercentage = totalPercentage + Number(d.amount);             
@@ -572,10 +582,12 @@
 		// The weights array does not include any user adjusted atrribute weights
 		// so they have to be offset so that the iteration index matches correctly.
 		offset = userAdjustedAttributesValues.length;
-		d3.selectAll("#consoleChart td").each(function(d, i) {
+        var objs = d3.selectAll("#consoleChart tr");
+    
+		objs.each(function(d, i) {
             
             if(d == undefined){
-                d = consolechartSortedData;
+                //d = consolechartSortedData;
             }
 			if (userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
 				return;
@@ -595,10 +607,75 @@
 			//d.visibleWidth = d.width;
 			$(this).find("rect").attr("width", d.visibleWidth);
 			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
+        
 		});
+        
+        
+   
+        
+        
+        
 	}
-	
-	
+    
+
+
+
+    
+/*
+ * Sort the Console Chart Bars based on width!
+ */
+
+function sortConsoleChartBars() {
+      
+  var objs = d3.selectAll("#consoleChart tr." + classNameConsoleAttr);
+
+   
+  objs.sort(function(a, b) {
+      
+      var aTd ="";
+      var bTd ="";
+      
+      $("#consoleChart tr." + classNameConsoleAttr + " p").each(function(){
+          
+          if( a.indexOf($(this).text()) != -1){
+              aTd = $(this).closest('td');
+          }
+          
+           if( b.indexOf($(this).text()) != -1){
+              bTd = $(this).closest('td');
+          }
+       
+      })
+      
+     
+      
+      //console.log("A td is : " + aTd);
+      //console.log("B td is : " + bTd);
+      var indexAWidth = parseFloat(aTd.find('rect').attr('width'));
+      var indexBWidth = parseFloat(bTd.find('rect').attr('width'));
+      var indexAtext = aTd.closest('tr').text();
+      var indexBtext = bTd.closest('tr').text();
+           
+  
+      ///*
+      if(indexAWidth > indexBWidth){
+          return -1;
+      }else if(indexBWidth > indexAWidth){
+          return 1;
+      }else{
+          return 0;
+      }
+      
+      //*/
+      //return indexBWidth - indexAWidth;
+      //return d3.descending(indexAWidth,indexBWidth);
+      
+    });
+
+}
+
+    
+
 	/*
 	 * Private
 	 * Get a list of the rank values for the given list of unique ids
@@ -1138,6 +1215,7 @@
 	 */
 	mar.rankButtonClicked = function() {
         rankButtonPressed = true;
+       
         greyMinibars(false);
 		console.log("table.js: Ranking"); 
 		var normalizedWeights = runSVD();
@@ -1158,7 +1236,7 @@
 		mar.updateMinimap();
 		mar.updateTable(); 
 		colorRows();
-		
+     
         
 		// update oldIndex to match rank after it has been used to color rows
 		for (var i = 0; i < ranking.length; i++) {
@@ -1172,11 +1250,10 @@
 		
        
 		changedRows = []; // reset changed rows
-        //sortSequenceOfConsoleRows();
+        
 		updateColumnWeights(normalizedWeights.slice());	
-        
-        
-
+        sortConsoleChartBars();
+     
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
 		//console.log("b (" + b.length + "): " + b);
 		//console.log("Weight: " + weights);
@@ -1194,7 +1271,7 @@
         setTimeout(function() {       
             $('#tablePanel tbody tr').animate({ backgroundColor: "white" }, 1000);
         }, timeDie);
-        
+       
         htmlTableToCache = $("#tablePanel tbody").html(); 
         htmlConsoleToCache = [];
 		d3.selectAll("#consoleChart td").each(function(d) {
@@ -1209,7 +1286,7 @@
         		direction = "unusedRow";
 
 	               if ( d == undefined){
-                            d = consolechartSortedData;
+                            //d = consolechartSortedData;
                     }
         	htmlConsoleToCache.push(
                         {
@@ -1220,7 +1297,7 @@
 						"direction" : direction
 					});
         });
-
+        
         $("#discard_button").attr("disabled", "disabled");
         console.log("Ranking Done");
 	}
@@ -1307,140 +1384,12 @@
         //addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
-        cachePrevContent = $('#consoleChart tbody').html();
 
 	}
     
 	
-	/*
-	 * Private
-	 * Sort attributes in console by weight
-	 */
-    function sortSequenceOfConsoleRows() {
-        
-        var dataObj =[];
-        d3.selectAll("#consoleChart td").each(function(d) {
-            
-            dataObj.push(d);
-            //console.log(d);
-            //console.log($(this).text())
-            
-        });
-         
-        
-        //console.log("Keys are : " + userAdjustedAttributesKeys);
-        //console.log("Values are : " + userAdjustedAttributesValues);
-        //return;
-        
-         var consoleAttributesWidthArray = [];
-         var consoleAttrHtmlArray = [];
-         var sortedHtmlArray = [];
-         var htmlIndices = [];
-        
-         var htmlArrayPlusIndex = [];
-         var consoleAttrWidthPlusIndex = [];     
-         var multiData =[];
-         var objectData =[];
-        cachePrevContent = "";
-        cachePrevContent = $('#consoleChart tbody').html();
-        //console.log("Previous Content: " + cachePrevContent);
-        //console.log("+++++++++++++++++++++++++++++++++++++++++++");
-        
- 
-        //console.log("User adjusted attribute keys are " + userAdjustedAttributesKeys);
-        interactionWeightHtml =""
-        $("#consoleChart tr").each(function(i, d) {
-            
-            if (i < userAdjustedAttributesKeys.length) 
-                {
-                    interactionWeightHtml =  $(this).html();
-                    console.log(i);
-				   
-                }else{
-                    var rectWidth = $(this).find("rect").attr("width");
-                    var htmlThis = $(this).html();
-                    //console.log("Html this : " + htmlThis);
-                    //console.log("+++++++++++++++++++++++++++++++++++++++++++++++++");
-                    consoleAttrHtmlArray.push(htmlThis);
-                    htmlArrayPlusIndex.push([htmlThis,i]); 
-                    htmlIndices.push(i);
-                    //consoleAttributesWidthArray.push(parseFloat(rectWidth));
-                    multiData.push([parseFloat(rectWidth),htmlThis]); 
-                    objectData.push([parseFloat(rectWidth),dataObj[i]]); 
 
-                    
-                    
-                }
-               
-            
-            
-           
-		});
-        
-        //var sortedArrayItem = consoleAttributesWidthArray.slice();
-        //sortedArrayItem.sort();
-        multiData.sort(sortFunction).reverse();
-        objectData.sort(sortFunction).reverse();
-        var iter=0;
-        $("#consoleChart tr").each(function(i, d) {
-            if(i==0){
-               $(this).html(interactionWeightHtml); 
-            }else{
-                if(iter< $("#consoleChart tr").length-1){
-                    //console.log("Value is : " + multiData[i][1]);
-                    $(this).html(multiData[iter][1]);
-                }
-                
-            }
-            iter += 1;
-           
-		});  
-            for(var i=0;i<multiData.length;i++){
-            //console.log("Data Keys are : " + multiData[i][1]);
-            //console.log("Data Vals are : " + multiData[i][0]);
-            //console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++");
-                
-                //console.log("Well Object is : " + i + " , " + objectData[i][1].name);
-            }
-        
-        
-        consolechartSortedData = [];
-        consolechartSortedData.push(dataObj[0]);
-        for(var i=0; i<multiData.length;i++){
-            consolechartSortedData.push(objectData[i][1]);
-        }
-        
-        
-        
-        for(var i=0; i<consolechartSortedData.length;i++){
-            //console.log("Well Object is : " + i + " , " + consolechartSortedData[i].name);
-        }
-        //console.log("Well Object is : " + objectData);
-        d3.selectAll("#consoleChart td").each(function(d) {
-            
-            //console.log(d);
-            //console.log($(this).text())
-            
-        });
-        
-        cacheNewContent = "";
-        cacheNewContent = $('#consoleChart tbody').html();
-        //console.log(" New Content is : " + cacheNewContent);
-        //console.log("+++++++++++++++++++++++++++++++++++++++++++");
-        //$('#consoleChart tbody').html(cachePrevContent);
-    }
-    
 
-    /*
-     * Private
-     * Sorting function
-     */
-    function sortFunction(a, b) {
-        if (a[0] === b[0])
-            return 0;
-        else
-            return (a[0] < b[0]) ? -1 : 1;
-    }
     
     
     /*
