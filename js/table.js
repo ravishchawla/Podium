@@ -402,7 +402,7 @@
 			$("td", "#consoleChart").attr("height", "1");
 			$("p", "#consoleChart").css({"min-width" : $("#auxContentDiv").width()});
 
-			mapBarHeight = $("svg").height();
+			mapBarHeight = $("#miniChart svg").height();
 
 			var tableObj = document.getElementById("miniChart");
 			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
@@ -567,7 +567,7 @@
 		totalPercentage = 0;
 		if (weights == null) {
 			d3.selectAll("#consoleChart td").each(function(d, i) {
-                
+
                 if(d == undefined){
                     //d=consolechartSortedData;
                 }
@@ -583,7 +583,7 @@
 		// The weights array does not include any user adjusted atrribute weights
 		// so they have to be offset so that the iteration index matches correctly.
 		offset = userAdjustedAttributesValues.length;
-        var objs = d3.selectAll("#consoleChart tr");
+        var objs = d3.selectAll("#consoleChart td");
     
 		objs.each(function(d, i) {
             
