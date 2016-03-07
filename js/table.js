@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = false;
+    var showBarOverlay = true;
     
     var miniChartCache = "";
    
@@ -459,34 +459,26 @@
 					cell["norm"] = row[c["head"] + "Norm"];
 					return cell; 
 				});
-			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; });
-			
-		cellWidth = 0;
-		if(!showBarOverlay)
-			cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
-		else {
-			cells = cells.html(function(d, i) {
-				if(numericalAttributes.indexOf(d.head) < 1) {
-					return d.html;
+			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+			.each(function(parentD) {
+				cellRef = $(this);
+				if(!showBarOverlay) {
+					d3.select(this).html(ƒ("html"));
+					return;
 				}
 
-				cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-				if(cellWidth < 10 ) { cellWidth = 10 }
+				d3.select(this).select("svg")
+							   .attr("width", function(d) {
+							   		return $(cellRef).width() < 0 ? 50 : $(cellRef).width();
+							   });
 
-				return "<svg class = ' " + d.cl + "Svg overlayBar"
-						+ " id = 'inter'  "
-						+ " width = " + ($(this).width() < 0 ? 50 : $(this).width()) + ">"
-						//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
-						+ "<g>"
-						+ "<rect id = 'something' class = 'some' width=" 
-						+ cellWidth +" height= 50 fill='#"
-						+ (i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
-						+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
-						+ "</g>"
-						+ "</svg>";
-			}).attr("class", ƒ("cl"));
-		}
-
+				d3.select(this).select("rect").attr("width", function(d) {
+					cellWidth = (cellRef.width() < 0) ? 50 : cellRef.width() * parentD.norm;
+					return (isNaN(cellWidth) || cellWidth < 10 ? 10 : cellWidth);
+				}).html(function(d) { return d.html; });
+			});
+			
+		
 		cells = 
 			cells.attr("placeHolder", function(d, i) {
 				// update the rank and old index
