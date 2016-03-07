@@ -150,6 +150,7 @@
 			}
 			ial.init(data, 0);
 			displayTable(data);
+			mar.rankButtonClicked(); 
 		});
 
 		legendItems = [["#337ab7", "No Changes"],
@@ -1672,63 +1673,59 @@ function sortConsoleChartBars() {
 		}
 	}    
 
-    /*
+	/*
 	 * Private
 	 * Updates the rows of mini bar as grey color, when main table rows are selected
 	 */
-    function selectionUpdatedMiniBar(){
-        
-        
-        miniChartCache = $("tr .rank.index.null").html();
-        var iter =0;
-        $("tr .rank.index.null").each(function() {
-                var backColor = $(this).css("background-color");
-                var backColor2 = $(this).css("background");
-                backColor2 = backColor2.substring(0,15);
-                if(backColor == "rgb(255, 255, 255)" || backColor == "rgba(0, 0, 0, 0)"){
-                   
-                }else{
-                     var id = iter - 1;
-                    
-                    $("#rec" + id).css("fill", "#bdbdbd");
-                    var elemTr = $("#rec" + id).closest('tr');
-                    var elemTrId = elemTr.attr('id');
-                    //console.log("tr id is : " + elemTrId);
-                    //console.log("++++++++++++++++++++++++++++++++++++++++++");
-                    
-                    var dotId = elemTrId+" Dotted";
-                    var ind = elemTrId.indexOf(" Dotted");
-                    if(ind == -1){
-                        var recWidth = $("#rec" + id).attr("width");
-                        var newWidth = 1*recWidth;
-                        $("#rec" + id).css("width",newWidth);
-                        //var recTop = $("#rec" + id).position().top - 210;
-                        //var recLeft = $("#rec" + id).position().left;
-                        var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
-                        //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
-                        var elemTd = $("#rec" + id).closest('svg');
-                        var elemTdHtml = "" + elemTd.html() + addCircle;
-                        elemTd.html(elemTdHtml);
-                        elemTr.attr('id', elemTrId+" Dotted");
-                    }
-                   
-                }
-            
-            if(backColor2 === "rgb(99, 99, 99)"){
-                     var id2 = iter - 1;
-                
-                        
-                } 
-            
-            iter += 1;
-            });
-        
-        
-        
-            $("#miniChart tr").css("color", "black");
-			$("#miniChart svg").css("height", mapBarHeight);
-			$("#miniChart rect").css("height", mapBarHeight);
-    }
+	function selectionUpdatedMiniBar(){
+
+
+		miniChartCache = $("tr .rank.index.null").html();
+		var iter = 0;
+		$("tr .rank.index.null").each(function() {
+			var backColor = $(this).css("background-color");
+			var backColor2 = $(this).css("background");
+			backColor2 = backColor2.substring(0, 15);
+			if (backColor == "rgb(255, 255, 255)" || backColor == "rgba(0, 0, 0, 0)") {
+
+			} else {
+				var id = iter - 1;
+
+				//$("#rec" + id).css("fill", "#bdbdbd");
+				var elemTr = $("#rec" + id).closest('tr');
+				var elemTrId = elemTr.attr('id');
+				//console.log("tr id is : " + elemTrId);
+				//console.log("++++++++++++++++++++++++++++++++++++++++++");
+
+				var dotId = elemTrId + " Dotted";
+				var ind = elemTrId.indexOf(" Dotted");
+				if (ind == -1) {
+					var recWidth = $("#rec" + id).attr("width");
+					var newWidth = 1 * recWidth;
+					$("#rec" + id).css("width", newWidth);
+					//var recTop = $("#rec" + id).position().top - 210;
+					//var recLeft = $("#rec" + id).position().left;
+					var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
+					//var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
+					var elemTd = $("#rec" + id).closest('svg');
+					var elemTdHtml = "" + elemTd.html() + addCircle;
+					elemTd.html(elemTdHtml);
+					elemTr.attr('id', elemTrId + " Dotted");
+				}
+			}
+
+			if (backColor2 === "rgb(99, 99, 99)")
+				var id2 = iter - 1;
+
+			iter += 1;
+		});
+
+		$("#miniChart tr").css("color", "black");
+		$("#miniChart svg").css("height", mapBarHeight);
+		$("#miniChart rect").css("height", mapBarHeight);
+	}
+    
+    
     /*
 	 * Private
 	 * Updates the selected row array based on if you have clicked on a watched row again or not
