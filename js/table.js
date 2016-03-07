@@ -696,16 +696,21 @@ function sortConsoleChartBars() {
 	 * Get a list of n rows taken from the surrounding area of the clicked rows
 	 * Input is an array of unique ids
 	 */
-	function getRowsForSVD(clickedRows, numRows) {
+	function getRowsForSVD(clickedRows, watchedRows, numRows) {
 		// use the rank values of the rows with the given unique ids
 		clickedRows = getRankValues(clickedRows); 
+		watchedRows = getRankValues(watchedRows);
 		
 		if (numRows > data.length) {
 			console.log("table.js: cannot get more than " + data.length + " rows");
 			return [];
 		}
 		var rowsForSVD = clickedRows.slice();
-		var numSurrounding = Math.ceil((numRows - clickedRows.length) / clickedRows.length); 
+		for (var i = 0; i < watchedRows.length; i++) {
+			if (rowsForSVD.indexOf(Number(watchedRows[i])) < 0)
+				rowsForSVD.push(Number(watchedRows[i]));
+		}
+		var numSurrounding = Math.ceil((numRows - rowsForSVD.length) / clickedRows.length); 
 		
 		for (var i = 0; i < clickedRows.length; i++) {
 			var r = Number(clickedRows[i]);
@@ -999,14 +1004,8 @@ function sortConsoleChartBars() {
 		var selectedRowIds = []; 
 		for (var i = 0; i < selectedRows.length; i++)
 			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
-		
 		var changedRowIdsForSVD = getChangedRows();
-		for (var i = 0; i < selectedRowIds.length; i++) {
-			if (changedRowIdsForSVD.indexOf(Number(selectedRowIds[i])) < 0)
-				changedRowIdsForSVD.push(Number(selectedRowIds[i]));
-		}
-		
-		var b = getRowsForSVD(changedRowIdsForSVD, numericalAttributes.length + 1); 
+		var b = getRowsForSVD(changedRowIdsForSVD, selectedRowIds, numericalAttributes.length + 1); 
 
 		if (b.length <= keys.length) {
 			// make sure the weights are updated
@@ -1200,7 +1199,7 @@ function sortConsoleChartBars() {
 
 		handleArrowClicks(null, prevStates);
 
-		//greyMinibars(false); // make sure the attribute weights are adjustable again
+		greyMinibars(false); // make sure the attribute weights are adjustable again
 		selectedRows = [];
         handleClickedRow();
         setTimeout(function() {       
