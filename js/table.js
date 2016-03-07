@@ -462,7 +462,8 @@
 			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 			.each(function(parentD) {
 				cellRef = $(this);
-				if(!showBarOverlay) {
+
+				if(!showBarOverlay || numericalAttributes.indexOf(parentD.head) < 1) {
 					d3.select(this).html(ƒ("html"));
 					return;
 				}
