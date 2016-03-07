@@ -462,21 +462,41 @@
 			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 			.each(function(parentD) {
 				cellRef = $(this);
-
 				if(!showBarOverlay || numericalAttributes.indexOf(parentD.head) < 1) {
 					d3.select(this).html(ƒ("html"));
 					return;
 				}
 
-				d3.select(this).select("svg")
-							   .attr("width", function(d) {
-							   		return $(cellRef).width() < 0 ? 50 : $(cellRef).width();
-							   });
+				if(d3.select(this).select("svg")[0][0] == null) {
 
-				d3.select(this).select("rect").attr("width", function(d) {
-					cellWidth = (cellRef.width() < 0) ? 50 : cellRef.width() * parentD.norm;
-					return (isNaN(cellWidth) || cellWidth < 10 ? 10 : cellWidth);
-				}).html(function(d) { return d.html; });
+					d3.select(this).html(function(d, i) {
+						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
+						if(cellWidth < 10 ) { cellWidth = 10 }
+
+						return "<svg class = ' " + d.cl + "Svg overlayBar"
+								+ " id = 'inter'  "
+								+ " width = " + ($(this).width() < 0 ? 50 : $(this).width()) + ">"
+								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
+								+ "<g>"
+								+ "<rect id = 'something' class = 'some' width=" 
+								+ cellWidth +" height= 50 fill='#"
+								+ (i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
+								+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
+								+ "</g>"
+								+ "</svg>";
+					});
+				} else {
+
+					d3.select(this).select("svg")
+								   .attr("width", function(d) {
+								   		return $(cellRef).width() < 0 ? 50 : $(cellRef).width();
+								   });
+
+					d3.select(this).select("rect").attr("width", function(d) {
+						cellWidth = (cellRef.width() < 0) ? 50 : cellRef.width() * parentD.norm;
+						return (isNaN(cellWidth) || cellWidth < 10 ? 10 : cellWidth);
+					}).html(function(d) { return d.html; });
+				}
 			});
 			
 		
@@ -1326,6 +1346,18 @@ function sortConsoleChartBars() {
 	mar.allRowsCheckClicked = function() {
 		showAllRows = !showAllRows;
 		colorRows();
+	}
+
+	mar.barOverlayClicked = function() {
+		showBarOverlay = !showBarOverlay;
+		mar.updateTable();
+		getRankScores();
+        getInteractionWeights();
+        var normInterArray = normalizeArray(interactionValueArray)
+        enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
+        var normRankArray = normalizeArray(rankScoreValueArray);
+        enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
+        
 	}
 
 	/*
