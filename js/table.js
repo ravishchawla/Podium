@@ -706,12 +706,15 @@ function sortConsoleChartBars() {
 			console.log("table.js: cannot get more than " + data.length + " rows");
 			return [];
 		}
+		
 		var rowsForSVD = clickedRows.slice();
 		for (var i = 0; i < watchedRows.length; i++) {
 			if (rowsForSVD.indexOf(Number(watchedRows[i])) < 0)
 				rowsForSVD.push(Number(watchedRows[i]));
 		}
 		var numSurrounding = Math.ceil((numRows - rowsForSVD.length) / clickedRows.length); 
+		if (rowsForSVD.length >= numRows)
+			return getUniqueIds(rowsForSVD); 
 		
 		for (var i = 0; i < clickedRows.length; i++) {
 			var r = Number(clickedRows[i]);
