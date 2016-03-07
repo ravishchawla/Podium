@@ -67,6 +67,14 @@ body {
 	display: none;
 }
 
+#consoleChart tr {
+	border-bottom: 5px solid white;
+}
+
+#consoleChart tr:nth-child(odd) {
+	background-color: lightgrey;
+}
+
 #auxContentDiv table {
 	border: none;
 }

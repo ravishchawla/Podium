@@ -1377,7 +1377,7 @@ function sortConsoleChartBars() {
         tablelens();
         handleClickedRow();
         
-        //addFixedHeader();
+        addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
 
