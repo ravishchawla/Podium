@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = true;
+    var showBarOverlay = false;
     
     var miniChartCache = "";
    
@@ -623,70 +623,50 @@
 			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
         
 		});
-        
-        
-   
-        
-        
-        
 	}
-    
-
-
 
     
-/*
- * Sort the Console Chart Bars based on width!
- */
+	/*
+	 * Sort the Console Chart Bars based on width!
+	 */
 
-function sortConsoleChartBars() {
-      
-  var objs = d3.selectAll("#consoleChart tr." + classNameConsoleAttr);
+	function sortConsoleChartBars() {
+		var objs = d3.selectAll("#consoleChart tr." + classNameConsoleAttr);
+		objs.sort(function(a, b) {
 
-   
-  objs.sort(function(a, b) {
-      
-      var aTd ="";
-      var bTd ="";
-      
-      $("#consoleChart tr." + classNameConsoleAttr + " p").each(function(){
-          
-          if( a.indexOf($(this).text()) != -1){
-              aTd = $(this).closest('td');
-          }
-          
-           if( b.indexOf($(this).text()) != -1){
-              bTd = $(this).closest('td');
-          }
-       
-      })
-      
-     
-      
-      //console.log("A td is : " + aTd);
-      //console.log("B td is : " + bTd);
-      var indexAWidth = parseFloat(aTd.find('rect').attr('width'));
-      var indexBWidth = parseFloat(bTd.find('rect').attr('width'));
-      var indexAtext = aTd.closest('tr').text();
-      var indexBtext = bTd.closest('tr').text();
-           
-  
-      ///*
-      if(indexAWidth > indexBWidth){
-          return -1;
-      }else if(indexBWidth > indexAWidth){
-          return 1;
-      }else{
-          return 0;
-      }
-      
-      //*/
-      //return indexBWidth - indexAWidth;
-      //return d3.descending(indexAWidth,indexBWidth);
-      
-    });
+			var aTd ="";
+			var bTd ="";
 
-}
+			$("#consoleChart tr." + classNameConsoleAttr + " p").each(function() {
+
+				if( a.indexOf($(this).text()) != -1)
+					aTd = $(this).closest('td');
+
+				if( b.indexOf($(this).text()) != -1)
+					bTd = $(this).closest('td');
+			});
+
+			//console.log("A td is : " + aTd);
+			//console.log("B td is : " + bTd);
+			var indexAWidth = parseFloat(aTd.find('rect').attr('width'));
+			var indexBWidth = parseFloat(bTd.find('rect').attr('width'));
+			var indexAtext = aTd.closest('tr').text();
+			var indexBtext = bTd.closest('tr').text();
+
+			///*
+			if (indexAWidth > indexBWidth)
+				return -1;
+			else if (indexBWidth > indexAWidth)
+				return 1;
+			else
+				return 0;
+
+			//*/
+			//return indexBWidth - indexAWidth;
+			//return d3.descending(indexAWidth,indexBWidth);
+
+		});
+	}
 
     
 
@@ -1055,6 +1035,24 @@ function sortConsoleChartBars() {
 	}
 	
 	
+	/*
+	 * Get the expected value of an attribute for a given rank position
+	 */
+	function getExpectedValue(attr, rankPos) {
+		var attrVals = [];
+		for (var i = 0; i < data.length; i++)
+			attrVals.push(Number(data[i][attr]));
+		
+		var minAndMax = getMinAndMax(attrVals); 
+		var expectedValue = (1.0 - (rankPos / data.length)) * (minAndMax[1] - minAndMax[0]) + minAndMax[0];
+		
+		if (rankPos == 1)
+			expectedValue = minAndMax[0];
+		
+		return expectedValue;  
+	}
+	
+	
 	/*********************************UTILITY FUNCTIONS*********************************/
 	
 	/*
@@ -1230,6 +1228,7 @@ function sortConsoleChartBars() {
 	 * Rank!
 	 */
 	mar.rankButtonClicked = function() {
+		
         rankButtonPressed = true;
        
         greyMinibars(false);
