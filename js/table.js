@@ -1657,10 +1657,13 @@
 					selectedRows.splice(index, 1);
 					updateRowFont(teamName);
 				}
+                selectionUpdatedMiniBar();
 			} else
 				isDragging = true;
+                selectionUpdatedMiniBar();
                 
 		});
+        
 	}
 
 
