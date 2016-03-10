@@ -1699,15 +1699,19 @@
 			}
 		}
 	}    
-
-	/*
+    
+    
+    
+    
+    /*
 	 * Private
 	 * Updates the rows of mini bar as grey color, when main table rows are selected
 	 */
 	function selectionUpdatedMiniBar(){
 
-
 		miniChartCache = $("tr .rank.index.null").html();
+        
+        $('#Dot').remove();
 		var iter = 0;
 		$("tr .rank.index.null").each(function() {
 			var backColor = $(this).css("background-color");
@@ -1721,37 +1725,37 @@
 				//$("#rec" + id).css("fill", "#bdbdbd");
 				var elemTr = $("#rec" + id).closest('tr');
 				var elemTrId = elemTr.attr('id');
-				//console.log("tr id is : " + elemTrId);
+				//console.log("elemTr  is : " + elemTr.html());
+                //console.log("tr id is : " + elemTrId);
 				//console.log("++++++++++++++++++++++++++++++++++++++++++");
 
-				var dotId = elemTrId + " Dotted";
-				var ind = elemTrId.indexOf(" Dotted");
-				if (ind == -1) {
-					var recWidth = $("#rec" + id).attr("width");
-					var newWidth = 1 * recWidth;
-					$("#rec" + id).css("width", newWidth);
-					//var recTop = $("#rec" + id).position().top - 210;
-					//var recLeft = $("#rec" + id).position().left;
-					var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
-					//var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
-					var elemTd = $("#rec" + id).closest('svg');
-					var elemTdHtml = "" + elemTd.html() + addCircle;
-					elemTd.html(elemTdHtml);
-					elemTr.attr('id', elemTrId + " Dotted");
-				}
+                var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
+                //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
+                var elemTd = $("#rec" + id).closest('svg');
+                var elemTdHtml = "" + elemTd.html() + addCircle;
+                elemTd.html(elemTdHtml);
+                //console.log("tr id is : " + elemTrId);
+                //console.log("tr id is : " + elemTdHtml);
+                //console.log("++++++++++++++++++++++++++++++++++++++++++");
+             
+				
 			}
 
 			if (backColor2 === "rgb(99, 99, 99)")
 				var id2 = iter - 1;
-
 			iter += 1;
 		});
 
+        
 		$("#miniChart tr").css("color", "black");
 		$("#miniChart svg").css("height", mapBarHeight);
 		$("#miniChart rect").css("height", mapBarHeight);
+        
+        //console.log("Finished Mini Map Updating ::::::::::::::::::::::::::::::::::::::::")
 	}
     
+
+
     
     /*
 	 * Private
@@ -1993,6 +1997,11 @@
             //console.log("Interaction Value Array now is : " + interactionValueArray);
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
+            /*
+            setTimeout(function() {       
+            
+            }, timeDie);
+            */
 		};
 
 
@@ -2000,6 +2009,8 @@
 		    helper: fixHelperModified,
 		    stop: updateIndex
 		}).disableSelection();
+        
+        
 	}
 	
 
@@ -2036,8 +2047,10 @@
 			updateColorAndOpacity($(this), oldMiniRow, newMiniRow, oldIndex, newIndex);  
 		});
         
-        if (!rankButtonPressed)
-           selectionUpdatedMiniBar();  
+        if (!rankButtonPressed){
+            selectionUpdatedMiniBar();  
+        }
+           
 	}
 
 	/*
