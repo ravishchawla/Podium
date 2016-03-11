@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = false;
+    var showBarOverlay = true;
     
     var miniChartCache = "";
    
@@ -597,21 +597,21 @@
 		// so they have to be offset so that the iteration index matches correctly.
 		offset = userAdjustedAttributesValues.length;
         var objs = d3.selectAll("#consoleChart td");
+    
 		objs.each(function(d, i) {
+            
             if(d == undefined){
                 //d = consolechartSortedData;
             }
 			if (userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
 				return;
 
-			if (unusedAttributes.indexOf(d.id) >= 0) {
+			if (unusedAttributes.indexOf(i) >= 0)
 				d.amount = 0;
-			}
-			else if (weights == null) {
+			else if (weights == null)
 				d.amount = d.amount/totalPercentage;
-			}
 			else {
-				d.amount = weights[d.id - offset];
+				d.amount = weights[i - offset];			
 			}
 
 			attributeWeights[d.id] = d.amount;
@@ -623,50 +623,70 @@
 			$(this).find("rect").attr("title", (d.amount * 100).toFixed(0) + "%");
         
 		});
+        
+        
+   
+        
+        
+        
 	}
+    
+
+
 
     
-	/*
-	 * Sort the Console Chart Bars based on width!
-	 */
+/*
+ * Sort the Console Chart Bars based on width!
+ */
 
-	function sortConsoleChartBars() {
-		var objs = d3.selectAll("#consoleChart tr." + classNameConsoleAttr);
-		objs.sort(function(a, b) {
+function sortConsoleChartBars() {
+      
+  var objs = d3.selectAll("#consoleChart tr." + classNameConsoleAttr);
 
-			var aTd ="";
-			var bTd ="";
+   
+  objs.sort(function(a, b) {
+      
+      var aTd ="";
+      var bTd ="";
+      
+      $("#consoleChart tr." + classNameConsoleAttr + " p").each(function(){
+          
+          if( a.indexOf($(this).text()) != -1){
+              aTd = $(this).closest('td');
+          }
+          
+           if( b.indexOf($(this).text()) != -1){
+              bTd = $(this).closest('td');
+          }
+       
+      })
+      
+     
+      
+      //console.log("A td is : " + aTd);
+      //console.log("B td is : " + bTd);
+      var indexAWidth = parseFloat(aTd.find('rect').attr('width'));
+      var indexBWidth = parseFloat(bTd.find('rect').attr('width'));
+      var indexAtext = aTd.closest('tr').text();
+      var indexBtext = bTd.closest('tr').text();
+           
+  
+      ///*
+      if(indexAWidth > indexBWidth){
+          return -1;
+      }else if(indexBWidth > indexAWidth){
+          return 1;
+      }else{
+          return 0;
+      }
+      
+      //*/
+      //return indexBWidth - indexAWidth;
+      //return d3.descending(indexAWidth,indexBWidth);
+      
+    });
 
-			$("#consoleChart tr." + classNameConsoleAttr + " p").each(function() {
-
-				if( a.indexOf($(this).text()) != -1)
-					aTd = $(this).closest('td');
-
-				if( b.indexOf($(this).text()) != -1)
-					bTd = $(this).closest('td');
-			});
-
-			//console.log("A td is : " + aTd);
-			//console.log("B td is : " + bTd);
-			var indexAWidth = parseFloat(aTd.find('rect').attr('width'));
-			var indexBWidth = parseFloat(bTd.find('rect').attr('width'));
-			var indexAtext = aTd.closest('tr').text();
-			var indexBtext = bTd.closest('tr').text();
-
-			///*
-			if (indexAWidth > indexBWidth)
-				return -1;
-			else if (indexBWidth > indexAWidth)
-				return 1;
-			else
-				return 0;
-
-			//*/
-			//return indexBWidth - indexAWidth;
-			//return d3.descending(indexAWidth,indexBWidth);
-
-		});
-	}
+}
 
     
 
@@ -939,6 +959,13 @@
 		for (var i = 0; i < len; i++)
 			result[i] = result[i] / sum; 
 
+		// Resplice the unused attributes into the results with a weight of 0
+		for (var i = 0; i < attributeWeights.length; i++) {
+			if (unusedAttributes.indexOf(i) >= 0) {
+				result.splice(i, 0, 0);
+			}
+		}
+		
 		return result;
 	}
 	
@@ -1001,18 +1028,8 @@
 			// make sure the weights are updated
 			updateColumnWeights(null);
 			retArray = attributeWeights.slice();
-
-			//getting rid of the interaction weight
 			retArray.splice(0, 1);
-			
 			var normalizedWeights = normalize(retArray);
-			
-			// Resplice the unused attributes into the results with a weight of 0
-			/*for (var i = 0; i < attributeWeights.length; i++) {
-				if (unusedAttributes.indexOf(i) >= 0) {
-					normalizedWeights.splice(i, 0, 0);
-				}
-			}*/
 			return normalizedWeights;
 		}
 		
@@ -1035,24 +1052,6 @@
 		var normalizedWeights = normalize(weights);
 
 		return normalizedWeights;
-	}
-	
-	
-	/*
-	 * Get the expected value of an attribute for a given rank position
-	 */
-	function getExpectedValue(attr, rankPos) {
-		var attrVals = [];
-		for (var i = 0; i < data.length; i++)
-			attrVals.push(Number(data[i][attr]));
-		
-		var minAndMax = getMinAndMax(attrVals); 
-		var expectedValue = (1.0 - (rankPos / data.length)) * (minAndMax[1] - minAndMax[0]) + minAndMax[0];
-		
-		if (rankPos == 1)
-			expectedValue = minAndMax[0];
-		
-		return expectedValue;  
 	}
 	
 	
@@ -1231,7 +1230,6 @@
 	 * Rank!
 	 */
 	mar.rankButtonClicked = function() {
-		
         rankButtonPressed = true;
        
         greyMinibars(false);
@@ -1268,7 +1266,8 @@
 		
        
 		changedRows = []; // reset changed rows
-		updateColumnWeights(normalizedWeights.slice());
+        
+		updateColumnWeights(normalizedWeights.slice());	
         sortConsoleChartBars();
      
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
@@ -1659,13 +1658,10 @@
 					selectedRows.splice(index, 1);
 					updateRowFont(teamName);
 				}
-                selectionUpdatedMiniBar();
 			} else
 				isDragging = true;
-                selectionUpdatedMiniBar();
                 
 		});
-        
 	}
 
 
@@ -1704,19 +1700,15 @@
 			}
 		}
 	}    
-    
-    
-    
-    
-    /*
+
+	/*
 	 * Private
 	 * Updates the rows of mini bar as grey color, when main table rows are selected
 	 */
 	function selectionUpdatedMiniBar(){
 
+
 		miniChartCache = $("tr .rank.index.null").html();
-        
-        $('#Dot').remove();
 		var iter = 0;
 		$("tr .rank.index.null").each(function() {
 			var backColor = $(this).css("background-color");
@@ -1730,37 +1722,37 @@
 				//$("#rec" + id).css("fill", "#bdbdbd");
 				var elemTr = $("#rec" + id).closest('tr');
 				var elemTrId = elemTr.attr('id');
-				//console.log("elemTr  is : " + elemTr.html());
-                //console.log("tr id is : " + elemTrId);
+				//console.log("tr id is : " + elemTrId);
 				//console.log("++++++++++++++++++++++++++++++++++++++++++");
 
-                var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
-                //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
-                var elemTd = $("#rec" + id).closest('svg');
-                var elemTdHtml = "" + elemTd.html() + addCircle;
-                elemTd.html(elemTdHtml);
-                //console.log("tr id is : " + elemTrId);
-                //console.log("tr id is : " + elemTdHtml);
-                //console.log("++++++++++++++++++++++++++++++++++++++++++");
-             
-				
+				var dotId = elemTrId + " Dotted";
+				var ind = elemTrId.indexOf(" Dotted");
+				if (ind == -1) {
+					var recWidth = $("#rec" + id).attr("width");
+					var newWidth = 1 * recWidth;
+					$("#rec" + id).css("width", newWidth);
+					//var recTop = $("#rec" + id).position().top - 210;
+					//var recLeft = $("#rec" + id).position().left;
+					var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
+					//var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
+					var elemTd = $("#rec" + id).closest('svg');
+					var elemTdHtml = "" + elemTd.html() + addCircle;
+					elemTd.html(elemTdHtml);
+					elemTr.attr('id', elemTrId + " Dotted");
+				}
 			}
 
 			if (backColor2 === "rgb(99, 99, 99)")
 				var id2 = iter - 1;
+
 			iter += 1;
 		});
 
-        
 		$("#miniChart tr").css("color", "black");
 		$("#miniChart svg").css("height", mapBarHeight);
 		$("#miniChart rect").css("height", mapBarHeight);
-        
-        //console.log("Finished Mini Map Updating ::::::::::::::::::::::::::::::::::::::::")
 	}
     
-
-
     
     /*
 	 * Private
@@ -2002,11 +1994,6 @@
             //console.log("Interaction Value Array now is : " + interactionValueArray);
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
-            /*
-            setTimeout(function() {       
-            
-            }, timeDie);
-            */
 		};
 
 
@@ -2014,8 +2001,6 @@
 		    helper: fixHelperModified,
 		    stop: updateIndex
 		}).disableSelection();
-        
-        
 	}
 	
 
@@ -2052,10 +2037,8 @@
 			updateColorAndOpacity($(this), oldMiniRow, newMiniRow, oldIndex, newIndex);  
 		});
         
-        if (!rankButtonPressed){
-            selectionUpdatedMiniBar();  
-        }
-           
+        if (!rankButtonPressed)
+           selectionUpdatedMiniBar();  
 	}
 
 	/*
