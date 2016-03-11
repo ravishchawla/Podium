@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = true;
+    var showBarOverlay = false;
     
     var miniChartCache = "";
    
@@ -597,21 +597,21 @@
 		// so they have to be offset so that the iteration index matches correctly.
 		offset = userAdjustedAttributesValues.length;
         var objs = d3.selectAll("#consoleChart td");
-    
 		objs.each(function(d, i) {
-            
             if(d == undefined){
                 //d = consolechartSortedData;
             }
 			if (userAdjustedAttributesValues.indexOf(($(this)).text()) != -1)
 				return;
 
-			if (unusedAttributes.indexOf(i) >= 0)
+			if (unusedAttributes.indexOf(d.id) >= 0) {
 				d.amount = 0;
-			else if (weights == null)
+			}
+			else if (weights == null) {
 				d.amount = d.amount/totalPercentage;
+			}
 			else {
-				d.amount = weights[i - offset];			
+				d.amount = weights[d.id - offset];
 			}
 
 			attributeWeights[d.id] = d.amount;
@@ -959,13 +959,6 @@ function sortConsoleChartBars() {
 		for (var i = 0; i < len; i++)
 			result[i] = result[i] / sum; 
 
-		// Resplice the unused attributes into the results with a weight of 0
-		for (var i = 0; i < attributeWeights.length; i++) {
-			if (unusedAttributes.indexOf(i) >= 0) {
-				result.splice(i, 0, 0);
-			}
-		}
-		
 		return result;
 	}
 	
@@ -1028,8 +1021,18 @@ function sortConsoleChartBars() {
 			// make sure the weights are updated
 			updateColumnWeights(null);
 			retArray = attributeWeights.slice();
+
+			//getting rid of the interaction weight
 			retArray.splice(0, 1);
+			
 			var normalizedWeights = normalize(retArray);
+			
+			// Resplice the unused attributes into the results with a weight of 0
+			/*for (var i = 0; i < attributeWeights.length; i++) {
+				if (unusedAttributes.indexOf(i) >= 0) {
+					normalizedWeights.splice(i, 0, 0);
+				}
+			}*/
 			return normalizedWeights;
 		}
 		
@@ -1266,8 +1269,7 @@ function sortConsoleChartBars() {
 		
        
 		changedRows = []; // reset changed rows
-        
-		updateColumnWeights(normalizedWeights.slice());	
+		updateColumnWeights(normalizedWeights.slice());
         sortConsoleChartBars();
      
 		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
