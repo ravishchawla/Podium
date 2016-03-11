@@ -1873,15 +1873,16 @@
                     
 			});
 
-			$(".miniTr" ).tooltip();        
+			mini_rows = "#miniChart svg";
+			$(mini_rows).tooltip();        
 			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScore;
-			$(".miniTr" ).attr("title", toolText);
+			$(mini_rows).attr("title", toolText);
 
-			$('.miniTr').tooltip({
+			$(mini_rows).tooltip({
 				tooltipClass: "tooltipTest",
 			});
 
-			$(".miniTr").tooltip({
+			$(mini_rows).tooltip({
 				position: {
 					my: "right top",
 					at: "center top"
