@@ -55,9 +55,6 @@
     var showBarOverlay = false;
     
     var miniChartCache = "";
-   
-    var attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
-    
     
 	/**********************************LOAD THE TABLE**********************************/
 	
@@ -153,10 +150,10 @@
 			mar.rankButtonClicked(); 
 		});
 
-		legendItems = [["#337ab7", "No Changes"],
-					   ["rgb(88,218,91)" , "Row has moved up"],
-					   ["rgb(218, 91, 88)" ,  "Row has moved sown"],
-					   ["rgb(88, 91, 88)" , "Row has been moved"]
+		legendItems = [[COLORS.MINIMAP_ROW, "No Changes"],
+					   [COLORS.POSITIVE_MOVE , "Row has moved up"],
+					   [COLORS.NEGATIVE_MOVE ,  "Row has moved sown"],
+					   [COLORS.GREY, "Row has been moved"]
 					  ];
 
 	}
@@ -287,8 +284,8 @@
 								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
 								+ "<g>"
 								+ "<rect id = 'something' class = 'some' width=" 
-								+ cellWidth +" height= 50 fill='#"
-								+ (i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
+								+ cellWidth +" height= 50 fill='"
+								+ (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "> </rect>"
 								+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
 								+ "</g>"
 								+ "</svg>";
@@ -313,7 +310,7 @@
 				  .attr("min-width", "50px")
 				  .style("color", function(d) { 
 				  	if(d.description == "Color") return d.fill;
-				  	else return "black";
+				  	else return COLORS.BLACK;
 				  })
 				  .style("background-color", function(d) { return d.fill; })
 				  .style("border-right", "5px solid white");
@@ -324,7 +321,7 @@
 					return [
 							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width = ' + minimap_width +  '><rect id = rec'+ i + ' class = miniMapRect width=' +
 								minimap_width * (data.length - row["rank"]) / data.length +
-								' height="50" fill="' + "#337ab7" + '"/></svg>' }];
+								' height="50" fill="' + COLORS.MINIMAP_ROW + '"/></svg>' }];
 
 				}).enter()
 				.append("td")
@@ -348,7 +345,7 @@
 					return "<p class=columnChartName id=col" + d.id + " title=" + d.title + ">" + d.name + "</p>"; 
 				}).append("svg")
 				.append("rect")
-				.attr("fill", "#337ab7")
+				.attr("fill", COLORS.CONSOLE_ROW)
 				.attr("id", function(d) { return "rect" + d.id; })
 				.attr("width", function(d) {
 					d.width = (console_width * d.amount);
@@ -479,8 +476,8 @@
 								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
 								+ "<g>"
 								+ "<rect id = 'something' class = 'some' width=" 
-								+ cellWidth +" height= 50 fill='#"
-								+ (i % 2 == 0 ? 'f' : 'a') + "27997'> </rect>"
+								+ cellWidth +" height= 50 fill='"
+								+ (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "> </rect>"
 								+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
 								+ "</g>"
 								+ "</svg>";
@@ -545,11 +542,11 @@
 
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
-				var barColor = "#337ab7";
+				var barColor = COLORS.MINIMAP_ROW;
 				if (row["rank"] < row["oldIndex"])
-					barColor = "#58DA5B";
+					barColor = COLORS.NEGATIVE_MOVE;
 				else if (row["rank"] > row["oldIndex"])
-					barColor = "#DA5B58";
+					barColor = COLORS.POSITIVE_MOVE;
 				
 				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
 				if (row["rank"] == row["oldIndex"])
@@ -1081,15 +1078,17 @@
 			opacity = 0;
 
 		color = '';
-
-		if(rowObj.hasClass('greenColorChange'))
-			color = 'rgba(88, 218, 91, ';
-		else if (rowObj.hasClass('redColorChange'))
-			color = 'rgba(218, 91, 88, ' ;
+		miniColor = '';
 
 		if (colorOverlay) {
-				rowObj.css("background-color", color + opacity + ')');
-				newMiniRowObj.css("fill", color + '1)');
+				if(rowObj.hasClass('greenColorChange')) {
+					rowObj.css("background-color", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
+					newMiniRowObj.css("fill", COLORS.POSITIVE_MOVE_GRADIENT(1));
+				}
+				else if(rowObj.hasClass('redColorChange')) {
+					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
+					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(1));
+				}
 		}
 
 		oldWidth = newMiniRowObj.attr("width");
@@ -1327,7 +1326,7 @@
 		colorOverlay = !colorOverlay;
 
 		if (!colorOverlay)
-			$("tr").css("background","white");
+			$("tr").css("background", COLORS.WHITE);
 		else
 			colorRows();
 	}
@@ -1547,10 +1546,10 @@
     	
     	if (tag == 0) {
     		// interaction weight
-    		colorValue = "a";
+    		colorValue = COLORS.ODD_COLUMN;
     	} else {
     		// rank score
-    		colorValue = "f";
+    		colorValue = COLORS.EVEN_COLUMN;
     	}
     	
     	var item = 0;
@@ -1561,7 +1560,7 @@
 				tdWidth = prevWidth;
 
 			var current = $(this).text();
-			var content = "<p class = 'textToHide'>"+current +"</p><svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='#" + colorValue + "27997'/></svg>"; 
+			var content = "<p class = 'textToHide'>"+current +"</p><svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='" + colorValue + "'/></svg>"; 
 			$(this).html(content);
 			ttText = itemArray[item];
 
@@ -1722,20 +1721,20 @@
 			var backColor = $(this).css("background-color");
 			var backColor2 = $(this).css("background");
 			backColor2 = backColor2.substring(0, 15);
-			if (backColor == "rgb(255, 255, 255)" || backColor == "rgba(0, 0, 0, 0)") {
+			if (backColor == COLORS.WHITE || backColor == COLORS.TRANSPARENT_BLACK) {
 
 			} else {
 				var id = iter - 1;
 
-				//$("#rec" + id).css("fill", "#bdbdbd");
+				//$("#rec" + id).css("fill", COLORS.GREY);
 				var elemTr = $("#rec" + id).closest('tr');
 				var elemTrId = elemTr.attr('id');
 				//console.log("elemTr  is : " + elemTr.html());
                 //console.log("tr id is : " + elemTrId);
 				//console.log("++++++++++++++++++++++++++++++++++++++++++");
 
-                var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill='black'></rect>";
-                //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke='black' stroke-width='1' fill='red'/>>";
+                var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill=" + COLORS.BLACK + "></rect>";
+                //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke=" + COLORS.BLACK + " stroke-width='1' fill= " + COLORS.RED + "/>>";
                 var elemTd = $("#rec" + id).closest('svg');
                 var elemTdHtml = "" + elemTd.html() + addCircle;
                 elemTd.html(elemTdHtml);
@@ -1746,13 +1745,13 @@
 				
 			}
 
-			if (backColor2 === "rgb(99, 99, 99)")
+			if (backColor2 === COLORS.MINIMAP_ROW_SELECTED)
 				var id2 = iter - 1;
 			iter += 1;
 		});
 
         
-		$("#miniChart tr").css("color", "black");
+		$("#miniChart tr").css("color", COLORS.BLACK);
 		$("#miniChart svg").css("height", mapBarHeight);
 		$("#miniChart rect").css("height", mapBarHeight);
         
@@ -1788,21 +1787,21 @@
 	 * Update the font of the given row
 	 */
 	function updateRowFont(teamName) {
-        var greyColor = "#bdbdbd";
-        var darkGreyColor = "#636363";
+        var greyColor = COLORS.GREY;
+        var darkGreyColor = COLORS.DARK_GREY;
 		var defFontSize = $("#tr1").css('font-size');
 		var defFontWeight = $("#tr1").css('font-weight');
 		//$("tr").css("font-size", defFontSize);
 		$("tr").css("font-weight", defFontWeight);
-		//$("tr .rank.index.null").css("background", "white");
-        //$("tr .rank.index.null").css("color", "black");
+		//$("tr .rank.index.null").css("background", COLORS.WHITE);
+        //$("tr .rank.index.null").css("color", COLORS.BLACK);
         
                 
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
             if(iter>0){
-               $(this).css("background", "white");
-               $(this).css("color", "black");
+               $(this).css("background", COLORS.WHITE);
+               $(this).css("color", COLORS.BLACK);
             }  
             iter += 1;
             });
@@ -1815,24 +1814,20 @@
                     
 					var rankCol = $(this).closest('tr').find('.rank.index.null');
                     var idThis = $(this).closest('tr').attr('id');
-                  
-                   
-                   
-                    
+
                     //ELSE CURRENT ROW IS NOT GREY
                     
-					if (i == selectedRows.length - 1) {
-						idValTr.css("color", "black");
+                    if (i == selectedRows.length - 1) {
+						idValTr.css("color", COLORS.BLACK);
 						idValTr.css("font-weight", "900");
                         
-                        var styleContent = "color: rgb(255, 255, 255); background: rgb(99, 99, 99);"
+                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.FONT_COLOR_DARK + ";"
                         rankCol.attr("style", styleContent);
 					} else {
-                        var styleContent = "color: rgb(0, 0, 0); background: rgb(189, 189, 189);"
+                        var styleContent = "color: " + COLORS.BLACK + "; background: " + COLORS.FONT_COLOR_LIGHT + ";"
                         rankCol.attr("style", styleContent);
                        
 					}
-                    
 				}
 			});
 		} 
@@ -1873,8 +1868,7 @@
                     
 			});
 
-			mini_rows = "#miniChart svg";
-			$(mini_rows).tooltip();        
+			mini_rows = "#miniChart svg";        
 			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScore;
 			$(mini_rows).attr("title", toolText);
 
@@ -1942,12 +1936,12 @@
 			if (!fishEyeOverlay) {
 				$(".miniTr").css('height', defTrHeight);
 				$(".miniTr").css('font-size', defFontSize);
-				$(".miniTr").css('background', "white");
-				$(".miniTr").css('color', "black");
+				$(".miniTr").css('background', COLORS.WHITE);
+				$(".miniTr").css('color', COLORS.BLACK);
 				$(".miniMapSvg").css('height',defSvgHeight);
 			}
 		}, function() {
-			$("#miniChart tr").css("color", "black");
+			$("#miniChart tr").css("color", COLORS.BLACK);
 			$("#miniChart svg").css("height", mapBarHeight);
 			$("#miniChart rect").css("height", mapBarHeight);
 		});
@@ -2065,18 +2059,15 @@
 	 */
 	function greyMinibars(greyOut) {
 		disallowWeightAdjustment = greyOut;
-		var blueColor = "#337ab7";
-		var greyColor = "rgb(88, 91, 88)";
-
 		$("#consoleChart rect").each(function(i, d) {
 			if (i < userAdjustedAttributesKeys.length) 
 				return;
 
 			if (greyOut){                
-				$(this).attr("fill", greyColor);
+				$(this).attr("fill", COLORS.DARK_GREY);
                  }
 			else{
-                $(this).attr("fill", blueColor);
+                $(this).attr("fill", COLORS.MINIMAP_ROW);
             }
 				
 		});
