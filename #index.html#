@@ -22,7 +22,7 @@
     <script type="text/javascript" src="lib/jquery.dragtable.js"></script>
     <script type="text/javascript" src="lib/ial_new.js"></script>
     <script type="text/javascript" src="lib/numeric-1.2.6.js"></script>
-    <script type="text/javascript" src="lib/bootstrapa.min.js"></script>
+    <script type="text/javascript" src="lib/bootstrap.min.js"></script>
     <script type="text/javascript" src="lib/jquery.color-2.1.2.min.js"></script>
 </head>
 
