@@ -1639,10 +1639,11 @@
 		updateClickedItem();
         //var selectorVariable = '#tableId tr';
         var selectorVariable = "tr .rank.index.null";
+        //removes rows when clicked on rank index cell
 		$(selectorVariable).click(function(event) {
-             var item = $(this).closest('tr').index();
-				//var item = $(this).index();
-				//console.log("item value: " + item);
+                var item = $(this).closest('tr').index();
+				//var item1 = $(this).index();
+				console.log("item value: " + item);
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1658,12 +1659,21 @@
 					selectedRows.splice(index, 1);
 					updateRowFont(teamName);
 				}
-                selectionUpdatedMiniBar();
+        miniMapDotRemove(item);
         
 	})
     }
 
-
+    /*
+	 * Private
+	 * Removes the Dot on the minimap with a specific id number
+	 */
+    function miniMapDotRemove(item){
+         var dotSelector = "#miniChart #tr"+item+" #Dot";
+         //console.log(dotSelector);
+         //console.log("This is : " + $(dotSelector).html())
+         $(dotSelector).remove();
+    }
 	/*
 	 * Private
 	 * Update a clicked item
@@ -1688,7 +1698,7 @@
 						teamName = $(this).text(); 
 				});
 
-				$("#tr" + item).attr("id", teamName);
+				//$("#tr" + item).attr("id", teamName); //CHANGED
                 editSelectedRowItems(teamName);
 				selectedRows.push(teamName);
 				selectedRows = selectedRows.filter(function(item, ps) {
@@ -1696,6 +1706,7 @@
 				});
                 //console.log("Selected rows: " + selectedRows);
 				updateRowFont(teamName);
+                
 			}
 		}
 	}    
