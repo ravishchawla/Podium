@@ -1640,9 +1640,7 @@
         //var selectorVariable = '#tableId tr';
         var selectorVariable = "tr .rank.index.null";
 		$(selectorVariable).click(function(event) {
-            
-			if (event.shiftKey) {
-                var item = $(this).closest('tr').index();
+             var item = $(this).closest('tr').index();
 				//var item = $(this).index();
 				//console.log("item value: " + item);
 				isDragging = false;
@@ -1661,13 +1659,9 @@
 					updateRowFont(teamName);
 				}
                 selectionUpdatedMiniBar();
-			} else
-				isDragging = true;
-                selectionUpdatedMiniBar();
-                
-		});
         
-	}
+	})
+    }
 
 
 	/*
