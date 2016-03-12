@@ -1636,13 +1636,14 @@
 		var defFontWeight = $("#tr1").css('font-weight');
 
 		updateClickedItem();
-		//updateRowFont("");
-
-		$('#tableId tr').click(function(event) {
+        //var selectorVariable = '#tableId tr';
+        var selectorVariable = "tr .rank.index.null";
+		$(selectorVariable).click(function(event) {
             
 			if (event.shiftKey) {
-				var item = $(this).index();
-				//console.log("item value: " + item);
+                var item = $(this).closest('tr').index();
+				//var item = $(this).index();
+				console.log("item value: " + item);
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1836,6 +1837,8 @@
 	}
 	
    
+    
+   
 	/*
 	 * Private
 	 * Add the fisheye effect to the mini-map
@@ -1846,8 +1849,10 @@
 		var defSvgHeight = $(".miniMapSvg")[0].offsetHeight;
 		var defFontSize = $("#tr1").css('font-size');
 
-
-		$(".miniTr").hover(function() {
+        var selectorVar = ".miniTr";
+        //var selectorVar = "#miniChart td";
+		$(selectorVar).hover(function() {
+            
 			var clickedRow = $(this).index();
 			$('.' + tooltipAttribute).attr("id", tooltipAttribute + clickedRow);
 			var teamName = "";
@@ -1870,7 +1875,7 @@
 
 			mini_rows = "#miniChart svg";        
 			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScore;
-			$(mini_rows).attr("title", toolText);
+			$(mini_rows).attr("title", toolText); 
 
 			$(mini_rows).tooltip({
 				tooltipClass: "tooltipTest",
