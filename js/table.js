@@ -53,6 +53,7 @@
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
     var showBarOverlay = true;
+    var useSVGs = false;
     
     var miniChartCache = "";
     var defFontSize;
@@ -149,7 +150,7 @@
 			}
 			ial.init(data, 0);
 			displayTable(data);
-			//mar.rankButtonClicked(); 
+			mar.rankButtonClicked(); 
 		});
 
 		legendItems = [[COLORS.MINIMAP_ROW, "No Changes"],
@@ -280,6 +281,20 @@
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
 						cellHeight = 24;
 						if(cellWidth < 10 ) { cellWidth = 10 }
+						//console.log($(this).height());
+						if(useSVGs) {
+							return "<svg class = ' " + d.cl + "Svg overlayBar"
+								+ " id = 'inter'  "
+								+ " width = " + ($(this).width() < 0 ? 50 : $(this).width()) + ">"
+								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
+								+ "<g>"
+								+ "<rect id = 'something' class = 'some' width=" 
+								+ cellWidth +" height= 50 fill='"
+								+ (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "'> </rect>"
+								+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
+								+ "</g>"
+								+ "</svg>";
+						} else
 						return "<div class = 'overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.GREY + ";' >"
 								+ "<div class = ' " + d.cl + "Svg overlayBar'"
