@@ -1283,7 +1283,7 @@
         enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, 0);   
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
-        updateRowFont("");
+        updateRowFont();
         selectionUpdatedMiniBar();
         rankButtonPressed = false;
         setTimeout(function() {       
@@ -1659,15 +1659,19 @@ function getDefFontSizeWeight(){
 				
 				$('.' + tooltipAttribute).each(function() {
 					tx += 1;
-					if (item == tx - 2)              
-						teamName = $(this).text(); 
+					if (item == tx - 2){
+                        teamName = $(this).text(); 
+                                           
+                    }           
+						
 				});
 
 				var index = selectedRows.indexOf(teamName);
-				if (index > -1) {
+				if (index != -1) {
 					selectedRows.splice(index, 1);
-					updateRowFont(teamName);
+					//  updateRowFont();
 				}
+        updateRowFont();
         miniMapDotRemove(item);
         
 	})
@@ -1692,6 +1696,7 @@ function getDefFontSizeWeight(){
 			isDragging = true;
 			var item = $(this).index(); 
 			highlightItems(item);
+            updateRowFont();
 			$("#discard_button").removeAttr("disabled");
 		}).mouseup(function() {  
 			shiftMode = true;
@@ -1703,8 +1708,12 @@ function getDefFontSizeWeight(){
 				var tx = 0;
 				$('.' + tooltipAttribute).each(function() {
 					tx += 1;
-					if (item == tx - 2)
-						teamName = $(this).text(); 
+					if (item == tx - 2){
+                        teamName = $(this).text(); 
+                        //console.log('Second time team name is : ' + item)
+                    }
+						
+                    
 				});
 
 				//$("#tr" + item).attr("id", teamName); //CHANGED
@@ -1714,10 +1723,11 @@ function getDefFontSizeWeight(){
 					return selectedRows.indexOf(item) == ps;
 				});
                 //console.log("Selected rows: " + selectedRows);
-				updateRowFont(teamName);
+				
                 
 			}
 		}
+        
 	}    
     
     
@@ -1802,19 +1812,19 @@ function getDefFontSizeWeight(){
 	 * Private
 	 * Update the font of the given row
 	 */
-	function updateRowFont(teamName) {
+	function updateRowFont() {
         var greyColor = COLORS.GREY;
         var darkGreyColor = COLORS.DARK_GREY;
 		$("tr").css("font-size", defFontSize);
 		$("tr").css("font-weight", defFontWeight);
-        console.log("Font weight defualt is : " + defFontWeight)
+        //console.log("Font weight defualt is : " + defFontWeight)
 		//$("tr .rank.index.null").css("background", COLORS.WHITE);
         //$("tr .rank.index.null").css("color", COLORS.BLACK);
         
                 
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
-            if(iter>0){
+            if(iter>-1){
                $(this).css("background", COLORS.WHITE);
                $(this).css("color", COLORS.BLACK);
             }  
