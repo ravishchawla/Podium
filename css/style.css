@@ -138,7 +138,8 @@ body {
 }
 
 #tableId .overlayBar {
-	background-color: grey;
+	display: block;
+	float: left;
 }
 
 .columnChartName {
