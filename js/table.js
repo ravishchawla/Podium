@@ -1407,6 +1407,7 @@
 		clickAndDragRows(); 
 		addArrows(); 
         tablelens();
+        tooltipMiniChart();
         handleClickedRow();
         
         addFixedHeader();
@@ -1643,7 +1644,7 @@
 			if (event.shiftKey) {
                 var item = $(this).closest('tr').index();
 				//var item = $(this).index();
-				console.log("item value: " + item);
+				//console.log("item value: " + item);
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1835,8 +1836,44 @@
         
       
 	}
-	
-   
+    
+    
+	/*
+	 * Private
+	 * Adds tooltip to the minimap
+	 */	
+    function tooltipMiniChart(){
+        var selectorVar = ".miniTr";
+        //var selectorVar = "#miniChart td";
+		$(selectorVar).hover(function() {
+            var clickedRow = $(this).index();
+            //console.log("Hovering : " + clickedRow);
+            
+            var mainTableSelector = "#tableId #tr"+clickedRow;
+            var mainTrHtml = $(mainTableSelector).html();
+            //console.log("html found is : " + mainTrHtml);
+            
+            var rankScoreText = $(mainTableSelector).find('.rankScore').text();
+            //console.log("rank score text found is : " + rankScoreText);
+            
+            var teamName = $(mainTableSelector).find('.School').text();
+            
+			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScoreText;
+			$(this).attr("title", toolText); 
+
+			$(this).tooltip({
+				tooltipClass: "tooltipMiniChart",
+			});
+
+			$(this).tooltip({
+				position: {
+					my: "right top",
+					at: "center top"
+				}
+			});
+            
+        })
+    }
     
    
 	/*
@@ -1854,41 +1891,7 @@
 		$(selectorVar).hover(function() {
             
 			var clickedRow = $(this).index();
-			$('.' + tooltipAttribute).attr("id", tooltipAttribute + clickedRow);
-			var teamName = "";
-			var tn = 0;
-			$('.' + tooltipAttribute).each(function() {
-				tn += 1;
-				if (clickedRow == tn - 2)
-					teamName = $(this).text(); 
-			});
-
-			var rankScore = "";
-			var rs = 0;
-			$('.rankScore').attr("id", "rankScore" + clickedRow);
-			$('.rankScore').each(function() {
-				rs += 1;
-				if (clickedRow == rs -1)
-					rankScore = rankScoreValueArray[clickedRow];
-                    
-			});
-
-			mini_rows = "#miniChart svg";        
-			var toolText = "(" + (clickedRow + 1) + ") "+ teamName + "; Rank Score: " + rankScore;
-			$(mini_rows).attr("title", toolText); 
-
-			$(mini_rows).tooltip({
-				tooltipClass: "tooltipTest",
-			});
-
-			$(mini_rows).tooltip({
-				position: {
-					my: "right top",
-					at: "center top"
-				}
-			});
-
-
+			
 			if (!fishEyeOverlay) {
 				var trThis = $(".miniTr").get(clickedRow);
 				var size = $(".miniTr").length;
