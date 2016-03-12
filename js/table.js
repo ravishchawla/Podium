@@ -55,6 +55,8 @@
     var showBarOverlay = false;
     
     var miniChartCache = "";
+    var defFontSize;
+    var defFontWeight;
     
 	/**********************************LOAD THE TABLE**********************************/
 	
@@ -1413,12 +1415,19 @@
         addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
+        getDefFontSizeWeight();
 
 	}
     
 	
-
-
+/*
+     * Private
+     * Gets the defaunt font size and weight of Main table when page loads first time
+     */
+function getDefFontSizeWeight(){
+    defFontSize = $("#tr1").css('font-size');
+    defFontWeight = $("#tr1").css('font-weight');
+}
     
     
     /*
@@ -1643,7 +1652,7 @@
 		$(selectorVariable).click(function(event) {
                 var item = $(this).closest('tr').index();
 				//var item1 = $(this).index();
-				console.log("item value: " + item);
+				//console.log("item value: " + item);
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1796,10 +1805,9 @@
 	function updateRowFont(teamName) {
         var greyColor = COLORS.GREY;
         var darkGreyColor = COLORS.DARK_GREY;
-		var defFontSize = $("#tr1").css('font-size');
-		var defFontWeight = $("#tr1").css('font-weight');
-		//$("tr").css("font-size", defFontSize);
+		$("tr").css("font-size", defFontSize);
 		$("tr").css("font-weight", defFontWeight);
+        console.log("Font weight defualt is : " + defFontWeight)
 		//$("tr .rank.index.null").css("background", COLORS.WHITE);
         //$("tr .rank.index.null").css("color", COLORS.BLACK);
         
@@ -1816,21 +1824,18 @@
 		for (var i = 0; i < selectedRows.length; i++) {
 			$('.' + tooltipAttribute).each(function() {
 				if (selectedRows[i] == $(this).text()) {
-					var idValTr = $(this).closest('tr');
-                    
-                    
-					var rankCol = $(this).closest('tr').find('.rank.index.null');
+					var idValTr = $(this).closest('tr');                
+                    var rankCol = $(this).closest('tr').find('.rank.index.null');
                     var idThis = $(this).closest('tr').attr('id');
 
-                    //ELSE CURRENT ROW IS NOT GREY
-                    
+                    //ELSE CURRENT ROW IS NOT GREY                    
                     if (i == selectedRows.length - 1) {
 						idValTr.css("color", COLORS.BLACK);
-						idValTr.css("font-weight", "900");
-                        
+						idValTr.css("font-weight", "900");                        
                         var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.FONT_COLOR_DARK + ";"
                         rankCol.attr("style", styleContent);
 					} else {
+                        idValTr.css("font-weight", defFontWeight); 
                         var styleContent = "color: " + COLORS.BLACK + "; background: " + COLORS.FONT_COLOR_LIGHT + ";"
                         rankCol.attr("style", styleContent);
                        
