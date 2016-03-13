@@ -469,7 +469,6 @@
 		expectationBarWidth = 2;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 		expectedCelllValues = getExpectedValuesArray(rowRankingScores);
-		console.log(expectedCelllValues);
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -494,7 +493,7 @@
 				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
-						expectationValue = (expectedCelllValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
+						expectationValue = (expectedCelllValues[colNum-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
 						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellWidth = $(this).width() * expectationValue;
@@ -514,7 +513,7 @@
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
-								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
+								+ "px; height: " + cellHeight + "px; background-color : " + (colNum % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
 								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + d.html + "</div>"
 								+ "</div>" 
 								+ expectationBarHTML + "</div>" 
