@@ -141,6 +141,7 @@ body {
 	display: block;
 	float: left;
 	color: white;
+	position: relative;
 }
 
 .columnChartName {

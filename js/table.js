@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = false;
+    var showBarOverlay = true;
     
     var miniChartCache = "";
     var defFontSize;
@@ -285,21 +285,26 @@
 						rowNum++;
 						rowNum %= data.length;
 						
-						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
+						/*expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 								+ " id = 'inter'  style = '"
-								+ "max-width : " + cellWidth + "px; width : " + cellWidth + "px; height: " + cellHeight + "px; background-color :"
-								+ (i % 2 == 0 ? COLORS.ODD_COLUMN_EXPECT : COLORS.EVEN_COLUMN_EXPECT) + "'" // </rect>"
+								+ "max-width : " + exCellWidth + "px; width : " + exCellWidth + "px; height: " + cellHeight + "px; background-color :"
+								+ (i % 2 == 0 ? COLORS.ODD_COLUMN_EXPECT : COLORS.EVEN_COLUMN_EXPECT) + ";'" // </rect>"
+								+ ">";
+						*/
+						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
+								+ " id = 'inter' style = '"
+								+ "max-width : " + 5 + "px; width : " + 5 + "px; height: " + cellHeight + "px; background-color : "
+								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 20;'"
 								+ ">";
 
 						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
-								+ expectationBarHTML
-
-								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + exCellWidth + "px; width : " + exCellWidth
-								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + ";' >"
-
-								+ d.html + "</div></div></div>";
+								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
+								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 40;' >"
+								+ d.html + "</div>"
+								+ expectationBarHTML + "</div>"
+								+ "</div>";
 					}).attr("class", ƒ("cl"));
 				}
 			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});
