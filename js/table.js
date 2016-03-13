@@ -12,7 +12,7 @@
 	var unusedAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
-	var legendItems = {};
+	var rowRankingScores = [];
 	var tooltipAttribute;
     var classNameFirstConsoleAttr = "1stconTr";
     var classNameConsoleAttr = "conTr";
@@ -52,8 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = true;
-    var useSVGs = false;
+    var showBarOverlay = false;
     
     var miniChartCache = "";
     var defFontSize;
@@ -147,18 +146,16 @@
 					}
 					normalizeAttribute(data, attrName, attributeStates.HIGH);
 				}
+
+		        for(var i = 0; i < data.length; i++) {
+		        	rowRankingScores.push(1);
+		        }
+
 			}
 			ial.init(data, 0);
 			displayTable(data);
-			mar.rankButtonClicked(); 
+			//mar.rankButtonClicked(); 
 		});
-
-		legendItems = [[COLORS.MINIMAP_ROW, "No Changes"],
-					   [COLORS.POSITIVE_MOVE , "Row has moved up"],
-					   [COLORS.NEGATIVE_MOVE ,  "Row has moved sown"],
-					   [COLORS.GREY, "Row has been moved"]
-					  ];
-
 	}
 	
 	
@@ -253,7 +250,7 @@
 			cells = rows.selectAll("td")
 				.data(function(row, i) {
 					return columns.map(function(c) {
-						var cell = {}; 
+						var cell = {};
 						d3.keys(c).forEach(function(k) {
 							cell[k] = (typeof c[k] == 'function') ? c[k](row, i) : c[k];
 							if (c[k] == "rank index" || c[k] == "oldIndex")
@@ -273,45 +270,38 @@
 				if(!showBarOverlay)
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
 				else {
+				    expectedCelllValues = getExpectedValuesArray(rowRankingScores);
+				    rowNum = 0;
+				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 					cells = cells.html(function(d, i) {
 						if(numericalAttributes.indexOf(d.head) < 1) {
 							return d.html;
 						}
-
+						expectationValue = (expectedCelllValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-						cellHeight = 24;
+						exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
-						//console.log($(this).height());
-						if(useSVGs) {
-							return "<svg class = ' " + d.cl + "Svg overlayBar"
-								+ " id = 'inter'  "
-								+ " width = " + ($(this).width() < 0 ? 50 : $(this).width()) + ">"
-								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
-								+ "<g>"
-								+ "<rect id = 'something' class = 'some' width=" 
-								+ cellWidth +" height= 50 fill='"
-								+ (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "'> </rect>"
-								+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
-								+ "</g>"
-								+ "</svg>";
-						} else
-						return "<div class = 'overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
-								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.GREY + ";' >"
-								+ "<div class = ' " + d.cl + "Svg overlayBar'"
+						rowNum++;
+						rowNum %= data.length;
+						
+						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 								+ " id = 'inter'  style = '"
 								+ "max-width : " + cellWidth + "px; width : " + cellWidth + "px; height: " + cellHeight + "px; background-color :"
-								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
-								//+ "<g>"
-								//+ "<rect id = 'something' class = 'some' width=" 
-								//+ cellWidth +" height= 50 fill='"
-								+ (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "'" // </rect>"
-								//+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
-								//+ "</g>"
-								+ ">" + d.html 
-								+ "</div></div>";
+								+ (i % 2 == 0 ? COLORS.ODD_COLUMN_EXPECT : COLORS.EVEN_COLUMN_EXPECT) + "'" // </rect>"
+								+ ">";
+
+						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
+								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
+
+								+ expectationBarHTML
+
+								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + exCellWidth + "px; width : " + exCellWidth
+								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + ";' >"
+
+								+ d.html + "</div></div></div>";
 					}).attr("class", ƒ("cl"));
 				}
-
 			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});
 			var num_rows = cells.length;
 			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
@@ -462,6 +452,11 @@
 			.data(data);
 		
 		// update the cells
+		rowNum = 0;
+		colNum = 0;
+		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
+		expectedCelllValues = getExpectedValuesArray(rowRankingScores);
+		console.log(expectedCelllValues);
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -481,43 +476,51 @@
 				cellRef = $(this);
 				if(!showBarOverlay || numericalAttributes.indexOf(parentD.head) < 1) {
 					d3.select(this).html(ƒ("html"));
-					return;
 				}
 
-				if(d3.select(this).select("svg")[0][0] == null) {
+				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
+						expectationValue = (expectedCelllValues[colNum-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-						cellHeight = 24;
+						cellHeight = 25;
+						exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						if(cellWidth < 10 ) { cellWidth = 10 }
-						return "<div class = 'overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
-								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.GREY + ";' >"
-								+ "<div class = ' " + d.cl + "Svg overlayBar'"
+						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
+								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
+								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + exCellWidth + "px; width : " + exCellWidth
+								+ "px; height: " + cellHeight + "px; background-color : " + (colNum % 2 == 0 ? COLORS.ODD_COLUMN_EXPECT : COLORS.EVEN_COLUMN_EXPECT) + ";' >"
+								+ "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 								+ " id = 'inter'  style = '"
 								+ "max-width : " + cellWidth + "px; width : " + cellWidth + "px; height: " + cellHeight + "px; background-color :"
-								//+ "<g " + "x = " + $(this).position().top + " y = " + $(this).position().right + ">"
-								//+ "<g>"
-								//+ "<rect id = 'something' class = 'some' width=" 
-								//+ cellWidth +" height= 50 fill='"
-								+ (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "'" // </rect>"
-								//+ "<text x = " + "0" + " dy = " + "1.5em" + " fill='white'>" + d.html + "</text>"
-								//+ "</g>"
-								+ ">" + d.html 
-								+ "</div></div>";
+								+ (colNum % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "'" // </rect>"
+								+ ">" //+ d.html
+								+ d.html + "</div></div></div>";
 						
 					});
 				} else {
-
-					d3.select(this).select("svg")
-								   .attr("width", function(d) {
-								   		return $(cellRef).width() < 0 ? 50 : $(cellRef).width();
+					d3.select(this).select(".expectationOverlayBar")
+								   .style("width", function(d, i) {
+								   		return ($(this).width()< 0 ? 50 : $(this).width() * expectedCelllValues[i][rowNum]);
+								   })
+								   .style("max-width", function(d, i) {
+								   		return ($(this).width()< 0 ? 50 : $(this).width() * expectedCelllValues[i][rowNum]);
 								   });
 
-					d3.select(this).select("rect").attr("width", function(d) {
-						cellWidth = (cellRef.width() < 0) ? 50 : cellRef.width() * parentD.norm;
-						return (isNaN(cellWidth) || cellWidth < 10 ? 10 : cellWidth);
-					}).html(function(d) { return d.html; });
+					d3.select(this).select(".actualOverlayBar")
+								   .style("width", function(d, i) {
+								   		return ($(this).width()< 0 ? 50 : $(this).width() * d.norm);
+								   })
+								   .style("max-width", function(d, i) {
+								   		return ($(this).width()< 0 ? 50 : $(this).width() * d.norm);
+								   }).html(function(d) { return d.html; });
 				}
+
+				rowNum++;
+				rowNum %= data.length;
+
+				colNum++;
+				colNum %= columns.length;
 			});
 			
 		
@@ -980,6 +983,7 @@
 		var matrix = matrixResult[0]; 
 		var uniqueIds = matrixResult[1]; 
 		var ranked = []; 
+		rowRankingScores = [];
 		
 		for (var i = 0; i < matrix.length; i++) {
 			var id = uniqueIds[i];
@@ -991,6 +995,7 @@
 			var result = (interactionWeight * interactionVal) + ((1.0 - interactionWeight) * dotProd);
 			obj["rankScore"] = result;
 			ranked.push({ id: id, val: result });
+			rowRankingScores.push(result);
 		}
 		
 		ranked.sort(function(a, b) {
@@ -1076,6 +1081,31 @@
 		return expectedValue;  
 	}
 	
+	/*
+	 * Get the expected values of all attributes for all given rows with rank scores.
+	 */
+	function getExpectedValuesArray(rankPositions) {
+		var expectedValuesArray = [];
+		for(var col = userAdjustedAttributesKeys.length; col < numericalAttributes.length; col++) {
+			var attr = numericalAttributes[col];
+			var attrVals = [];
+			var expectedValues = [];
+			for (var i = 0; i < data.length; i++)
+					attrVals.push(Number(data[i][attr]));
+			
+			
+			var minAndMax = getMinAndMax(attrVals);
+			
+			for (var i = 0; i < rankPositions.length; i++) {
+				 expectedValues[i] = (1.0 - (rankPositions[i] / data.length)) * (minAndMax[1] - minAndMax[0]) + minAndMax[0];
+				 if(expectedValues[i] == 1)
+				 	expectedValues[i] = minAndMax[0];
+			}
+			
+			expectedValuesArray[col - userAdjustedAttributesKeys.length] = expectedValues;
+		}
+		return expectedValuesArray;
+	}
 	
 	/*********************************UTILITY FUNCTIONS*********************************/
 	

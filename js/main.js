@@ -8,7 +8,7 @@
 	 */
 	main.init = function() {
 		$(document).ready(function() {
-	        mar.loadTable("data/offenseDataV2.csv");
+	        mar.loadTable("data/offenseDataV3.csv");
 	    });
 	}
 })();

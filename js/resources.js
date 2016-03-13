@@ -13,6 +13,8 @@ getNegativeMoveWithOpacity = function(opacity) {
 const COLORS = {
 	"ODD_COLUMN" : "#f27997",
 	"EVEN_COLUMN" : "#a27997",
+	"ODD_COLUMN_EXPECT" : "#d399e8",
+	"EVEN_COLUMN_EXPECT" : "#969Deb",
 	"POSITIVE_MOVE" : "#DA5B58",
 	"NEGATIVE_MOVE" : "#58DA5B",
 	"POSITIVE_MOVE_GRADIENT" : getPositiveMoveWithOpacity,
@@ -30,3 +32,14 @@ const COLORS = {
 	"BLUE" : "#337ab7",
 	"RED" : "#FF0000",
 };
+
+const legendItems = [[COLORS.ODD_COLUMN, "Column 1 value"],
+					 [COLORS.EVEN_COLUMN , "Column 2 value"],
+					 [COLORS.ODD_COLUMN_EXPECT, "Column 1 expected value"],
+					 [COLORS.EVEN_COLUMN_EXPECT, "Column 2 expected value"],
+					 [COLORS.POSITIVE_MOVE, "Row moved up in ranking"],
+					 [COLORS.NEGATIVE_MOVE, "Row moved down in ranking"],
+					 [COLORS.MINIMAP_ROW, "Active mini row"],
+					 [COLORS.MINIMAP_ROW_SELECTED, "Selected mini row"]
+					];
+

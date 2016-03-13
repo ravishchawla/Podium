@@ -140,6 +140,7 @@ body {
 #tableId .overlayBar {
 	display: block;
 	float: left;
+	color: white;
 }
 
 .columnChartName {
