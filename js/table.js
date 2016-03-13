@@ -52,7 +52,7 @@
     var isDragging = true;
     var rankButtonPressed = false;
     var disallowWeightAdjustment = false;
-    var showBarOverlay = true;
+    var showBarOverlay = false;
     
     var miniChartCache = "";
     var defFontSize;
@@ -148,7 +148,7 @@
 				}
 
 		        for(var i = 0; i < data.length; i++) {
-		        	rowRankingScores.push(1);
+		        	rowRankingScores.push(i);
 		        }
 
 			}
@@ -273,13 +273,18 @@
 				    expectedCelllValues = getExpectedValuesArray(rowRankingScores);
 				    rowNum = 0;
 				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
+				    expectationBarWidth = 2;
 					cells = cells.html(function(d, i) {
 						if(numericalAttributes.indexOf(d.head) < 1) {
 							return d.html;
 						}
 						expectationValue = (expectedCelllValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-						exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+						exCellWidth = $(this).width() * expectationValue;
+
+						exCellWidth = exCellWidth - cellWidth;
+						exCellWidth = (exCellWidth >= cellWidth) ? cellWidth : exCellWidth;
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
 						rowNum++;
@@ -293,17 +298,19 @@
 						*/
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 								+ " id = 'inter' style = '"
-								+ "max-width : " + 5 + "px; width : " + 5 + "px; height: " + cellHeight + "px; background-color : "
-								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 20;'"
+								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
+								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 80;'"
 								+ ">";
 
 						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
-								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 40;' >"
-								+ d.html + "</div>"
-								+ expectationBarHTML + "</div>"
+								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
+								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + d.html + "</div>"
+								+ "</div>" 
+								+ expectationBarHTML + "</div>" 
+								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellWidth + "px'>abcde</div>"
 								+ "</div>";
 					}).attr("class", ƒ("cl"));
 				}
@@ -459,6 +466,7 @@
 		// update the cells
 		rowNum = 0;
 		colNum = 0;
+		expectationBarWidth = 2;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 		expectedCelllValues = getExpectedValuesArray(rowRankingScores);
 		console.log(expectedCelllValues);
@@ -486,30 +494,40 @@
 				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
-						expectationValue = (expectedCelllValues[colNum-offset][rowNum] * d.norm)/parseFloat(d.html);
+						expectationValue = (expectedCelllValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
+						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+						exCellWidth = $(this).width() * expectationValue;
+						
+						exCellWidth = exCellWidth - cellWidth;
+						exCellWidth = (exCellWidth >= cellWidth) ? cellWidth : exCellWidth;
 						cellHeight = 25;
-						exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+
 						if(cellWidth < 10 ) { cellWidth = 10 }
+						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
+								+ " id = 'inter' style = '"
+								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
+								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 80;'"
+								+ ">";
+
 						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
-								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + exCellWidth + "px; width : " + exCellWidth
-								+ "px; height: " + cellHeight + "px; background-color : " + (colNum % 2 == 0 ? COLORS.ODD_COLUMN_EXPECT : COLORS.EVEN_COLUMN_EXPECT) + ";' >"
-								+ "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
-								+ " id = 'inter'  style = '"
-								+ "max-width : " + cellWidth + "px; width : " + cellWidth + "px; height: " + cellHeight + "px; background-color :"
-								+ (colNum % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "'" // </rect>"
-								+ ">" //+ d.html
-								+ d.html + "</div></div></div>";
+
+								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
+								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
+								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + d.html + "</div>"
+								+ "</div>" 
+								+ expectationBarHTML + "</div>" 
+								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellWidth + "px'>abcde</div>"
+								+ "</div>";
 						
 					});
 				} else {
 					d3.select(this).select(".expectationOverlayBar")
-								   .style("width", function(d, i) {
-								   		return ($(this).width()< 0 ? 50 : $(this).width() * expectedCelllValues[i][rowNum]);
-								   })
-								   .style("max-width", function(d, i) {
-								   		return ($(this).width()< 0 ? 50 : $(this).width() * expectedCelllValues[i][rowNum]);
+								   .style("left", function(d, i) {
+								   		cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
+								   		exCellWidth = ($(this).width() * expectationValue) - cellWidth;
+								   		return (exCellWidth >= cellWidth) ? cellWidth : exCellWidth;
 								   });
 
 					d3.select(this).select(".actualOverlayBar")
@@ -519,6 +537,11 @@
 								   .style("max-width", function(d, i) {
 								   		return ($(this).width()< 0 ? 50 : $(this).width() * d.norm);
 								   }).html(function(d) { return d.html; });
+
+					d3.select(this).select(".textOverlayBar")
+								  .html(function(d, i) { 
+								  	return d.html;
+								  });
 				}
 
 				rowNum++;
@@ -988,7 +1011,6 @@
 		var matrix = matrixResult[0]; 
 		var uniqueIds = matrixResult[1]; 
 		var ranked = []; 
-		rowRankingScores = [];
 		
 		for (var i = 0; i < matrix.length; i++) {
 			var id = uniqueIds[i];
@@ -1000,7 +1022,6 @@
 			var result = (interactionWeight * interactionVal) + ((1.0 - interactionWeight) * dotProd);
 			obj["rankScore"] = result;
 			ranked.push({ id: id, val: result });
-			rowRankingScores.push(result);
 		}
 		
 		ranked.sort(function(a, b) {
@@ -1296,6 +1317,7 @@
 		console.log("table.js: Ranking"); 
 		var normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
+		rowRankingScores = [];
 
 		// update oldIndex to the old rank position and update rank
 		for (var i = 0; i < ranking.length; i++) {
@@ -1305,6 +1327,8 @@
 			obj["oldIndex"] = obj["rank"]; 
 			obj["rank"] = i + 1;
 			obj["rank"] = i + 1;
+
+			rowRankingScores.push(id);
 		}
 
 		// update the table order and color the rows
