@@ -45,9 +45,11 @@
          <div id = "controlButtons">
             <button type="button" id="rank_button" onclick="mar.rankButtonClicked()" class="btn btn-primary">Rank</button>
             <button type="button" id="discard_button" onclick="mar.discardButtonClicked()" class="btn btn-danger">Discard</button> 
-        <input type="checkbox" id="show_all_rows_checkbox" onclick="mar.allRowsCheckClicked()" checked autocomplete="off">Show All</input>
-        <input type="checkbox" id="show_bar_overlay_checkbox" onclick="mar.barOverlayClicked()" autocomplete="off">Show Bar Overlay</input></div>
-            <ul class="nav nav-tabs">
+        <div id = "checkboxButtons">
+            <input type="checkbox" id="show_all_rows_checkbox" clsss="checkbox" onclick="mar.allRowsCheckClicked()" checked autocomplete="off">Show All</input>
+            <input type="checkbox" id="show_bar_overlay_checkbox" class="checkbox" onclick="mar.barOverlayClicked()" autocomplete="off">Show Bar Overlay</input></div>
+        </div>
+                <ul class="nav nav-pills">
                 <li id="minimapTab" onclick="mar.changeToMinimap()" role="presentation" class="active nav-tab"><a href="#">Minimap</a></li>
                 <li id="consoleTab" onclick="mar.changeToConsole()" role="presentation" class="nav-tab"><a href="#">Console</a></li>
                 <li id="legendTab" onclick="mar.changeToLegend()" role="presentation" class="nav-tab"><a href="#">Legend</a><li>

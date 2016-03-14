@@ -72,6 +72,9 @@
     //State that weight values are fixed or moveable
     var disallowWeightAdjustment = false;
 
+    //State to hold which tab is currently activated
+    var currentActiveTab = TABS.MINIMAP;
+
 
 	/*Options for the app*/
 
@@ -207,9 +210,7 @@
             	.data(legendItems)
             	.enter()
             	.append("tr")
-            	.attr("class", "legendItem")
-            	.style("border-bottom", "10px solid white");
-
+            	.attr("class", "legendItem");
         legend_rows.selectAll("td")
 				.data(function(row, i) {
 					return [{"fill" : legendItems[i][0], "description" : "Color"},
@@ -221,10 +222,9 @@
 				  .attr("min-width", "50px")
 				  .style("color", function(d) { 
 				  	if(d.description == "Color") return d.fill;
-				  	else return COLORS.BLACK;
+				  	else return COLORS.WHITE;
 				  })
-				  .style("background-color", function(d) { return d.fill; })
-				  .style("border-right", "5px solid white");
+				  .style("background-color", function(d) { return d.fill; });
 	}
 	
 	/*
@@ -1320,17 +1320,15 @@
 	 * Private
 	 * Toggles the state of the tabs when they are clicked upon.
 	 */
-	function toggleActiveTab(consoleTab, minimapTab) {
-		consoleTab = $("#auxPanel #consoleTab");
-		consoleTab.toggleClass("active");
+	function toggleActiveTab(tabToActivate) {
+		for(var tab in TABS) {
+			if(TABS[tab] == tabToActivate || TABS[tab] == currentActiveTab) {
+				$("#auxPanel #" + TABS[tab]).toggleClass("active");
+			}
+		}
 
-		minimapTab = $("#auxPanel #minimapTab");
-		minimapTab.toggleClass("active");	
-
-		legendTab = $("#auxPanel #legendTab");
-		legendTab.toggleClass("active");
-	}	
-	
+		currentActiveTab = tabToActivate;
+	}
 	
 	/**************************************INPUTS**************************************/
 	
@@ -1506,7 +1504,7 @@
 	 * Toggle to the console tab
 	 */
 	mar.changeToConsole = function() {
-		toggleActiveTab();
+		toggleActiveTab(TABS.CONSOLE);
 		
 		$("#legendChart").css({"display" : "none"});
 		$("#miniChart").css({"display":"none"});
@@ -1517,7 +1515,7 @@
 	 * Toggle to the mini map tab
 	 */
 	mar.changeToMinimap = function() {
-		toggleActiveTab();
+		toggleActiveTab(TABS.MINIMAP);
 
 		$("#legendChart").css({"display" : "none"});
 		$("#consoleChart").css({"display":"none"});
@@ -1526,7 +1524,7 @@
 	
 
 	mar.changeToLegend = function() {
-		toggleActiveTab();
+		toggleActiveTab(TABS.LEGEND);
 		$("#consoleChart").css({"display":"none"});
 		$("#miniChart").css({"display":"none"});
 		$("#legendChart").css({"display" : "block"});

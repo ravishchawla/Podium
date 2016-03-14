@@ -19,7 +19,7 @@ const COLORS = {
 	"NEGATIVE_MOVE" : "#58DA5B",
 	"POSITIVE_MOVE_GRADIENT" : getPositiveMoveWithOpacity,
 	"NEGATIVE_MOVE_GRADIENT" : getNegativeMoveWithOpacity,
-	"MINIMAP_ROW" : "#337ab7",
+	"MINIMAP_ROW" : "rgb(255, 255, 255)",
 	"MINIMAP_ROW_SELECTED" : "rgb(99, 99, 99)",
 	"CONSOLE_ROW" : "#337ab7",
 	"FONT_COLOR_DARK" : "rgb(99, 99, 99)",
@@ -42,4 +42,6 @@ const legendItems = [[COLORS.ODD_COLUMN, "Column 1 value"],
 					 [COLORS.MINIMAP_ROW, "Active mini row"],
 					 [COLORS.MINIMAP_ROW_SELECTED, "Selected mini row"]
 					];
+
+const TABS = {"MINIMAP" : "minimapTab", "CONSOLE" : "consoleTab" , "LEGEND" : "legendTab"};
 

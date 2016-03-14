@@ -7,7 +7,7 @@ body {
     display: block;
     position: relative;
     z-index: 20;
-    background-color: white;
+    background-color: #555;
 }
 
 
@@ -28,12 +28,12 @@ body {
 
 
 #auxPanel {
+	background-color: #555;
 	width: 20%;
 	height: 100vh;
 	float: left;
 	overflow-x: hidden;
 	overflow-y: auto;
-	background-color: white;
 	position: relative;
 	z-index: 20;
 }
@@ -67,12 +67,22 @@ body {
 	display: none;
 }
 
-#consoleChart tr {
-	border-bottom: 5px solid white;
+#legendChart tr {
+	border-bottom: 10px solid #555;
+}
+
+#legendChart td{
+	border-right: 5px solid #555;
+}
+
+#consoleChart tr:nth-child(even){
+	background-color: #555;
+	border-bottom: 5px solid #555;
 }
 
 #consoleChart tr:nth-child(odd) {
 	background-color: lightgrey;
+	border-bottom: 5px solid lightgrey;
 }
 
 #auxContentDiv table {
@@ -199,11 +209,10 @@ body {
    
 }
 
+#checkboxButtons {
+	background-color: lightgrey;
+}
 
-
-
-
-
-
-
-
+.nav-pills a {
+	color: white;
+}
