@@ -153,12 +153,18 @@
 
 			}
 			ial.init(data, 0);
-			displayTable(data);
+			displayPage(data);
 			//mar.rankButtonClicked(); 
 		});
 	}
+
+	/* Display the Legend based on the LegendItems data structure
+     *
+	*/
 	
 	function displayLegend() {
+
+		//Add legend by appending the panel, rows, and individual cells
 		legendPanel = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "legendChart")
@@ -189,7 +195,13 @@
 				  .style("border-right", "5px solid white");
 	}
 	
+	/*
+	 * Display the Minimap by adding it to the Auxilary panel
+	 */
+
 	function displayMinimap() {
+
+		//add minimap panel, rows, and cells
 		minimap_width = $("#auxContentDiv").width();
 		minimap = d3.select("#auxContentDiv")
 				.append("table")
@@ -219,21 +231,32 @@
 				.attr("height", "10px");
 
 		$("td", "#miniChart").attr("height", "1");
-			$("td", "#consoleChart").attr("height", "1");
-			$("p", "#consoleChart").css({"min-width" : $("#auxContentDiv").width()});
+		$("td", "#consoleChart").attr("height", "1");
+		$("p", "#consoleChart").css({"min-width" : $("#auxContentDiv").width()});
 
-			mapBarHeight = $("#miniChart svg").height();
+		mapBarHeight = $("#miniChart svg").height();
 
-			var tableObj = document.getElementById("miniChart");
-			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
-				mapBarHeight--;
-				$("svg", "#miniChart").height(mapBarHeight);
-			}
+		//Decrease minimap row size until it fits on the page
+		var tableObj = document.getElementById("miniChart");
+		while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
+			mapBarHeight--;
+			$("svg", "#miniChart").height(mapBarHeight);
+		}
+
+		mapBarHeight--;
+		if(mapBarHeight > 0) $("svg", "#miniChart").height(mapBarHeight);
 
 	}
 
+
+	/*
+	 * Display the console chart on the Auxilary panel.
+	 */
+
 	function displayConsole() {
 		var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
+
+		//add console chart panel, rows, and individual cells
 		consolePanel = d3.select("#auxContentDiv")
 				.append("table")
 				.attr("id", "consoleChart")
@@ -257,6 +280,8 @@
 
 		console_width = $("#auxContentDiv").width();
 
+		//For each row, a SVG is added ofwidth proportional to to number of rows
+		//A drag behavior is added to svgs, controlling their widths
 		console_rows.selectAll("td")
 				.data(function(column, i) {
 					colWidth = (1 / num_cols);
@@ -281,9 +306,10 @@
 				}).attr("title", function(d) { 
 					return (d.amount * 100).toFixed(0) + "%"; })
 				.attr("height", "10px")
-				.call(d3.behavior.drag().on('drag', function(d) {
-                    console.log("Hehe :" + d.name);
-                
+				.call(d3.behavior.drag().on('drag', function(d) {                
+
+					//Dragging updates the width, and sets the amount based on how much it's moved.
+
                     if(d == undefined){
                         console.log("Its Undefinded");
                         //d = consolechartSortedData;
@@ -312,8 +338,8 @@
 					$("#discard_button").removeAttr("disabled");
 				}))
 
-
-				d3.selectAll("#consoleChart svg")
+			//On hover, change the width of the svg so its easier to drag, decrease on drag-out.
+			d3.selectAll("#consoleChart svg")
 				.on('mouseover', function(d) {
 					if(d.visibleWidth >= 10) return;
 					$(this).find("rect").attr("width", d.visibleWidth + 10);
@@ -322,8 +348,9 @@
 					$(this).find("rect").attr("width", d.visibleWidth);
 				})
 
-				htmlConsoleToCache = [];
-				d3.selectAll("#consoleChart td").each(function(d) {
+			//cache the console chart by saving all datum values.
+			htmlConsoleToCache = [];
+			d3.selectAll("#consoleChart td").each(function(d) {
 				htmlConsoleToCache.push(
 				 	{
 						"amount" : d.amount,
@@ -337,25 +364,16 @@
 	}
 
 	/*
-	 * Private
-	 * Display the table
+	 * Display the main table by adding it to the main table.
 	 */
-    
-	function displayTable(displayData) {
-		if (displayData != undefined && displayData.length != 0) {
 
-			// append the table
-			table = d3.select("#tablePanel")
+	function displayTable() {
+		table = d3.select("#tablePanel")
 				.insert("table", ":first-child")
 				.attr("id", "tableId")
 				.attr("class", "table");
-			
-			// append the mini map
-			
-			// append the table in the console view for attribute weight visualization
-			
-			// append the table header
-			header = table.append("thead")
+
+		header = table.append("thead")
 				.attr("class", "header")
 				.append("tr")
 				.selectAll("th")
@@ -366,8 +384,7 @@
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
 				.text(ƒ("head"));
 
-			// append the rows			
-			rows = table.append("tbody")
+		rows = table.append("tbody")
 				.selectAll("tr")
 				.data(data)
 				.enter()
@@ -375,16 +392,9 @@
 				.attr("id",function(d,i){
 					return "tr" + i;
 				});
-			
-			// append the rows of the mini map
-			
-			displayMinimap();
-            displayConsole();
-            displayLegend();
- 
-			// append the rows in the console for each attribute
-			
-			cells = rows.selectAll("td")
+
+		//Add cells to the table
+		cells = rows.selectAll("td")
 				.data(function(row, i) {
 					return columns.map(function(c) {
 						var cell = {};
@@ -403,6 +413,8 @@
 				.append("td")
 				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; });
 
+				//If bar overlay is disabled, return just the cell value,
+				//else, add DIV to display the value instead.
 				cellWidth = 0;
 				if(!showBarOverlay)
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
@@ -426,13 +438,11 @@
 						if(cellWidth < 10 ) { cellWidth = 10 }
 						rowNum++;
 						rowNum %= data.length;
+
+						//The display bars are shwon as DIVs. Main div shows the cell background (grey),
+						//a div to show the actual value of the cell (pink/purple), a div to show the text of the cell,
+						//a div to show the expected value (as a black bar).
 						
-						/*expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
-								+ " id = 'inter'  style = '"
-								+ "max-width : " + exCellWidth + "px; width : " + exCellWidth + "px; height: " + cellHeight + "px; background-color :"
-								+ (i % 2 == 0 ? COLORS.ODD_COLUMN_EXPECT : COLORS.EVEN_COLUMN_EXPECT) + ";'" // </rect>"
-								+ ">";
-						*/
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 								+ " id = 'inter' style = '"
 								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
@@ -451,17 +461,28 @@
 								+ "</div>";
 					}).attr("class", ƒ("cl"));
 				}
-			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});			
-			// append mini map cells
-			
-			// append the cells for the console view
-			
-
-			
+			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});		
 
 			$("td.interactionWeight").addClass("tableSeperator");
 			$("th.interactionWeight").addClass("tableSeperator")
+	
+			
+	}
 
+	/*
+	 * Private
+	 * Display the table
+	 */
+    
+	function displayPage(displayData) {
+		if (displayData != undefined && displayData.length != 0) {
+
+			displayMinimap();
+            displayConsole();
+            displayLegend();
+
+            displayTable();
+ 
 			addFunctionality(); 
 			$("#discard_button").attr("disabled", "disabled");
 			
