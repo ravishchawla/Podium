@@ -189,7 +189,7 @@
 			}
 			ial.init(data, 0);
 			displayPage(data);
-			//mar.rankButtonClicked(); 
+			mar.rankButtonClicked(); 
 		});
 	}
 
