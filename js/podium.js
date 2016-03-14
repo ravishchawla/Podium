@@ -451,7 +451,7 @@
 				if(!showBarOverlay)
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
 				else {
-				    expectedCelllValues = getExpectedValuesArray(rowRankingScores);
+				    expectedCellValues = getExpectedValuesArray(rowRankingScores);
 				    rowNum = 0;
 				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 				    expectationBarWidth = 2;
@@ -459,7 +459,7 @@
 						if(numericalAttributes.indexOf(d.head) < 1) {
 							return d.html;
 						}
-						expectationValue = (expectedCelllValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
+						expectationValue = (expectedCellValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
 						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellWidth = $(this).width() * expectationValue;
@@ -538,7 +538,7 @@
 		colNum = 0;
 		expectationBarWidth = 2;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
-		expectedCelllValues = getExpectedValuesArray(rowRankingScores);
+		expectedCellValues = getExpectedValuesArray(rowRankingScores);
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -563,7 +563,7 @@
 				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
-						expectationValue = (expectedCelllValues[colNum-offset][rowNum] * d.norm)/parseFloat(d.html);
+						expectationValue = (expectedCellValues[colNum-offset][rowNum] * d.norm)/parseFloat(d.html);
 						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
 						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellWidth = $(this).width() * expectationValue;
@@ -1156,44 +1156,17 @@
 	
 	
 	/*
-	 * Get the expected value of an attribute for a given rank position
-	 */
-	function getExpectedValue(attr, rankPos) {
-		var attrVals = [];
-		for (var i = 0; i < data.length; i++)
-			attrVals.push(Number(data[i][attr]));
-		
-		var minAndMax = getMinAndMax(attrVals); 
-		var expectedValue = (1.0 - (rankPos / data.length)) * (minAndMax[1] - minAndMax[0]) + minAndMax[0];
-		
-		if (rankPos == 1)
-			expectedValue = minAndMax[0];
-		
-		return expectedValue;  
-	}
-	
-	/*
 	 * Get the expected values of all attributes for all given rows with rank scores.
 	 */
 	function getExpectedValuesArray(rankPositions) {
 		var expectedValuesArray = [];
-		for(var col = userAdjustedAttributesKeys.length; col < numericalAttributes.length; col++) {
-			var attr = numericalAttributes[col];
-			var attrVals = [];
-			var expectedValues = [];
-			for (var i = 0; i < data.length; i++)
-					attrVals.push(Number(data[i][attr]));
-			
-			
-			var minAndMax = getMinAndMax(attrVals);
-			
-			for (var i = 0; i < rankPositions.length; i++) {
-				 expectedValues[i] = (1.0 - (rankPositions[i] / data.length)) * (minAndMax[1] - minAndMax[0]) + minAndMax[0];
-				 if(expectedValues[i] == 1)
-				 	expectedValues[i] = minAndMax[0];
-			}
-			
-			expectedValuesArray[col - userAdjustedAttributesKeys.length] = expectedValues;
+		for (var i = 0; i < rankPositions.length; i++) {
+			var expectedVal = (1.0 - (rankPositions[i] / data.length));
+			if (rankPositions[i] == 1)
+				expectedVal = 1; 
+			if (rankPositions[i] == data.length)
+				expectedVal = 0; 
+			expectedValuesArray.push(expectedVal);
 		}
 		return expectedValuesArray;
 	}

@@ -33,14 +33,14 @@ const COLORS = {
 	"RED" : "#FF0000",
 };
 
-const legendItems = [[COLORS.ODD_COLUMN, "Column 1 value"],
-					 [COLORS.EVEN_COLUMN , "Column 2 value"],
-					 [COLORS.ODD_COLUMN_EXPECT, "Column 1 expected value"],
-					 [COLORS.EVEN_COLUMN_EXPECT, "Column 2 expected value"],
+const legendItems = [//[COLORS.ODD_COLUMN, "Column 1 value"],
+					 //[COLORS.EVEN_COLUMN , "Column 2 value"],
+					 //[COLORS.ODD_COLUMN_EXPECT, "Column 1 expected value"],
+					 //[COLORS.EVEN_COLUMN_EXPECT, "Column 2 expected value"],
 					 [COLORS.POSITIVE_MOVE, "Row moved up in ranking"],
 					 [COLORS.NEGATIVE_MOVE, "Row moved down in ranking"],
-					 [COLORS.MINIMAP_ROW, "Active mini row"],
-					 [COLORS.MINIMAP_ROW_SELECTED, "Selected mini row"]
+					 [COLORS.MINIMAP_ROW, "Row didn't move in ranking"],
+					 [COLORS.MINIMAP_ROW_SELECTED, "Watched row"]
 					];
 
 const TABS = {"MINIMAP" : "minimapTab", "CONSOLE" : "consoleTab" , "LEGEND" : "legendTab"};
