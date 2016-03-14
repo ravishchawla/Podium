@@ -158,7 +158,184 @@
 		});
 	}
 	
+	function displayLegend() {
+		legendPanel = d3.select("#auxContentDiv")
+				.append("table")
+				.attr("id", "legendChart")
+				.attr("hidden", "hidden");
+
+		legend_rows = legendPanel.append("tbody")
+            	.selectAll("tr")
+            	.data(legendItems)
+            	.enter()
+            	.append("tr")
+            	.attr("class", "legendItem")
+            	.style("border-bottom", "10px solid white");
+
+        legend_rows.selectAll("td")
+				.data(function(row, i) {
+					return [{"fill" : legendItems[i][0], "description" : "Color"},
+					{"fill" : "none", "description" : legendItems[i][1]}];
+				}).enter()
+				  .append("td")
+				  .html(function(d) { return d.description; })
+				  .attr("height", "10px")
+				  .attr("min-width", "50px")
+				  .style("color", function(d) { 
+				  	if(d.description == "Color") return d.fill;
+				  	else return COLORS.BLACK;
+				  })
+				  .style("background-color", function(d) { return d.fill; })
+				  .style("border-right", "5px solid white");
+	}
 	
+	function displayMinimap() {
+		minimap_width = $("#auxContentDiv").width();
+		minimap = d3.select("#auxContentDiv")
+				.append("table")
+				.attr("id", "miniChart");
+
+		minimap_rows = minimap.append("tbody")
+				.selectAll("tr")
+				.data(data)
+				.enter()
+				.append("tr")
+                .attr("class","miniTr")
+                .attr("id",function(d,i){
+                return "tr"+i;
+                });
+
+		minimap_rows.selectAll("td")
+				.data(function(row, i) {
+					return [
+							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width = ' + minimap_width +  '><rect id = rec'+ i + ' class = miniMapRect width=' +
+								minimap_width * (data.length - row["rank"]) / data.length +
+								' height="50" fill="' + COLORS.MINIMAP_ROW + '"/></svg>' }];
+
+				}).enter()
+				.append("td")
+				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+				.html(function(d) { return d.value; })
+				.attr("height", "10px");
+
+		$("td", "#miniChart").attr("height", "1");
+			$("td", "#consoleChart").attr("height", "1");
+			$("p", "#consoleChart").css({"min-width" : $("#auxContentDiv").width()});
+
+			mapBarHeight = $("#miniChart svg").height();
+
+			var tableObj = document.getElementById("miniChart");
+			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
+				mapBarHeight--;
+				$("svg", "#miniChart").height(mapBarHeight);
+			}
+
+	}
+
+	function displayConsole() {
+		var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
+		consolePanel = d3.select("#auxContentDiv")
+				.append("table")
+				.attr("id", "consoleChart")
+				.attr("hidden", "hidden");
+		
+		console_rows = consolePanel.append("tbody")
+				.selectAll("tr")
+				.data(numericalAttributes)
+				.enter()
+				.append("tr")
+                .attr("class", function(d,i){
+              if(i==0){
+                  return classNameFirstConsoleAttr;
+              }  else{
+                  return classNameConsoleAttr;
+              }
+            })
+            .attr("id", function(d,i) {
+                	return "consoleTr" + i;
+        });
+
+		console_width = $("#auxContentDiv").width();
+
+		console_rows.selectAll("td")
+				.data(function(column, i) {
+					colWidth = (1 / num_cols);
+					if (column === "interactionWeight") {
+						colWidth = 0.5;
+						column = "Maximum Interaction Weight";
+					}
+					return [{ id: i, name: column, amount: colWidth }];
+				}).enter()
+				.append("td")
+				.html(function(d) {
+					attributeWeights[d.id] = d.amount;
+					return "<p class=columnChartName id=col" + d.id + " title=" + d.title + ">" + d.name + "</p>"; 
+				}).append("svg")
+				.append("rect")
+				.attr("fill", COLORS.CONSOLE_ROW)
+				.attr("id", function(d) { return "rect" + d.id; })
+				.attr("width", function(d) {
+					d.width = (console_width * d.amount);
+					d.visibleWidth = d.width;
+					return d.width + "px";
+				}).attr("title", function(d) { 
+					return (d.amount * 100).toFixed(0) + "%"; })
+				.attr("height", "10px")
+				.call(d3.behavior.drag().on('drag', function(d) {
+                    console.log("Hehe :" + d.name);
+                
+                    if(d == undefined){
+                        console.log("Its Undefinded");
+                        //d = consolechartSortedData;
+                    }
+					if (d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
+						return;
+
+					var new_width = d.width + d3.event.dx;
+					if (new_width < 0)
+						new_width = 0;
+
+					if (new_width > console_width)
+						new_width = console_width;
+
+					d.width = new_width;
+					d.visibleWidth = (d.width < 3 ? 3 : d.width);
+					//d.visibleWidth = d.width;
+					d.amount = new_width / console_width;
+					attributeWeights[d.id] = d.amount;
+					d3.select(this).attr("width", d.visibleWidth);
+					d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
+
+					if (d.name === "Maximum Interaction Weight")
+						maxInteractionWeight = d.amount; 
+					
+					$("#discard_button").removeAttr("disabled");
+				}))
+
+
+				d3.selectAll("#consoleChart svg")
+				.on('mouseover', function(d) {
+					if(d.visibleWidth >= 10) return;
+					$(this).find("rect").attr("width", d.visibleWidth + 10);
+				})
+				.on('mouseout', function(d) {
+					$(this).find("rect").attr("width", d.visibleWidth);
+				})
+
+				htmlConsoleToCache = [];
+				d3.selectAll("#consoleChart td").each(function(d) {
+				htmlConsoleToCache.push(
+				 	{
+						"amount" : d.amount,
+						"width" : d.width,
+						"visibleWidth" : d.visibleWidth,
+						"name" : d.name,
+						"direction" : "directionUp"
+					}
+				);
+			});
+	}
+
 	/*
 	 * Private
 	 * Display the table
@@ -174,21 +351,9 @@
 				.attr("class", "table");
 			
 			// append the mini map
-			minimap = d3.select("#auxContentDiv")
-				.append("table")
-				.attr("id", "miniChart");
-
+			
 			// append the table in the console view for attribute weight visualization
-			consolePanel = d3.select("#auxContentDiv")
-				.append("table")
-				.attr("id", "consoleChart")
-				.attr("hidden", "hidden");
-
-			legendPanel = d3.select("#auxContentDiv")
-				.append("table")
-				.attr("id", "legendChart")
-				.attr("hidden", "hidden");
-
+			
 			// append the table header
 			header = table.append("thead")
 				.attr("class", "header")
@@ -212,41 +377,13 @@
 				});
 			
 			// append the rows of the mini map
-			minimap_rows = minimap.append("tbody")
-				.selectAll("tr")
-				.data(data)
-				.enter()
-				.append("tr")
-                .attr("class","miniTr")
-                .attr("id",function(d,i){
-                return "tr"+i;
-                });
+			
+			displayMinimap();
+            displayConsole();
+            displayLegend();
  
 			// append the rows in the console for each attribute
-			console_rows = consolePanel.append("tbody")
-				.selectAll("tr")
-				.data(numericalAttributes)
-				.enter()
-				.append("tr")
-                .attr("class", function(d,i){
-              if(i==0){
-                  return classNameFirstConsoleAttr;
-              }  else{
-                  return classNameConsoleAttr;
-              }
-            })
-                .attr("id", function(d,i) {
-                	return "consoleTr" + i;
-                });
-
-            legend_rows = legendPanel.append("tbody")
-            	.selectAll("tr")
-            	.data(legendItems)
-            	.enter()
-            	.append("tr")
-            	.attr("class", "legendItem")
-            	.style("border-bottom", "10px solid white");
-
+			
 			cells = rows.selectAll("td")
 				.data(function(row, i) {
 					return columns.map(function(c) {
@@ -314,120 +451,13 @@
 								+ "</div>";
 					}).attr("class", ƒ("cl"));
 				}
-			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});
-			var num_rows = cells.length;
-			var num_cols = numericalAttributes.length - userAdjustedAttributesKeys.length;
-
-			minimap_width = $("#auxContentDiv").width();
-			console_width = $("#auxContentDiv").width();
-			
-			legend_rows.selectAll("td")
-				.data(function(row, i) {
-					return [{"fill" : legendItems[i][0], "description" : "Color"},
-					{"fill" : "none", "description" : legendItems[i][1]}];
-				}).enter()
-				  .append("td")
-				  .html(function(d) { return d.description; })
-				  .attr("height", "10px")
-				  .attr("min-width", "50px")
-				  .style("color", function(d) { 
-				  	if(d.description == "Color") return d.fill;
-				  	else return COLORS.BLACK;
-				  })
-				  .style("background-color", function(d) { return d.fill; })
-				  .style("border-right", "5px solid white");
-
+			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});			
 			// append mini map cells
-			minimap_rows.selectAll("td")
-				.data(function(row, i) {
-					return [
-							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width = ' + minimap_width +  '><rect id = rec'+ i + ' class = miniMapRect width=' +
-								minimap_width * (data.length - row["rank"]) / data.length +
-								' height="50" fill="' + COLORS.MINIMAP_ROW + '"/></svg>' }];
-
-				}).enter()
-				.append("td")
-				.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
-				.html(function(d) { return d.value; })
-				.attr("height", "10px");
-
+			
 			// append the cells for the console view
-			console_rows.selectAll("td")
-				.data(function(column, i) {
-					colWidth = (1 / num_cols);
-					if (column === "interactionWeight") {
-						colWidth = 0.5;
-						column = "Maximum Interaction Weight";
-					}
-					return [{ id: i, name: column, amount: colWidth }];
-				}).enter()
-				.append("td")
-				.html(function(d) {
-					attributeWeights[d.id] = d.amount;
-					return "<p class=columnChartName id=col" + d.id + " title=" + d.title + ">" + d.name + "</p>"; 
-				}).append("svg")
-				.append("rect")
-				.attr("fill", COLORS.CONSOLE_ROW)
-				.attr("id", function(d) { return "rect" + d.id; })
-				.attr("width", function(d) {
-					d.width = (console_width * d.amount);
-					d.visibleWidth = d.width;
-					return d.width + "px";
-				}).attr("title", function(d) { 
-					return (d.amount * 100).toFixed(0) + "%"; })
-				.attr("height", "10px")
-				.call(d3.behavior.drag().on('drag', function(d) {
-                    console.log("Hehe :" + d.name);
-                
-                    if(d == undefined){
-                        console.log("Its Undefinded");
-                        //d = consolechartSortedData;
-                    }
-					if (d.name !== "Maximum Interaction Weight" && disallowWeightAdjustment)
-						return;
+			
 
-					var new_width = d.width + d3.event.dx;
-					if (new_width < 0)
-						new_width = 0;
-
-					if (new_width > console_width)
-						new_width = console_width;
-
-					d.width = new_width;
-					d.visibleWidth = (d.width < 3 ? 3 : d.width);
-					//d.visibleWidth = d.width;
-					d.amount = new_width / console_width;
-					attributeWeights[d.id] = d.amount;
-					d3.select(this).attr("width", d.visibleWidth);
-					d3.select(this).attr("title", (d.amount * 100).toFixed(0) + "%");
-
-					if (d.name === "Maximum Interaction Weight")
-						maxInteractionWeight = d.amount; 
-					
-					$("#discard_button").removeAttr("disabled");
-				}))
-
-
-				d3.selectAll("#consoleChart svg")
-				.on('mouseover', function(d) {
-					if(d.visibleWidth >= 10) return;
-					$(this).find("rect").attr("width", d.visibleWidth + 10);
-				})
-				.on('mouseout', function(d) {
-					$(this).find("rect").attr("width", d.visibleWidth);
-				})
-
-			$("td", "#miniChart").attr("height", "1");
-			$("td", "#consoleChart").attr("height", "1");
-			$("p", "#consoleChart").css({"min-width" : $("#auxContentDiv").width()});
-
-			mapBarHeight = $("#miniChart svg").height();
-
-			var tableObj = document.getElementById("miniChart");
-			while(tableObj.scrollHeight > tableObj.clientHeight && mapBarHeight >= 1) {
-				mapBarHeight--;
-				$("svg", "#miniChart").height(mapBarHeight);
-			}
+			
 
 			$("td.interactionWeight").addClass("tableSeperator");
 			$("th.interactionWeight").addClass("tableSeperator")
@@ -436,18 +466,7 @@
 			$("#discard_button").attr("disabled", "disabled");
 			
 			htmlTableToCache = $("#tablePanel tbody").html(); 
-			htmlConsoleToCache = [];
-			d3.selectAll("#consoleChart td").each(function(d) {
-				htmlConsoleToCache.push(
-				 	{
-						"amount" : d.amount,
-						"width" : d.width,
-						"visibleWidth" : d.visibleWidth,
-						"name" : d.name,
-						"direction" : "directionUp"
-					}
-				);
-			});
+			
 
 
 			console.log("table.js: table appended");
@@ -591,8 +610,6 @@
 		minimap_rows = minimap.select("tbody")
 			.selectAll("tr")
 			.data(data);
-
-		var num_rows = cells.length;
 
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
