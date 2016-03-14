@@ -3,8 +3,11 @@
 	/*************************************VARIABLES*************************************/
 	
 	mar = {};
+
+	/*Object holds data after it's loaded*/
 	var data;
-	var opacityScale;
+
+	/*Arrays and variables to hold column values based on their type*/
 	var columns = [];
 	var numericalAttributes = [];
 	var userAdjustedAttributesKeys = [];
@@ -12,51 +15,80 @@
 	var unusedAttributes = [];
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
-	var rowRankingScores = [];
 	var tooltipAttribute;
-    var classNameFirstConsoleAttr = "1stconTr";
-    var classNameConsoleAttr = "conTr";
 
-    
+	/*Arrays and variables to hold rows*/
 	var lastChangedRow;
 	var changedRows = [];
     var selectedRows = [];
+
+    /*Arrays and variables to hold data values*/
+    var rowRankingScores = [];
     var interactionValueArray =[];
     var rankScoreValueArray = [];
     var consolechartSortedData = [];
+	var keys;
 
-    
-	
+    /*Variables to hold cached data*/
+    var htmlTableToCache;
+	var htmlConsoleToCache; 
+    var miniChartCache;
+
+    /*Variables for holding global values used in the app*/
 	var tolerance; 
 	var mapBarHeight;
-	var minimap_width = 50;
-	var console_width = 150;
     var count = 0;
-    
-	var keys;
-	var htmlTableToCache;
-	var htmlConsoleToCache; 
+    var opacityScale;
+	var maxRankScore = 1; 
+	var maxInteractionWeight = 0.5;
+
+    /*Objects and variables to hold table, minimap,and console content*/
 	var table, header, rows, cells;
 	var minimap, minimap_rows;
 	var consolePanel, console_rows;
-
-	var useCategorical = false; 
-	var interactionIncrement = 1; 
-	var maxInteractionWeight = 0.5;
-	var maxRankScore = 1; 
-    var timeDie = 1000;
-
-	var showAllRows = true;
-	var colorOverlay = true;
-	var fishEyeOverlay = true;
-    var isDragging = true;
-    var rankButtonPressed = false;
-    var disallowWeightAdjustment = false;
-    var showBarOverlay = false;
     
-    var miniChartCache = "";
+    /*Constant class names*/
+    var classNameFirstConsoleAttr = "1stconTr";
+    var classNameConsoleAttr = "conTr";
+
+    /*Variables for size values*/
     var defFontSize;
     var defFontWeight;
+    var minimap_width = 50;
+    var console_width = 150;
+
+    /*Fixed constant values*/
+	const timeDie = 1000;
+	const interactionIncrement = 1;
+
+	 /*State variables*/
+    
+    //State that rows are being dragged
+    var isDragging = true;
+
+    //State that the rank button was pressed
+    var rankButtonPressed = false;
+
+    //State that weight values are fixed or moveable
+    var disallowWeightAdjustment = false;
+
+
+	/*Options for the app*/
+
+	//Use Categorical Attributes in ranking
+	var useCategorical = false; 
+
+	//show rows that were moved by user, or moved as a consequence
+	var showAllRows = true;
+
+	//show color gradient over how much rows moved
+	var colorOverlay = true;
+
+	//show fish eye overlay on minimap
+	var fishEyeOverlay = true;
+
+    //Show overlayed bars on top of all attributes
+    var showBarOverlay = false;
     
 	/**********************************LOAD THE TABLE**********************************/
 	
