@@ -520,8 +520,6 @@
 			
 			htmlTableToCache = $("#tablePanel tbody").html(); 
 			
-
-
 			console.log("table.js: table appended");
 		}
 	}
@@ -767,8 +765,6 @@
 					bTd = $(this).closest('td');
 			});
 
-			//console.log("A td is : " + aTd);
-			//console.log("B td is : " + bTd);
 			var indexAWidth = parseFloat(aTd.find('rect').attr('width'));
 			var indexBWidth = parseFloat(bTd.find('rect').attr('width'));
 			var indexAtext = aTd.closest('tr').text();
@@ -1422,11 +1418,6 @@
 		updateColumnWeights(normalizedWeights.slice());
         sortConsoleChartBars();
      
-		//console.log("A (" + A.length + " x " + A[0].length + "): " + JSON.stringify(A));
-		//console.log("b (" + b.length + "): " + b);
-		//console.log("Weight: " + weights);
-		//console.log("table.js: Ranking - " + JSON.stringify(ranking)); 
-             
         getRankScores();
         getInteractionWeights();
         var normInterArray = normalizeArray(interactionValueArray)
@@ -1443,7 +1434,6 @@
         htmlTableToCache = $("#tablePanel tbody").html(); 
         htmlConsoleToCache = [];
 		d3.selectAll("#consoleChart td").each(function(d) {
-            //console.log(d)
         	direction = "directionUp";
         	pObj = $(this).find("input");
         	if(pObj.hasClass("directionUp"))
@@ -1570,14 +1560,14 @@
 	}
     
 	
-/*
+	/*
      * Private
      * Gets the defaunt font size and weight of Main table when page loads first time
      */
-function getDefFontSizeWeight(){
-    defFontSize = $("#tr1").css('font-size');
-    defFontWeight = $("#tr1").css('font-weight');
-}
+	function getDefFontSizeWeight(){
+    	defFontSize = $("#tr1").css('font-size');
+    	defFontWeight = $("#tr1").css('font-weight');
+	}
     
     
     /*
@@ -1639,9 +1629,7 @@ function getDefFontSizeWeight(){
     	$(classInteractionCol).each(function() {
     		var interWeight = $(this).text(); 
     		interactionValueArray.push(parseFloat(interWeight));   
-            //console.log("Weight: " + parseFloat(interWeight));
     	});  
-        //console.log("################################################################");
     }
     
     
@@ -1802,7 +1790,6 @@ function getDefFontSizeWeight(){
 		$(selectorVariable).click(function(event) {
                 var item = $(this).closest('tr').index();
 				//var item1 = $(this).index();
-				//console.log("item value: " + item);
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1833,8 +1820,6 @@ function getDefFontSizeWeight(){
 	 */
     function miniMapDotRemove(item){
          var dotSelector = "#miniChart #tr"+item+" #Dot";
-         //console.log(dotSelector);
-         //console.log("This is : " + $(dotSelector).html())
          $(dotSelector).remove();
     }
 	/*
@@ -1860,10 +1845,7 @@ function getDefFontSizeWeight(){
 					tx += 1;
 					if (item == tx - 2){
                         teamName = $(this).text(); 
-                        //console.log('Second time team name is : ' + item)
                     }
-						
-                    
 				});
 
 				//$("#tr" + item).attr("id", teamName); //CHANGED
@@ -1872,9 +1854,6 @@ function getDefFontSizeWeight(){
 				selectedRows = selectedRows.filter(function(item, ps) {
 					return selectedRows.indexOf(item) == ps;
 				});
-                //console.log("Selected rows: " + selectedRows);
-				
-                
 			}
 		}
         
@@ -1905,20 +1884,12 @@ function getDefFontSizeWeight(){
 				//$("#rec" + id).css("fill", COLORS.GREY);
 				var elemTr = $("#rec" + id).closest('tr');
 				var elemTrId = elemTr.attr('id');
-				//console.log("elemTr  is : " + elemTr.html());
-                //console.log("tr id is : " + elemTrId);
-				//console.log("++++++++++++++++++++++++++++++++++++++++++");
 
                 var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill=" + COLORS.BLACK + "></rect>";
                 //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke=" + COLORS.BLACK + " stroke-width='1' fill= " + COLORS.RED + "/>>";
                 var elemTd = $("#rec" + id).closest('svg');
                 var elemTdHtml = "" + elemTd.html() + addCircle;
                 elemTd.html(elemTdHtml);
-                //console.log("tr id is : " + elemTrId);
-                //console.log("tr id is : " + elemTdHtml);
-                //console.log("++++++++++++++++++++++++++++++++++++++++++");
-             
-				
 			}
 
 			if (backColor2 === COLORS.MINIMAP_ROW_SELECTED)
@@ -1930,12 +1901,7 @@ function getDefFontSizeWeight(){
 		$("#miniChart tr").css("color", COLORS.BLACK);
 		$("#miniChart svg").css("height", mapBarHeight);
 		$("#miniChart rect").css("height", mapBarHeight);
-        
-        //console.log("Finished Mini Map Updating ::::::::::::::::::::::::::::::::::::::::")
 	}
-    
-
-
     
     /*
 	 * Private
@@ -1945,16 +1911,13 @@ function getDefFontSizeWeight(){
         var index  = -1;
         for(var i=0;i<selectedRows.length;i++){
             if(teamName == selectedRows[i]){
-                //console.log("found the team name which was before : " + teamName + "index is : " + i);
                 index = i;
             }
         }
         
         if(index>-1){
-            //console.log("selected row before : " + selectedRows);
             selectedRows.splice(index, 1);
             selectedRows.push(teamName);
-            //console.log("selected row after : " + selectedRows);
         }
     }
 	
@@ -1967,7 +1930,6 @@ function getDefFontSizeWeight(){
         var darkGreyColor = COLORS.DARK_GREY;
 		$("tr").css("font-size", defFontSize);
 		$("tr").css("font-weight", defFontWeight);
-        //console.log("Font weight defualt is : " + defFontWeight)
 		//$("tr .rank.index.null").css("background", COLORS.WHITE);
         //$("tr .rank.index.null").css("color", COLORS.BLACK);
         
@@ -2017,14 +1979,11 @@ function getDefFontSizeWeight(){
         //var selectorVar = "#miniChart td";
 		$(selectorVar).hover(function() {
             var clickedRow = $(this).index();
-            //console.log("Hovering : " + clickedRow);
             
             var mainTableSelector = "#tableId #tr"+clickedRow;
             var mainTrHtml = $(mainTableSelector).html();
-            //console.log("html found is : " + mainTrHtml);
             
             var rankScoreText = $(mainTableSelector).find('.rankScore').text();
-            //console.log("rank score text found is : " + rankScoreText);
             
             var teamName = $(mainTableSelector).find('.School').text();
             
@@ -2172,7 +2131,6 @@ function getDefFontSizeWeight(){
 
 			colorRows();
             getInteractionWeights();
-            //console.log("Interaction Value Array now is : " + interactionValueArray);
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
             /*
@@ -2182,12 +2140,10 @@ function getDefFontSizeWeight(){
             */
 		};
 
-
 		$("#tablePanel tbody").sortable({
 		    helper: fixHelperModified,
 		    stop: updateIndex
 		}).disableSelection();
-        
         
 	}
 	
@@ -2228,7 +2184,6 @@ function getDefFontSizeWeight(){
         if (!rankButtonPressed){
             selectionUpdatedMiniBar();  
         }
-           
 	}
 
 	/*
@@ -2336,8 +2291,6 @@ function getDefFontSizeWeight(){
 			});
 		}
 
-		//quick hack to get direction caching to work. this should be integrated
-		//with the above code because its just a duplicate - TODO
 		if(states != null) {
 			$("#consoleChart").find("input").each(function(i) {
 				var clickedObj = $(this);
