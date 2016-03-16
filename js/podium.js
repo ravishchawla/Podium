@@ -1831,9 +1831,9 @@
             //selectionUpdatedMiniBar();
 			isDragging = true;
 			var item = $(this).index(); 
-			highlightItems(item);
-            
-            //console.log("Clicked")
+			highlightItems(item);            
+            //console.log("Clicked : " + item);
+            placeDotsOnMiniBar(item);
             
             updateRowFont();
 			$("#discard_button").removeAttr("disabled");
