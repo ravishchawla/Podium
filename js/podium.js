@@ -1780,15 +1780,11 @@
 	 * Handler for clicked row
 	 */
 	function handleClickedRow() {
-		var defFontWeight = $("#tr1").css('font-weight');
-
 		updateClickedItem();
-        //var selectorVariable = '#tableId tr';
         var selectorVariable = "tr .rank.index.null";
         //removes rows when clicked on rank index cell
 		$(selectorVariable).click(function(event) {
                 var item = $(this).closest('tr').index();
-				//var item1 = $(this).index();
 				isDragging = false;
 				var teamName = "";
 				var tx = 0;
@@ -1805,9 +1801,9 @@
 				var index = selectedRows.indexOf(teamName);
 				if (index != -1) {
 					selectedRows.splice(index, 1);
-					//  updateRowFont();
 				}
-        updateRowFont();
+        updateRowFont();                
+       
         miniMapDotRemove(item);
         
 	})
@@ -1827,9 +1823,13 @@
 	 */ 
 	function updateClickedItem() {   
 		$('#tableId tr').mousedown(function() {
+            //selectionUpdatedMiniBar();
 			isDragging = true;
 			var item = $(this).index(); 
 			highlightItems(item);
+            
+            console.log("Clickd")
+            
             updateRowFont();
 			$("#discard_button").removeAttr("disabled");
 		}).mouseup(function() {  
@@ -1847,7 +1847,6 @@
                     }
 				});
 
-				//$("#tr" + item).attr("id", teamName); //CHANGED
                 editSelectedRowItems(teamName);
 				selectedRows.push(teamName);
 				selectedRows = selectedRows.filter(function(item, ps) {
@@ -1928,21 +1927,21 @@
         var greyColor = COLORS.GREY;
         var darkGreyColor = COLORS.DARK_GREY;
 		$("tr").css("font-size", defFontSize);
-		$("tr").css("font-weight", defFontWeight);
-		//$("tr .rank.index.null").css("background", COLORS.WHITE);
-        //$("tr .rank.index.null").css("color", COLORS.BLACK);
-        
+		$("tr").css("font-weight", defFontWeight);       
                 
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
             if(iter>-1){
                $(this).css("background", COLORS.WHITE);
                $(this).css("color", COLORS.BLACK);
+          
             }  
+            
             iter += 1;
             });
         
 		for (var i = 0; i < selectedRows.length; i++) {
+            //console.log("selected rows items : " + selectedRows[i] + "    this text : " +  $(this).text());
 			$('.' + tooltipAttribute).each(function() {
 				if (selectedRows[i] == $(this).text()) {
 					var idValTr = $(this).closest('tr');                
@@ -1961,7 +1960,22 @@
                         rankCol.attr("style", styleContent);
                        
 					}
-				}
+				}else{
+                    //console.log("clicked on white")
+                //to be fixed :
+                /*
+                var gotTeamName = $(this).text();
+                
+                console.log("this white stuff is : " + gotTeamName)
+                console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+                
+                editSelectedRowItems(gotTeamName);
+				selectedRows.push(gotTeamName);
+				selectedRows = selectedRows.filter(function(item, ps) {
+					return selectedRows.indexOf(item) == ps;
+				});
+                */
+                }
 			});
 		} 
         
