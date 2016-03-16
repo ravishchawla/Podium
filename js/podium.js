@@ -1336,7 +1336,7 @@
 		selectedRows = [];
         handleClickedRow();
         setTimeout(function() {       
-            $('#tablePanel tbody tr').animate({ backgroundColor: "white" }, 1000);
+            $('#tablePanel tbody .School').animate({ backgroundColor: "white" }, 1000);
         }, timeDie);
         $("#discard_button").attr("disabled","disabled");
 	}
@@ -1399,7 +1399,7 @@
         selectionUpdatedMiniBar();
         rankButtonPressed = false;
         setTimeout(function() {       
-            $('#tablePanel tbody tr').animate({ backgroundColor: "white" }, 1000);
+            $('#tablePanel tbody .School').animate({ backgroundColor: "white" }, 1000);
         }, timeDie);
        
         htmlTableToCache = $("#tablePanel tbody").html(); 
@@ -2126,7 +2126,8 @@
 	function colorRows() {
 		var movedRow = $(lastChangedRow);
 		$('tr', "#tablePanel tbody").each(function (i) {
-		
+            //var onlySchoolTd = $(this);  
+            var onlySchoolTd = $(this).find(".School");          
 			var newIndex = Number($(this).find("td.rank.index").html());
 			var oldIndex = Number($(this).find("td.oldIndex").html());
 			var uniqueId = $(this).find("td.uniqueId").html();
@@ -2135,21 +2136,21 @@
 
 			if ((showAllRows == false && changedRows.indexOf(Number(uniqueId)) == -1) ||
 					(newIndex == oldIndex)) {
-				$(this).removeClass('greenColorChange');
-				$(this).removeClass('redColorChange');
-				$(this).animate({ backgroundColor: "transparent" }, 1000);
+				onlySchoolTd.removeClass('greenColorChange');
+				onlySchoolTd.removeClass('redColorChange');
+				onlySchoolTd.animate({ backgroundColor: "transparent" }, 1000);
 				return true;
 			} else if (newIndex > oldIndex) {
-				$(this).removeClass('greenColorChange');
-				$(this).addClass('redColorChange');
+				onlySchoolTd.removeClass('greenColorChange');
+				onlySchoolTd.addClass('redColorChange');
 			} else if (newIndex < oldIndex) {
-				$(this).removeClass('redColorChange');
-				$(this).addClass('greenColorChange');
+				onlySchoolTd.removeClass('redColorChange');
+				onlySchoolTd.addClass('greenColorChange');
 			}
 			
 			oldMiniRow = $("#miniChart #tr" + (oldIndex - 1) + " rect");
 			newMiniRow = $("#miniChart #tr" + (newIndex - 1) + " rect");
-			updateColorAndOpacity($(this), oldMiniRow, newMiniRow, oldIndex, newIndex);  
+			updateColorAndOpacity(onlySchoolTd, oldMiniRow, newMiniRow, oldIndex, newIndex);  
 		});
         
         if (!rankButtonPressed){
