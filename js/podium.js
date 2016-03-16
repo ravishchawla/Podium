@@ -1783,9 +1783,11 @@
 	 */
 	function handleClickedRow() {
 		updateClickedItem();
+        selectionUpdatedMiniBar();
         var selectorVariable = "tr .rank.index.null";
         //removes rows when clicked on rank index cell
 		$(selectorVariable).click(function(event) {
+                console.log("click rec")
                 var item = $(this).closest('tr').index();
 				isDragging = false;
 				var teamName = "";
@@ -1807,6 +1809,7 @@
         updateRowFont();                
        
         miniMapDotRemove(item);
+        
         
 	})
     }
@@ -1859,15 +1862,27 @@
         
 	}    
     
-    
-    
+    /*
+	 * Private
+	 * Places the Dot on MiniBar
+	 */
+    function placeDotsOnMiniBar(id){
+         //$("#rec" + id).css("fill", COLORS.GREY);
+        var elemTr = $("#rec" + id).closest('tr');
+        var elemTrId = elemTr.attr('id');
+
+        var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill=" + COLORS.BLACK + "></rect>";
+        //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke=" + COLORS.BLACK + " stroke-width='1' fill= " + COLORS.RED + "/>>";
+        var elemTd = $("#rec" + id).closest('svg');
+        var elemTdHtml = "" + elemTd.html() + addCircle;
+        elemTd.html(elemTdHtml);
+    }
     
     /*
 	 * Private
 	 * Updates the rows of mini bar as grey color, when main table rows are selected
 	 */
 	function selectionUpdatedMiniBar(){
-
 		miniChartCache = $("tr .rank.index.null").html();
         
         $('#Dot').remove();
@@ -1880,16 +1895,8 @@
 
 			} else {
 				var id = iter - 1;
-
-				//$("#rec" + id).css("fill", COLORS.GREY);
-				var elemTr = $("#rec" + id).closest('tr');
-				var elemTrId = elemTr.attr('id');
-
-                var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill=" + COLORS.BLACK + "></rect>";
-                //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke=" + COLORS.BLACK + " stroke-width='1' fill= " + COLORS.RED + "/>>";
-                var elemTd = $("#rec" + id).closest('svg');
-                var elemTdHtml = "" + elemTd.html() + addCircle;
-                elemTd.html(elemTdHtml);
+                placeDotsOnMiniBar(id);
+               
 			}
 
 			if (backColor2 === COLORS.MINIMAP_ROW_SELECTED)
