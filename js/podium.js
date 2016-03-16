@@ -41,6 +41,7 @@
     var opacityScale;
 	var maxRankScore = 1; 
 	var maxInteractionWeight = 0.5;
+    var paddingMiniBars = 2;
 
     /*Objects and variables to hold table, minimap,and console content*/
 	var table, header, rows, cells;
@@ -1407,6 +1408,7 @@
         enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
         updateRowFont();
         selectionUpdatedMiniBar();
+        padMiniBars();     
         rankButtonPressed = false;
         setTimeout(function() {       
             $('#tablePanel tbody .School').animate({ backgroundColor: "white" }, 1000);
@@ -1828,7 +1830,7 @@
 			var item = $(this).index(); 
 			highlightItems(item);
             
-            console.log("Clickd")
+            //console.log("Clicked")
             
             updateRowFont();
 			$("#discard_button").removeAttr("disabled");
@@ -1900,6 +1902,15 @@
 		$("#miniChart svg").css("height", mapBarHeight);
 		$("#miniChart rect").css("height", mapBarHeight);
 	}
+    
+    /*
+	 * Private
+	 * Adds padding between rows of minibar
+	 */
+    function padMiniBars(){
+        var paddedHeightMiniBars = mapBarHeight + paddingMiniBars;
+        $("#miniChart tr").css("height", paddedHeightMiniBars);        
+    }
     
     /*
 	 * Private
