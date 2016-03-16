@@ -93,6 +93,9 @@
     //Show overlayed bars on top of all attributes
     var showBarOverlay = false;
     
+    //Show overlayed Expected Value Line 
+    var showExpectedValueOverlay = false;
+    
 	/**********************************LOAD THE TABLE**********************************/
 	
 	/*
@@ -474,13 +477,15 @@
 						//The display bars are shwon as DIVs. Main div shows the cell background (grey),
 						//a div to show the actual value of the cell (pink/purple), a div to show the text of the cell,
 						//a div to show the expected value (as a black bar).
-						
-						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
-								+ " id = 'inter' style = '"
+                        
+                      
+                            expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
+								+ " id = 'expectedBarId' style = '"
 								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
 								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 80;'"
 								+ ">";
-
+                     
+                        
 						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
@@ -496,8 +501,9 @@
 			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});		
 
 			$("td.interactionWeight").addClass("tableSeperator");
-			$("th.interactionWeight").addClass("tableSeperator")
-	
+			$("th.interactionWeight").addClass("tableSeperator");
+        
+           
 			
 	}
 
@@ -574,7 +580,7 @@
 
 						if(cellWidth < 10 ) { cellWidth = 10 }
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
-								+ " id = 'inter' style = '"
+								+ " id = 'expectedBarId' style = '"
 								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
 								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 80;'"
 								+ ">";
@@ -649,6 +655,10 @@
 			$(this).css("min-width", widths[i]);
 			
 		});	
+        
+        
+        
+       
 	}
 
 
@@ -1471,6 +1481,24 @@
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
         
+         if(showExpectedValueOverlay){
+            $("td #expectedBarId").show();
+        }else{
+            $("td #expectedBarId").hide();
+        }
+        
+	}
+    
+    
+    mar.expectedValueOverLayClicked = function() {
+		showExpectedValueOverlay = !showExpectedValueOverlay;
+        if(showExpectedValueOverlay && showBarOverlay ){
+            $("td #expectedBarId").show();
+        }else{
+            $("td #expectedBarId").hide();
+        }
+		
+        
 	}
 
 	/*
@@ -1679,7 +1707,7 @@
 				tdWidth = prevWidth;
 
 			var current = $(this).text();
-			var content = "<p class = 'textToHide'>"+current +"</p><svg class = ' " + selector + "'Svg' id = 'inter'  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='" + colorValue + "'/></svg>"; 
+			var content = "<p class = 'textToHide'>"+current +"</p><svg class = ' " + selector + "'Svg' id = ''  width = " + tdWidth+"><rect id = 'something' class = 'some' width=" + tdWidth+" height= 50 fill='" + colorValue + "'/></svg>"; 
 			$(this).html(content);
 			ttText = itemArray[item];
 
