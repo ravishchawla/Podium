@@ -42,6 +42,7 @@
 	var maxRankScore = 1; 
 	var maxInteractionWeight = 0.5;
     var paddingMiniBars = 2;
+    var minWidthTDTH =75;
 
     /*Objects and variables to hold table, minimap,and console content*/
 	var table, header, rows, cells;
@@ -652,12 +653,25 @@
 			widths.push(this.getBoundingClientRect().width);
 		});
 
-		$("th", ".pseudoHeader").each(function(i, d) {
-			$(this).css("min-width", widths[i]);
+        
+        $("th", ".pseudoHeader").each(function(i, d) {
+            var widValue;
+            if( widths[i] < minWidthTDTH ){
+                widValue = minWidthTDTH;
+            }else{
+                widValue =  widths[i];
+            }
+			$(this).css("min-width", widValue);
+			
+		});	
+       
+        
+        $("td").each(function(i, d) {
+			$(this).css("min-width", minWidthTDTH);
 			
 		});	
         
-        
+      
         
        
 	}
@@ -1408,7 +1422,8 @@
         enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
         updateRowFont();
         selectionUpdatedMiniBar();
-        padMiniBars();     
+        padMiniBars();
+     
         rankButtonPressed = false;
         setTimeout(function() {       
             $('#tablePanel tbody .School').animate({ backgroundColor: "white" }, 1000);
@@ -2116,6 +2131,8 @@
 	}
 	
 	
+    
+    
 	/*
 	 * Private
 	 * Make rows click & draggable
