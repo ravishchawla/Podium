@@ -1565,9 +1565,9 @@
 		clickAndDragRows(); 
 		addArrows(); 
         tablelens();
-        tooltipMiniChart();
+       
         handleClickedRow();
-        
+        tooltipMiniChart();
         addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
@@ -1802,7 +1802,7 @@
         var selectorVariable = "tr .rank.index.null";
         //removes rows when clicked on rank index cell
 		$(selectorVariable).click(function(event) {
-                console.log("click rec")
+               
                 var item = $(this).closest('tr').index();
 				isDragging = false;
 				var teamName = "";
@@ -2022,10 +2022,12 @@
 	 */	
     function tooltipMiniChart(){
         var selectorVar = ".miniTr";
-        //var selectorVar = "#miniChart td";
-		$(selectorVar).hover(function() {
-            var clickedRow = $(this).index();
-            
+		$(selectorVar).find("td").hover(function() {
+        //$(selectorVar).hover(function() {
+            var svgItem = $(this).find("svg");
+            var clickedRow = parseInt((svgItem.attr("id")).substr(3,4));
+            //var clickedRow = $(this).index();
+            //console.log("well this index is :" +clickedRow);
             var mainTableSelector = "#tableId #tr"+clickedRow;
             var mainTrHtml = $(mainTableSelector).html();
             
@@ -2181,6 +2183,7 @@
             getInteractionWeights();
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
+            tooltipMiniChart();
             /*
             setTimeout(function() {       
             
