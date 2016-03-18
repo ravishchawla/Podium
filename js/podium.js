@@ -528,7 +528,7 @@
 			
 			htmlTableToCache = $("#tablePanel tbody").html(); 
 			
-			console.log("table.js: table appended");
+			console.log("podium.js: table appended");
 		}
 	}
 	
@@ -832,13 +832,13 @@
 	 * Get a list of n rows taken from the surrounding area of the clicked rows
 	 * Input is an array of unique ids
 	 */
-	function getRowsForSVD(clickedRows, watchedRows, numRows) {
+	function getRowsForSolver(clickedRows, watchedRows, numRows) {
 		// use the rank values of the rows with the given unique ids
 		clickedRows = getRankValues(clickedRows); 
 		watchedRows = getRankValues(watchedRows);
 		
 		if (numRows > data.length) {
-			console.log("table.js: cannot get more than " + data.length + " rows");
+			console.log("podium.js: cannot get more than " + data.length + " rows");
 			return [];
 		}
 		
@@ -1130,14 +1130,15 @@
 	 * If no rows have been changed, returns the current array of attribute weights
 	 */
 	function runSVD() {
+		console.log("podium.js: SVD");
 		// use SVD to compute w = V * D_0^−1 * U^T * b
-		var minRows = useCategorical ? keys.length + 1 : numericalAttributes.length + 1;
+		var minRows = useCategorical ? keys.length + 1 : numericalAttributes.length - userAdjustedAttributesKeys.length + 1;
 		
 		var selectedRowIds = []; 
 		for (var i = 0; i < selectedRows.length; i++)
 			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
 		var changedRowIdsForSVD = getChangedRows();
-		var b = getRowsForSVD(changedRowIdsForSVD, selectedRowIds, numericalAttributes.length + 1); 
+		var b = getRowsForSolver(changedRowIdsForSVD, selectedRowIds, numericalAttributes.length + 1); 
 
 		if (b.length <= keys.length) {
 			// make sure the weights are updated
@@ -1148,21 +1149,8 @@
 			retArray.splice(0, 1);
 			
 			var normalizedWeights = normalize(retArray);
-			
-			// Resplice the unused attributes into the results with a weight of 0
-			/*for (var i = 0; i < attributeWeights.length; i++) {
-				if (unusedAttributes.indexOf(i) >= 0) {
-					normalizedWeights.splice(i, 0, 0);
-				}
-			}*/
+
 			return normalizedWeights;
-		}
-		
-		//TODO: THIS HAS TO RETURN SOMETHING OR BE CHECKED BY CALLER!!
-		// don't recompute SVD unless something has been moved
-		if (getChangedRows().length < 1) {
-			console.log("table.js: No changes have been made!");
-			return;
 		}
 		
 		var A = getAugmentedMatrix(b)[0];
@@ -1174,6 +1162,41 @@
 		var D0 = numeric.inv(numeric.diag(S)[0]); 
 		var UT = numeric.transpose(U);
 		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
+		var normalizedWeights = normalize(weights);
+
+		return normalizedWeights;
+	}
+	
+	
+	/*
+	 * Private
+	 * Runs LU decomposition on the changed rows and returns an array of normalized weights
+	 * If no rows have been changed, returns the current array of attribute weights
+	 */
+	function runLUD() {
+		console.log("podium.js: LUD");
+		var selectedRowIds = []; 
+		for (var i = 0; i < selectedRows.length; i++)
+			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
+		var changedRowIdsForLUD = getChangedRows();
+		var b = getRowsForSolver(changedRowIdsForLUD, selectedRowIds, numericalAttributes.length - userAdjustedAttributesKeys.length);
+
+		// can't recompute LUD unless something has been moved
+		if (b.length < 1) {
+			// make sure the weights are updated
+			updateColumnWeights(null);
+			retArray = attributeWeights.slice();
+
+			//getting rid of the interaction weight
+			retArray.splice(0, 1);
+
+			var normalizedWeights = normalize(retArray);
+			return normalizedWeights;
+		}
+		
+		var A = getMatrix(b)[0];
+		var LUD = numeric.LU(A); 
+		var weights = numeric.LUsolve(LUD, b);
 		var normalizedWeights = normalize(weights);
 
 		return normalizedWeights;
@@ -1334,7 +1357,7 @@
 	 * Return the table to its state before changes were made
 	 */
 	mar.discardButtonClicked = function() {
-		console.log("table.js: Discarding Changes"); 
+		console.log("podium.js: Discarding Changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
 
 		prevStates = [];
@@ -1375,8 +1398,13 @@
         rankButtonPressed = true;
        
         greyMinibars(false);
-		console.log("table.js: Ranking"); 
-		var normalizedWeights = runSVD();
+		console.log("podium.js: Ranking"); 
+		var numRows = selectedRows.length + getChangedRows().length;
+		var normalizedWeights; 
+		if (numRows <= numericalAttributes.length - userAdjustedAttributesKeys.length)
+			normalizedWeights = runLUD(); 
+		else
+			normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 		rowRankingScores = [];
 
