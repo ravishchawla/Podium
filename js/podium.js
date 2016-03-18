@@ -842,14 +842,15 @@
 			return [];
 		}
 		
-		var rowsForSVD = clickedRows.slice();
+		var rowsForSolver = clickedRows.slice();
+	
 		for (var i = 0; i < watchedRows.length; i++) {
-			if (rowsForSVD.indexOf(Number(watchedRows[i])) < 0)
-				rowsForSVD.push(Number(watchedRows[i]));
+			if (rowsForSolver.indexOf(Number(watchedRows[i])) < 0)
+				rowsForSolver.push(Number(watchedRows[i]));
 		}
-		var numSurrounding = Math.ceil((numRows - rowsForSVD.length) / clickedRows.length); 
-		if (rowsForSVD.length >= numRows)
-			return getUniqueIds(rowsForSVD); 
+		var numSurrounding = Math.ceil((numRows - rowsForSolver.length) / clickedRows.length); 
+		if (rowsForSolver.length >= numRows)
+			return rowsForSolver; 
 		
 		for (var i = 0; i < clickedRows.length; i++) {
 			var r = Number(clickedRows[i]);
@@ -859,8 +860,8 @@
 			// crawl out to find numSurrounding new rows
 			while (count < numSurrounding) {
 				// check r - currentDist
-				if (r - currentDist > 0 && rowsForSVD.indexOf(r - currentDist) < 0) {
-					rowsForSVD.push(r - currentDist);
+				if (r - currentDist > 0 && rowsForSolver.indexOf(r - currentDist) < 0) {
+					rowsForSolver.push(r - currentDist);
 					count++;
 				}
 				
@@ -868,8 +869,8 @@
 					break; 
 				
 				// check r + currentDist
-				if (r + currentDist <= data.length && rowsForSVD.indexOf(r + currentDist) < 0) {
-					rowsForSVD.push(r + currentDist);
+				if (r + currentDist <= data.length && rowsForSolver.indexOf(r + currentDist) < 0) {
+					rowsForSolver.push(r + currentDist);
 					count++;
 				}
 				
@@ -879,8 +880,8 @@
 			}
 		}
 		
-		// return the unique ids of the adjacent rows
-		return getUniqueIds(rowsForSVD);
+		// return the row numbers
+		return rowsForSolver;
 	}
 	
 	
@@ -1403,7 +1404,7 @@
 		var normalizedWeights; 
 		if (numRows <= numericalAttributes.length - userAdjustedAttributesKeys.length)
 			normalizedWeights = runLUD(); 
-		else
+		else 
 			normalizedWeights = runSVD();
 		var ranking = computeRanking(normalizedWeights);
 		rowRankingScores = [];
@@ -1414,7 +1415,6 @@
 			var obj = getDataByUniqueId(id);
 			
 			obj["oldIndex"] = obj["rank"]; 
-			obj["rank"] = i + 1;
 			obj["rank"] = i + 1;
 
 			rowRankingScores.push(id);
