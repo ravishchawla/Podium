@@ -1205,6 +1205,112 @@
 	
 	
 	/*
+	 * Private
+	 * Runs solver using regression for the changed rows and returns an array of normalized weights
+	 * If no rows have been changed, returns the current array of attribute weights
+	 */
+	function runRegressionSolver() {
+		console.log("podium.js: regression solver");
+		var selectedRowIds = []; 
+		
+		for (var i = 0; i < selectedRows.length; i++)
+			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
+		
+		var changedRowIdsForUnderdetermined = getChangedRows();
+		var b = getChangedRows(); 
+		
+		for (var i = 0; i < selectedRowIds.length; i++) {
+			if (b.indexOf(selectedRowIds[i]) < 0)
+				b.push(selectedRowIds[i]);
+		}
+			
+		// can't recompute unless something has been moved
+		if (b.length < 1) {
+			// make sure the weights are updated
+			updateColumnWeights(null);
+			retArray = attributeWeights.slice();
+
+			//getting rid of the interaction weight
+			retArray.splice(0, 1);
+
+			var normalizedWeights = normalize(retArray);
+			return normalizedWeights;
+		} else if (b.length == 1) {
+			// when only one item is being modeled, use weight vector
+			// produced from normalized attribute values
+			var currentDataItem = getDataByUniqueId(b[0]);
+			var attrVals = [];
+			for (var i = userAdjustedAttributesKeys.length; i < numericalAttributes.length; i++)
+				attrVals.push(currentDataItem[numericalAttributes[i] + "Norm"]);
+			
+			var normalizedWeights = normalize(attrVals);
+			return normalizedWeights;
+		}
+		
+		var regressionAttributes = [];
+		var slopeDiff = [];
+		for (var i = userAdjustedAttributesKeys.length; i < numericalAttributes.length; i++) {
+			var currentAttribute = numericalAttributes[i];
+			var xRegressionData = []; // normalized rank values
+			var yRegressionData = []; // normalized attribute values
+			
+			for (var j = 0; j < b.length; j++) {
+				var currentDataItem = getDataByUniqueId(b[j]);
+				xRegressionData.push(Number(currentDataItem["rank"]) / data.length);
+				yRegressionData.push(currentDataItem[currentAttribute + "Norm"]);
+			}
+			
+			var slope = getRegressionSlope(xRegressionData, yRegressionData);
+			
+			regressionAttributes.push(currentAttribute);
+			slopeDiff.push(Math.abs(1.0 - Math.abs(slope)));
+		}
+		
+		// normalize the slope differences to be the normalized attribute weights
+		var minMax = getMinAndMax(slopeDiff);
+		var weightSum = 0; 
+		for (var i = 0; i < slopeDiff.length; i++) {
+			var newVal = 1.0 - ((slopeDiff[i] - minMax[0]) / (minMax[1] - minMax[0]));
+			slopeDiff[i] = newVal; 
+			weightSum += newVal; 
+		}
+		
+		for (var i = 0; i < slopeDiff.length; i++)
+			slopeDiff[i] = slopeDiff[i] / weightSum;
+
+		return slopeDiff;
+	}
+	
+	
+	/*
+	 * Get the slope of the regression line through the given points
+	 * Takes in two arrays: one of x values and one of corresponding y values
+	 */
+	function getRegressionSlope(xVals, yVals) {
+		var xSum = 0; 
+		var ySum = 0; 
+		var xySum = 0; 
+		var xxSum = 0; 
+		var yySum = 0; 
+		var numVals = xVals.length;
+		
+		for (var i = 0; i < xVals.length; i++) {
+			var currentX = xVals[i]; 
+			var currentY = yVals[i];
+			xSum += currentX;
+			ySum += currentY;
+			xySum += currentX * currentY;
+			xxSum += currentX * currentX; 
+			yySum += currentY * currentY;
+		}
+		
+		var slope = ((numVals * xySum) - (xSum * ySum)) / ((numVals * xxSum) - (xSum * xSum));
+		
+		return slope; 
+	}
+	
+	
+	/*
 	 * Get the expected values of all attributes for all given rows with rank scores.
 	 */
 	function getExpectedValuesArray(rankPositions) {
@@ -1401,11 +1507,13 @@
         greyMinibars(false);
 		console.log("podium.js: Ranking"); 
 		var numRows = selectedRows.length + getChangedRows().length;
-		var normalizedWeights; 
-		if (numRows <= numericalAttributes.length - userAdjustedAttributesKeys.length)
+		var normalizedWeights = runRegressionSolver();
+		
+		/*if (numRows <= numericalAttributes.length - userAdjustedAttributesKeys.length)
 			normalizedWeights = runLUD(); 
 		else 
-			normalizedWeights = runSVD();
+			normalizedWeights = runSVD();*/
+		
 		var ranking = computeRanking(normalizedWeights);
 		rowRankingScores = [];
 
