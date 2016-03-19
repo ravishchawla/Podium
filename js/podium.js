@@ -188,7 +188,7 @@
 				}
 
 		        for(var i = 0; i < data.length; i++) {
-		        	rowRankingScores.push(i);
+		        	rowRankingScores.push(i+1);
 		        }
 
 			}
@@ -457,47 +457,56 @@
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
 				else {
 				    expectedCellValues = getExpectedValuesArray(rowRankingScores);
+				    console.log(expectedCellValues);
 				    rowNum = 0;
+				    colNum = 0;
 				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 				    expectationBarWidth = 2;
 					cells = cells.html(function(d, i) {
 						if(numericalAttributes.indexOf(d.head) < 1) {
 							return d.html;
 						}
-						expectationValue = (expectedCellValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
-						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
-						exCellWidth = $(this).width() * expectationValue;
-
-						exCellWidth = exCellWidth - cellWidth;
-						exCellWidth = (exCellWidth >= cellWidth) ? cellWidth : exCellWidth;
+						//expectationValue = (expectedCellValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
+						expectationValue = (expectedCellValues[colNum][rowNum]);
+						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
+						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+						exCellLeft = $(this).width() * expectationValue;
+						//exCellLeft = exCellLeft - cellWidth;
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
-						rowNum++;
-						rowNum %= data.length;
+						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
 
 						//The display bars are shwon as DIVs. Main div shows the cell background (grey),
 						//a div to show the actual value of the cell (pink/purple), a div to show the text of the cell,
 						//a div to show the expected value (as a black bar).
                         
                       
-                            expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
-								+ " id = 'expectedBarId' style = '"
-								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 80;'"
-								+ ">";
+                        expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
+							+ " id = 'expectedBarId' style = '"
+							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
+							+ COLORS.BLACK + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ ">";
                      
                         
-						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
+						cellBarHTML = "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
 								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
-								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + d.html + "</div>"
-								+ "</div>" 
-								+ expectationBarHTML + "</div>" 
-								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellWidth + "px'>abcde</div>"
+								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + colNum + "," + rowNum 
+								//+ "</div>"// + "</div>"
+								+ expectationBarHTML// + "</div>" 
+								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellLeft + "px'>" + d.html + "</div></div></div>"
 								+ "</div>";
+						colNum++;
+						colNum %= (numericalAttributes.length - 1);
+
+						if(colNum == 0) {
+							rowNum++;
+							rowNum %= data.length;
+						}
+
+						return cellBarHTML;
 					}).attr("class", ƒ("cl"));
 				}
 			$("#tablePanel ." + tooltipAttribute).css({"white-space" : "nowrap"});		
@@ -571,49 +580,44 @@
 				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
-						expectationValue = (expectedCellValues[colNum-offset][rowNum] * d.norm)/parseFloat(d.html);
-						cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-						//exCellWidth = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
-						exCellWidth = $(this).width() * expectationValue;
-						
-						exCellWidth = exCellWidth - cellWidth;
-						exCellWidth = (exCellWidth >= cellWidth) ? cellWidth : exCellWidth;
+						expectationValue = (expectedCellValues[colNum][rowNum]);
+						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
+						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
+						exCellLeft = $(this).width() * expectationValue;
+						//exCellLeft = exCellLeft - cellWidth;
 						cellHeight = 25;
-
 						if(cellWidth < 10 ) { cellWidth = 10 }
-						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
-								+ " id = 'expectedBarId' style = '"
-								+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-								+ COLORS.BLACK + "; left : " + exCellWidth + "px; z-index: 80;'"
-								+ ">";
+						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
 
-						return "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
+						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
+							+ " id = 'expectedBarId' style = '"
+							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
+							+ COLORS.BLACK + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ ">";
+                        
+						cellBarHTML = "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
-								+ "px; height: " + cellHeight + "px; background-color : " + (colNum % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
-								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + d.html + "</div>"
-								+ "</div>" 
-								+ expectationBarHTML + "</div>" 
-								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellWidth + "px'>abcde</div>"
-								+ "</div>";
-						
+								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
+								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + colNum + "," + rowNum 
+								//+ "</div>"// + "</div>"
+								+ expectationBarHTML// + "</div>" 
+								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellLeft + "px'>" + d.html + "</div></div></div>"
+								+ "</div>";	
+						return cellBarHTML;		
 					});
 				} else {
-					d3.select(this).select(".expectationOverlayBar")
-								   .style("left", function(d, i) {
-								   		cellWidth = ($(this).width() < 0) ? 50 : $(this).width() * d.norm;
-								   		exCellWidth = ($(this).width() * expectationValue) - cellWidth;
-								   		return (exCellWidth >= cellWidth) ? cellWidth : exCellWidth;
-								   });
 
 					d3.select(this).select(".actualOverlayBar")
 								   .style("width", function(d, i) {
-								   		return ($(this).width()< 0 ? 50 : $(this).width() * d.norm);
+								   		cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
+								   		cellWidth = cellWidth < 10 ? 10 : cellWidth;
+								   		return cellWidth;
 								   })
 								   .style("max-width", function(d, i) {
-								   		return ($(this).width()< 0 ? 50 : $(this).width() * d.norm);
-								   }).html(function(d) { return d.html; });
+								   		return cellWidth;
+								   });
 
 					d3.select(this).select(".textOverlayBar")
 								  .html(function(d, i) { 
@@ -621,11 +625,12 @@
 								  });
 				}
 
-				rowNum++;
-				rowNum %= data.length;
-
 				colNum++;
-				colNum %= columns.length;
+				colNum %= (numericalAttributes.length - 1);
+				if(colNum == 0) {
+					rowNum++;
+					rowNum %= data.length;
+				}
 			});
 			
 		
@@ -666,10 +671,10 @@
 		});	
        
         
-        $("td").each(function(i, d) {
-			$(this).css("min-width", minWidthTDTH);
+       // $("td").each(function(i, d) {
+		//	$(this).css("min-width", minWidthTDTH);
 			
-		});	
+		//});	
         
       
         
@@ -1315,13 +1320,17 @@
 	 */
 	function getExpectedValuesArray(rankPositions) {
 		var expectedValuesArray = [];
-		for (var i = 0; i < rankPositions.length; i++) {
-			var expectedVal = (1.0 - (rankPositions[i] / data.length));
-			if (rankPositions[i] == 1)
-				expectedVal = 1; 
-			if (rankPositions[i] == data.length)
-				expectedVal = 0; 
-			expectedValuesArray.push(expectedVal);
+		for (var attr = userAdjustedAttributesKeys.length; attr < numericalAttributes.length; attr++) {
+			var colExpectatedVals = [];
+			for (var i = 0; i < rankPositions.length; i++) {
+				var expectedVal = (1.0 - (rankPositions[i] / data.length));
+				if (rankPositions[i] == 1)
+					expectedVal = 1; 
+				if (rankPositions[i] == data.length)
+					expectedVal = 0; 
+				colExpectatedVals.push(expectedVal);
+			}
+			expectedValuesArray.push(colExpectatedVals);
 		}
 		return expectedValuesArray;
 	}
@@ -1704,7 +1713,7 @@
        
         handleClickedRow();
         tooltipMiniChart();
-        addFixedHeader();
+        //addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
         getDefFontSizeWeight();
