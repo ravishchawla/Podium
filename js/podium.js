@@ -13,6 +13,7 @@
 	var userAdjustedAttributesKeys = [];
 	var userAdjustedAttributesValues = [];
 	var unusedAttributes = [];
+	var attributeStatesMap = {};
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
 	var tooltipAttribute;
@@ -162,7 +163,7 @@
 					}
 					
 					if (isNumerical) {
-						columns.push({ head: attrName, cl: attrName.replace(" ", "_", "g") + " numericalAttribute", html: ƒ(attrName)});
+						columns.push({ head: attrName, cl: attrName.split(" ").join("_") + " numericalAttribute", html: ƒ(attrName)});
 						numericalAttributes.push(attrName);
 					} else {
 						var attrMap = {}; 
@@ -195,7 +196,7 @@
 			}
 			ial.init(data, 0);
 			displayPage(data);
-			//mar.rankButtonClicked(); 
+			mar.rankButtonClicked(); 
 		});
 	}
 
@@ -721,6 +722,23 @@
 
 		$("td", "#miniChart").attr("height", "1");
 		$("svg", "#miniChart").height(mapBarHeight);
+	}
+
+	mar.updateExpectations = function(attributeName) {
+		expectedCellValues = getExpectedValuesArray(rowRankingScores);
+
+		$("." + attributeName.split(" ").join("_") + " .expectationOverlayBar").css({"left" : function(idx, val) {
+			expectationValue = (expectedCellValues[numericalAttributes.indexOf(attributeName) - userAdjustedAttributesValues.length][idx]);
+			tdwidth = $(this).parent().parent().width();
+			exCellLeft = tdwidth * expectationValue;
+			exCellLeft = (exCellLeft >= tdwidth) ? tdwidth - 5: exCellLeft;
+
+			console.log($(this));
+			$(this).find(".textOverlayBar").css({"left" : "-" + exCellLeft + "px"});
+
+			return exCellLeft;
+		}});
+
 	}
 
 	
@@ -1326,15 +1344,27 @@
 	 */
 	function getExpectedValuesArray(rankPositions) {
 		var expectedValuesArray = [];
-		for (var attr = userAdjustedAttributesKeys.length; attr < numericalAttributes.length; attr++) {
-			var colExpectatedVals = [];
-			for (var i = 0; i < rankPositions.length; i++) {
-				var expectedVal = (1.0 - (rankPositions[i] / data.length));
+		var pos;
+
+		getExpectedValue = function(i) {
+			var expectedVal = (1.0 - (rankPositions[i] / data.length));
 				if (rankPositions[i] == 1)
 					expectedVal = 1; 
 				if (rankPositions[i] == data.length)
 					expectedVal = 0; 
-				colExpectatedVals.push(expectedVal);
+				return expectedVal;
+		}
+
+		for (var attr = userAdjustedAttributesKeys.length; attr < numericalAttributes.length; attr++) {
+			var colExpectatedVals = [];
+			if(attributeStatesMap[numericalAttributes[attr]] == attributeStates.LOW) {
+				for (var i = 0; i < rankPositions.length; i++) {
+					colExpectatedVals.push(getExpectedValue(i));
+				}
+			} else {
+				for(var i = rankPositions.length - 1; i >= 0; i--) {
+					colExpectatedVals.push(getExpectedValue(i));
+				}
 			}
 			expectedValuesArray.push(colExpectatedVals);
 		}
@@ -2357,7 +2387,7 @@
 
 			var movedRowIndex = movedRow.find("td.rank.index").html();
 
-			if ((showAllRows == false && changedR+......ows.indexOf(Number(uniqueId)) == -1) ||
+			if ((showAllRows == false && changedRows.indexOf(Number(uniqueId)) == -1) ||
 					(newIndex == oldIndex)) {
 				onlySchoolTd.removeClass('greenColorChange');
 				onlySchoolTd.removeClass('redColorChange');
@@ -2438,13 +2468,15 @@
 			if (i > 4) { // don't add arrows for the attributes we define
 				var html_text = $(this).html();
 				if (numericalAttributes.indexOf(html_text) > -1) {
+
+					attributeStatesMap[html_text] = attributeStates.HIGH;
+
 					consoleRow = $("#consoleChart td").filter(function() {
 						return $(this).find("p").text() === html_text;
 					});
 					html_text = '<input type="image" src="img/arrow-up.png" width=15px class="directionUp"/>' + html_text;
 					$(consoleRow.find("p")).html(html_text);
 					handleArrowClicks(consoleRow, null);
-					
 				}
 			}
 		});
@@ -2468,18 +2500,22 @@
 					unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
 					// re-normalize the attribute
 					normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
+					attributeStatesMap[clickedRowName] = attributeStates.HIGH;
 				} else if ($(clickedObj).hasClass('directionDown')) {
 					$(clickedObj).attr('src', 'img/arrow-down.png');
 					// re-normalize the attribute
 					normalizeAttribute(data, clickedRowName, attributeStates.LOW);
+					attributeStatesMap[clickedRowName] = attributeStates.LOW;
 				} else if ($(clickedObj).hasClass('unusedRow')) {
 					$(clickedObj).attr('src', 'img/remove.png');
 					$((($(this).parent())[0])).addClass("disabledAttribute");
 
 					id = $(this).attr("id");
 					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+					attributeStatesMap[clickedRowName] = attributeStates.UNUSED;
 				}
 				
+				mar.updateExpectations(clickedRowName);
 				$("#discard_button").removeAttr("disabled");
 			});
 		}
@@ -2499,18 +2535,21 @@
 					unusedAttributes.splice(unusedAttributes.indexOf(parseInt(id.replace(/[^0-9\.]/g, ''), 10)), 1);
 					// re-normalize the attribute
 					normalizeAttribute(data, clickedRowName, attributeStates.HIGH);
+					attributeStatesMap[clickedRowName] = attributeStates.HIGH;
 				} else if ($(clickedObj).hasClass('directionDown')) {
 					$(clickedObj).attr('src', 'img/arrow-down.png');
 					// re-normalize the attribute
 					normalizeAttribute(data, clickedRowName, attributeStates.LOW);
+					attributeStatesMap[clickedRowName] = attributeStates.LOW;
 				} else if ($(clickedObj).hasClass('unusedRow')) {
 					$(clickedObj).attr('src', 'img/remove.png');
 					$(((pObj.parent())[0])).addClass("disabledAttribute");
 
 					id = pObj.attr("id");
 					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+					attributeStatesMap[clickedRowName] = attributeStates.UNUSED;
 				}
-
+				mar.updateExpectations(clickedRowName);
 			});
 		}
 	}
