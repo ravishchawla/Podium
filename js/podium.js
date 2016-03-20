@@ -93,7 +93,7 @@
 	var fishEyeOverlay = true;
 
     //Show overlayed bars on top of all attributes
-    var showBarOverlay = false;
+    var showBarOverlay = true;
     
     //Show overlayed Expected Value Line 
     var showExpectedValueOverlay = false;
@@ -484,7 +484,7 @@
                         expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-							+ COLORS.BLACK + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ COLORS.TRANSPARENT + "; left : " + exCellLeft + "px; z-index: 80;'"
 							+ ">";
                      
                         
@@ -592,14 +592,14 @@
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-							+ COLORS.BLACK + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ (showExpectedValueOverlay ? COLORS.BLACK : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
 							+ ">";
                         
 						cellBarHTML = "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
-								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
+								+ "px; height: " + cellHeight + "px; background-color : " + (colNum % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
 								//+ "<div class = 'textOverlayBar overlayBar' style='z-index: 90;'>" + colNum + "," + rowNum 
 								//+ "</div>"// + "</div>"
 								+ expectationBarHTML// + "</div>" 
@@ -1643,10 +1643,10 @@
         var normRankArray = normalizeArray(rankScoreValueArray);
         enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
         
-         if(showExpectedValueOverlay){
-            $("td #expectedBarId").show();
+        if(showExpectedValueOverlay && showBarOverlay ){
+            $("td #expectedBarId").css({"background-color" : COLORS.BLACK})
         }else{
-            $("td #expectedBarId").hide();
+            $("td #expectedBarId").css({"background-color" : COLORS.TRANSPARENT})
         }
         
 	}
@@ -1655,12 +1655,10 @@
     mar.expectedValueOverLayClicked = function() {
 		showExpectedValueOverlay = !showExpectedValueOverlay;
         if(showExpectedValueOverlay && showBarOverlay ){
-            $("td #expectedBarId").show();
+            $("td #expectedBarId").css({"background-color" : COLORS.BLACK})
         }else{
-            $("td #expectedBarId").hide();
+            $("td #expectedBarId").css({"background-color" : COLORS.TRANSPARENT})
         }
-		
-        
 	}
 
 	/*
@@ -2051,7 +2049,7 @@
 			var backColor = $(this).css("background-color");
 			var backColor2 = $(this).css("background");
 			backColor2 = backColor2.substring(0, 15);
-			if (backColor == COLORS.WHITE || backColor == COLORS.TRANSPARENT_BLACK) {
+			if (backColor == COLORS.WHITE || backColor == COLORS.TRANSPARENT) {
 
 			} else {
 				var id = iter - 1;

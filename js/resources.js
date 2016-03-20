@@ -27,7 +27,7 @@ const COLORS = {
 	"GREY" : "#bdbdbd",
 	"DARK_GREY" : "#636363",
 	"BLACK" : "rgb(0,0,0)",
-	"TRANSPARENT_BLACK" : "rgba(0, 0, 0, 0)",
+	"TRANSPARENT" : "rgba(0, 0, 0, 0)",
 	"WHITE" : "rgb(255, 255, 255)",
 	"BLUE" : "#337ab7",
 	"RED" : "#FF0000",
