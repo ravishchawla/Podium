@@ -93,7 +93,7 @@
 	var fishEyeOverlay = true;
 
     //Show overlayed bars on top of all attributes
-    var showBarOverlay = true;
+    var showBarOverlay = false;
     
     //Show overlayed Expected Value Line 
     var showExpectedValueOverlay = false;
@@ -484,7 +484,7 @@
                         expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-							+ COLORS.TRANSPARENT + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ (showExpectedValueOverlay ? COLORS.BLACK : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
 							+ ">";
                      
                         
@@ -513,7 +513,10 @@
 
 			$("td.interactionWeight").addClass("tableSeperator");
 			$("th.interactionWeight").addClass("tableSeperator");
-        
+        	
+        	$("td").each(function(i, d) {
+				$(this).css("min-width", minWidthTDTH);
+			});
            
 			
 	}
@@ -556,6 +559,7 @@
 		expectationBarWidth = 2;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 		expectedCellValues = getExpectedValuesArray(rowRankingScores);
+		console.log(expectedCellValues);
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -580,7 +584,7 @@
 				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
-						expectationValue = (expectedCellValues[colNum][rowNum]);
+						expectationValue = (expectedCellValues[colNum - offset][rowNum]);
 						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
 						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellLeft = $(this).width() * expectationValue;
@@ -605,7 +609,7 @@
 								+ expectationBarHTML// + "</div>" 
 								+ "<div class = 'textOverlayBar overlayBar' style='z-index: 50; left: -" + exCellLeft + "px'>" + d.html + "</div></div></div>"
 								+ "</div>";	
-						return cellBarHTML;		
+						return cellBarHTML;
 					});
 				} else {
 
@@ -626,7 +630,7 @@
 				}
 
 				colNum++;
-				colNum %= (numericalAttributes.length - 1);
+				colNum %= (columns.length);
 				if(colNum == 0) {
 					rowNum++;
 					rowNum %= data.length;
@@ -671,10 +675,10 @@
 		});	
        
         
-       // $("td").each(function(i, d) {
-		//	$(this).css("min-width", minWidthTDTH);
+        $("td").each(function(i, d) {
+			$(this).css("min-width", minWidthTDTH);
 			
-		//});	
+		});	
         
       
         
@@ -1524,7 +1528,6 @@
 			normalizedWeights = runSVD();*/
 		
 		var ranking = computeRanking(normalizedWeights);
-		rowRankingScores = [];
 
 		// update oldIndex to the old rank position and update rank
 		for (var i = 0; i < ranking.length; i++) {
@@ -1533,8 +1536,6 @@
 			
 			obj["oldIndex"] = obj["rank"]; 
 			obj["rank"] = i + 1;
-
-			rowRankingScores.push(id);
 		}
 
 		// update the table order and color the rows
