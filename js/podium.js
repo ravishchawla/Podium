@@ -1767,7 +1767,7 @@
           if (count == 0) {
             
             // handle bars for interaction weights
-            tag = 0;
+            tag = 1;
             getInteractionWeights();
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray, tag^=1);
