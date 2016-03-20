@@ -1533,7 +1533,7 @@
 		selectedRows = [];
         handleClickedRow();
         setTimeout(function() {       
-            $('#tablePanel tbody .School').animate({ backgroundColor: "white" }, 1000);
+            $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.SLATE }, 1000);
         }, timeDie);
         $("#discard_button").attr("disabled","disabled");
 	}
@@ -1601,7 +1601,7 @@
      
         rankButtonPressed = false;
         setTimeout(function() {       
-            $('#tablePanel tbody .School').animate({ backgroundColor: "white" }, 1000);
+            $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.SLATE }, 1000);
         }, timeDie);
        
         htmlTableToCache = $("#tablePanel tbody").html(); 
@@ -1641,7 +1641,7 @@
 		colorOverlay = !colorOverlay;
 
 		if (!colorOverlay)
-			$("tr").css("background", COLORS.WHITE);
+			$("tr").css("background", COLORS.SLATE);
 		else
 			colorRows();
 	}
@@ -1741,7 +1741,7 @@
        
         handleClickedRow();
         tooltipMiniChart();
-        //addFixedHeader();
+        addFixedHeader();
         enableConsoleChartTooltips();
         drawBars();
         getDefFontSizeWeight();
@@ -2138,8 +2138,8 @@
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
             if(iter>-1){
-               $(this).css("background", COLORS.WHITE);
-               $(this).css("color", COLORS.BLACK);
+               $(this).css("background", COLORS.SLATE);
+               $(this).css("color", COLORS.WHITE);
           
             }  
             
