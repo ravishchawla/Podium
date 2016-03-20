@@ -27,6 +27,7 @@
     var interactionValueArray =[];
     var rankScoreValueArray = [];
     var consolechartSortedData = [];
+    var miniCharWidthValues = [];
 	var keys;
 
     /*Variables to hold cached data*/
@@ -194,7 +195,7 @@
 			}
 			ial.init(data, 0);
 			displayPage(data);
-			mar.rankButtonClicked(); 
+			//mar.rankButtonClicked(); 
 		});
 	}
 
@@ -256,10 +257,13 @@
 
 		minimap_rows.selectAll("td")
 				.data(function(row, i) {
+					mini_width = minimap_width * (data.length - row["rank"]) / data.length;
+					mini_width = (mini_width < 1 ? 1 : mini_width);
+					miniCharWidthValues.push(mini_width);
 					return [
 							{ column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width = ' + minimap_width +  '><rect id = rec'+ i + ' class = miniMapRect width=' +
-								minimap_width * (data.length - row["rank"]) / data.length +
-								' height="50" fill="' + COLORS.MINIMAP_ROW + '"/></svg>' }];
+								 + mini_width +
+								' height="50" fill="' + COLORS.MINIMAP_ROW + '"/></svg>'}];
 
 				}).enter()
 				.append("td")
@@ -457,7 +461,6 @@
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
 				else {
 				    expectedCellValues = getExpectedValuesArray(rowRankingScores);
-				    console.log(expectedCellValues);
 				    rowNum = 0;
 				    colNum = 0;
 				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
@@ -559,7 +562,6 @@
 		expectationBarWidth = 2;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 		expectedCellValues = getExpectedValuesArray(rowRankingScores);
-		console.log(expectedCellValues);
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -1358,7 +1360,7 @@
 	 * Private
 	 * Update the opacity of the given row object based on the change in index
 	 */
-	function updateColorAndOpacity(rowObj, oldMiniRowObj, newMiniRowObj, oldIndex, newIndex) {
+	function updateColorAndOpacity(rowObj, newMiniRowObj, oldIndex, newIndex) {
 		var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
 		if (newIndex == oldIndex)
 			opacity = 0;
@@ -1376,10 +1378,7 @@
 					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(1));
 				}
 		}
-
-		oldWidth = newMiniRowObj.attr("width");
-		newMiniRowObj.attr("width", oldMiniRowObj.attr("width"));
-		oldMiniRowObj.attr("width", oldWidth);
+		newMiniRowObj.attr("width", miniCharWidthValues[oldIndex]);
 	}
 	
 	
@@ -1854,10 +1853,10 @@
     	
     	if (tag == 0) {
     		// interaction weight
-    		colorValue = COLORS.ODD_COLUMN;
+    		colorValue = COLORS.EVEN_COLUMN;
     	} else {
     		// rank score
-    		colorValue = COLORS.EVEN_COLUMN;
+    		colorValue = COLORS.ODD_COLUMN;
     	}
     	
     	var item = 0;
@@ -2358,12 +2357,11 @@
 
 			var movedRowIndex = movedRow.find("td.rank.index").html();
 
-			if ((showAllRows == false && changedRows.indexOf(Number(uniqueId)) == -1) ||
+			if ((showAllRows == false && changedR+......ows.indexOf(Number(uniqueId)) == -1) ||
 					(newIndex == oldIndex)) {
 				onlySchoolTd.removeClass('greenColorChange');
 				onlySchoolTd.removeClass('redColorChange');
 				onlySchoolTd.animate({ backgroundColor: "transparent" }, 1000);
-				return true;
 			} else if (newIndex > oldIndex) {
 				onlySchoolTd.removeClass('greenColorChange');
 				onlySchoolTd.addClass('redColorChange');
@@ -2372,11 +2370,10 @@
 				onlySchoolTd.addClass('greenColorChange');
 			}
 			
-			oldMiniRow = $("#miniChart #tr" + (oldIndex - 1) + " rect");
 			newMiniRow = $("#miniChart #tr" + (newIndex - 1) + " rect");
-			updateColorAndOpacity(onlySchoolTd, oldMiniRow, newMiniRow, oldIndex, newIndex);  
+			updateColorAndOpacity(onlySchoolTd, newMiniRow, oldIndex, newIndex);  
 		});
-        
+
         if (!rankButtonPressed){
             selectionUpdatedMiniBar();  
         }
