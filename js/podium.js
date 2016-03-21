@@ -2158,7 +2158,7 @@
                     if (i == selectedRows.length - 1) {
 						idValTr.css("color", COLORS.BLACK);
 						idValTr.css("font-weight", "900");                        
-                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.FONT_COLOR_DARK + ";"
+                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.BLACK + ";" // FONT_COLOR_DARK
                         rankCol.attr("style", styleContent);
 					} else {
                         idValTr.css("font-weight", defFontWeight); 
