@@ -3,20 +3,46 @@ const attributeStates = {"HIGH" : 1, "LOW" : 2, "UNUSED" : 3};
 /*Colors*/
 
 getPositiveMoveWithOpacity = function(opacity) { 
-	return 'rgba(88, 218, 91, ' + opacity + ')';
+	if (opacity > 0.9)
+		return 'rgb(50, 205, 50)';
+	else if (opacity > 0.8)
+		return 'rgb(70, 210, 70)';
+	else if (opacity > 0.7)
+		return 'rgb(91, 215, 91)';
+	else if (opacity > 0.6)
+		return 'rgb(111, 220, 111)';
+	else if (opacity > 0.5)
+		return 'rgb(132, 225, 132)';
+	else if (opacity > 0.4)
+		return 'rgb(152, 230, 152)';
+	else (opacity > 0.3)
+		return 'rgb(173, 235, 173)';
 }
 
 getNegativeMoveWithOpacity = function(opacity) {
-	return 'rgba(218, 91, 88, ' + opacity + ')';
+	if (opacity > 0.9)
+		return 'rgb(205, 50, 50)';
+	else if (opacity > 0.8)
+		return 'rgb(210, 70, 70)';
+	else if (opacity > 0.7)
+		return 'rgb(215, 91, 91)';
+	else if (opacity > 0.6)
+		return 'rgb(220, 111, 111)';
+	else if (opacity > 0.5)
+		return 'rgb(225, 132, 132)';
+	else if (opacity > 0.4)
+		return 'rgb(230, 152, 152)';
+	else if (opacity > 0.3)
+		return 'rgb(235, 173, 173)';
+	else 
+		return 'rgb(240, 193, 193';
 }
 
 const COLORS = {
-	"ODD_COLUMN" : "#83AA30",
-	"EVEN_COLUMN" : "#A68F58",
-	"ODD_COLUMN_EXPECT" : "#d399e8",
-	"EVEN_COLUMN_EXPECT" : "#969Deb",
-	"POSITIVE_MOVE" : "#DA5B58",
-	"NEGATIVE_MOVE" : "#58DA5B",
+	"ODD_COLUMN" : "#f27997",
+	"EVEN_COLUMN" : "#a27997",
+	"POSITIVE_MOVE" : "#96e898",
+	"NEGATIVE_MOVE" : "#e69898",
 	"POSITIVE_MOVE_GRADIENT" : getPositiveMoveWithOpacity,
 	"NEGATIVE_MOVE_GRADIENT" : getNegativeMoveWithOpacity,
 	"MINIMAP_ROW" : "rgb(255, 255, 255)",
@@ -34,11 +60,7 @@ const COLORS = {
 	"RED" : "#FF0000",
 };
 
-const legendItems = [//[COLORS.ODD_COLUMN, "Column 1 value"],
-					 //[COLORS.EVEN_COLUMN , "Column 2 value"],
-					 //[COLORS.ODD_COLUMN_EXPECT, "Column 1 expected value"],
-					 //[COLORS.EVEN_COLUMN_EXPECT, "Column 2 expected value"],
-					 [COLORS.POSITIVE_MOVE, "Row moved up in ranking"],
+const legendItems = [[COLORS.POSITIVE_MOVE, "Row moved up in ranking"],
 					 [COLORS.NEGATIVE_MOVE, "Row moved down in ranking"],
 					 [COLORS.MINIMAP_ROW, "Row didn't move in ranking"],
 					 [COLORS.MINIMAP_ROW_SELECTED, "Watched row"]
