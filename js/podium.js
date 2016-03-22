@@ -465,7 +465,7 @@
 				    rowNum = 0;
 				    colNum = 0;
 				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
-				    expectationBarWidth = 2;
+				    expectationBarWidth = 1;
 					cells = cells.html(function(d, i) {
 						if(numericalAttributes.indexOf(d.head) < 1) {
 							return d.html;
@@ -560,7 +560,7 @@
 		// update the cells
 		rowNum = 0;
 		colNum = 0;
-		expectationBarWidth = 2;
+		expectationBarWidth = 1;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
 		expectedCellValues = getExpectedValuesArray(rowRankingScores);
 		cells = rows.selectAll("td")
@@ -701,19 +701,21 @@
 
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
-				var barColor = COLORS.MINIMAP_ROW;
-				if (row["rank"] < row["oldIndex"])
-					barColor = COLORS.NEGATIVE_MOVE;
-				else if (row["rank"] > row["oldIndex"])
-					barColor = COLORS.POSITIVE_MOVE;
-				
-				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
+				var newIndex = Number(row["rank"]);
+				var oldIndex = Number(row["oldIndex"]);
+				var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
 				if (row["rank"] == row["oldIndex"])
 					opacity = 1;
+				
+				var barColor = COLORS.MINIMAP_ROW;
+				if (row["rank"] < row["oldIndex"])
+					barColor = COLORS.NEGATIVE_MOVE_GRADIENT(opacity);
+				else if (row["rank"] > row["oldIndex"])
+					barColor = COLORS.POSITIVE_MOVE_GRADIENT(opacity);
             return [
 				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
 				        '><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
-				        	+ ' height="50" fill="' + barColor + '" opacity="' + opacity + '"/></svg>' }];
+				        	+ ' height="50" fill="' + barColor + '"/></svg>' }];
 	
 			})
 			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -1399,11 +1401,11 @@
 		if (colorOverlay) {
 				if(rowObj.hasClass('greenColorChange')) {
 					rowObj.css("background-color", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
-					newMiniRowObj.css("fill", COLORS.POSITIVE_MOVE_GRADIENT(1));
+					newMiniRowObj.css("fill", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
 				}
 				else if(rowObj.hasClass('redColorChange')) {
 					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
-					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(1));
+					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
 				}
 		}
 		newMiniRowObj.attr("width", miniCharWidthValues[oldIndex]);
