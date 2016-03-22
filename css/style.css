@@ -185,6 +185,7 @@ body {
 
 .pseudoDivWrapper {
 	background-color: #555;
+	z-index: 900;
 }
 
 .pseudoHeader {

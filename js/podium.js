@@ -2095,7 +2095,7 @@
 
 			} else {
 				var id = iter - 1;
-                //placeDotsOnMiniBar(id);
+                placeDotsOnMiniBar(id);
                
 			}
 
