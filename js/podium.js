@@ -2091,15 +2091,17 @@
 		var iter = 0;
 		$("tr .rank.index.null").each(function() {
 			var backColor = $(this).css("background-color");
-			var backColor2 = $(this).css("background");
+            var backColor2 = $(this).css("background");
 			backColor2 = backColor2.substring(0, 15);
-			if (backColor == COLORS.WHITE || backColor == COLORS.TRANSPARENT) {
+			if (backColor == COLORS.RANKCELL_BACKCOLOR || backColor == COLORS.TRANSPARENT) {
 
 			} else {
 				var id = iter - 1;
                 placeDotsOnMiniBar(id);
                
 			}
+     
+            
 
 			if (backColor2 === COLORS.MINIMAP_ROW_SELECTED)
 				var id2 = iter - 1;

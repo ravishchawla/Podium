@@ -53,6 +53,7 @@ const COLORS = {
 	"GREY" : "#bdbdbd",
 	"DARK_GREY" : "#636363",
 	"SLATE" : "#555",
+    "RANKCELL_BACKCOLOR" : "rgb(85, 85, 85)",
 	"BLACK" : "rgb(0,0,0)",
 	"TRANSPARENT" : "rgba(0, 0, 0, 0)",
 	"WHITE" : "rgb(255, 255, 255)",
