@@ -35,7 +35,7 @@ body {
 	overflow-x: hidden;
 	overflow-y: auto;
 	position: relative;
-	z-index: 20;
+	z-index: 901;
 }
 
 #auxContentDiv {
@@ -185,6 +185,7 @@ body {
 
 .pseudoDivWrapper {
 	background-color: #555;
+	z-index: 900;
 }
 
 .pseudoHeader {

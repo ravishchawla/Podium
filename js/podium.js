@@ -709,10 +709,10 @@
 					opacity = 1;
 				
 				var barColor = COLORS.MINIMAP_ROW;
+				miniCharWidthValues.push((minimap_width * row["rankScore"])/maxRankScore);
 				if (row["rank"] < row["oldIndex"])
 					barColor = COLORS.NEGATIVE_MOVE_GRADIENT(opacity);
 				else if (row["rank"] > row["oldIndex"])
-            		miniCharWidthValues.push((minimap_width * row["rankScore"])/maxRankScore);
 					barColor = COLORS.POSITIVE_MOVE_GRADIENT(opacity);
             		return [
 				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
@@ -724,6 +724,7 @@
 			.html(function(d) {return d.value; })
 			.attr("height",  "10px");
 
+		miniCharWidthValues.sort(function(a, b) { return parseFloat(b) - parseFloat(a); });
 		$("td", "#miniChart").attr("height", "1");
 		$("svg", "#miniChart").height(mapBarHeight);
 	}
@@ -1596,7 +1597,8 @@
 			var rowObj = $('tr', '#tablePanel').eq(i + 1);
 			rowObj.find("td.oldIndex").html(rank);
 		}
-       
+     	
+     	console.log(miniCharWidthValues);  
 		changedRows = []; // reset changed rows
 		updateColumnWeights(normalizedWeights.slice());
         sortConsoleChartBars();
@@ -2095,7 +2097,7 @@
 
 			} else {
 				var id = iter - 1;
-                //placeDotsOnMiniBar(id);
+                placeDotsOnMiniBar(id);
                
 			}
 
