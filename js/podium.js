@@ -732,8 +732,6 @@
 			tdwidth = $(this).parent().parent().width();
 			exCellLeft = tdwidth * expectationValue;
 			exCellLeft = (exCellLeft >= tdwidth) ? tdwidth - 5: exCellLeft;
-
-			console.log($(this));
 			$(this).find(".textOverlayBar").css({"left" : "-" + exCellLeft + "px"});
 
 			return exCellLeft;
@@ -1358,11 +1356,11 @@
 		for (var attr = userAdjustedAttributesKeys.length; attr < numericalAttributes.length; attr++) {
 			var colExpectatedVals = [];
 			if(attributeStatesMap[numericalAttributes[attr]] == attributeStates.LOW) {
-				for (var i = 0; i < rankPositions.length; i++) {
+				for(var i = rankPositions.length - 1; i >= 0; i--) {
 					colExpectatedVals.push(getExpectedValue(i));
 				}
 			} else {
-				for(var i = rankPositions.length - 1; i >= 0; i--) {
+				for (var i = 0; i < rankPositions.length; i++) {
 					colExpectatedVals.push(getExpectedValue(i));
 				}
 			}
