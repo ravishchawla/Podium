@@ -699,6 +699,7 @@
 			.selectAll("tr")
 			.data(data);
 
+		miniCharWidthValues = [];
 		minimap_rows.selectAll("td")
 			.data(function(row, i) {
 				var barColor = COLORS.MINIMAP_ROW;
@@ -710,7 +711,9 @@
 				var opacity = opacityScale(Math.abs(Number(row["rank"]) - Number(row["oldIndex"])));
 				if (row["rank"] == row["oldIndex"])
 					opacity = 1;
-            return [
+            	
+            	miniCharWidthValues.push((minimap_width * row["rankScore"])/maxRankScore);
+            	return [
 				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
 				        '><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
 				        	+ ' height="50" fill="' + barColor + '" opacity="' + opacity + '"/></svg>' }];
@@ -1383,6 +1386,13 @@
 		data = updatedData;
 	}
 	
+	/*
+	 * Private
+	 * Update width of mini row object
+	 */
+	function updateMiniRowWidth(newMiniRowObj, oldIndex) {
+		newMiniRowObj.attr("width", miniCharWidthValues[oldIndex]);
+	}
 	
 	/*
 	 * Private
@@ -1404,9 +1414,11 @@
 				else if(rowObj.hasClass('redColorChange')) {
 					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
 					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(1));
+				} else {
+					newMiniRowObj.css("fill", COLORS.WHITE);
+					newMiniRowObj.css("opacity", 1);
 				}
 		}
-		newMiniRowObj.attr("width", miniCharWidthValues[oldIndex]);
 	}
 	
 	
@@ -1569,19 +1581,20 @@
 		mar.updateData(ranking);
 		mar.updateMinimap();
 		mar.updateTable(); 
-		colorRows();
+		colorAndResizeRows(false);
      
-        
+        //miniRowValues = miniCharWidthValues.slice();
+		//miniCharWidthValues = [];
 		// update oldIndex to match rank after it has been used to color rows
 		for (var i = 0; i < ranking.length; i++) {
 			var id = Number(ranking[i]["id"]);
 			var obj = getDataByUniqueId(id);
+			//miniCharWidthValues.push(miniRowValues[obj["rank"]]);	
 			var rank = obj["rank"];
 			obj["oldIndex"] = rank; 
 			var rowObj = $('tr', '#tablePanel').eq(i + 1);
 			rowObj.find("td.oldIndex").html(rank);
 		}
-		
        
 		changedRows = []; // reset changed rows
 		updateColumnWeights(normalizedWeights.slice());
@@ -1641,7 +1654,7 @@
 		if (!colorOverlay)
 			$("tr").css("background", COLORS.SLATE);
 		else
-			colorRows();
+			colorAndResizeRows(false);
 	}
 
 
@@ -1658,7 +1671,7 @@
 	 */
 	mar.allRowsCheckClicked = function() {
 		showAllRows = !showAllRows;
-		colorRows();
+		colorAndResizeRows(false);
 	}
 
 	mar.barOverlayClicked = function() {
@@ -2081,7 +2094,7 @@
 
 			} else {
 				var id = iter - 1;
-                placeDotsOnMiniBar(id);
+                //placeDotsOnMiniBar(id);
                
 			}
 
@@ -2350,7 +2363,7 @@
                 
 			});	
 
-			colorRows();
+			colorAndResizeRows(true);
             getInteractionWeights();
             var normInterArray = normalizeArray(interactionValueArray)
             enableBarsOnCols("td.interactionWeight.tableSeperator", normInterArray, interactionValueArray,0);
@@ -2374,7 +2387,7 @@
 	 * Private
 	 * Modify the colors of the rows based on where they have been moved
 	 */
-	function colorRows() {
+	function colorAndResizeRows(toResize) {
 		var movedRow = $(lastChangedRow);
 		$('tr', "#tablePanel tbody").each(function (i) {
             //var onlySchoolTd = $(this);  
@@ -2399,7 +2412,11 @@
 			}
 			
 			newMiniRow = $("#miniChart #tr" + (newIndex - 1) + " rect");
-			updateColorAndOpacity(onlySchoolTd, newMiniRow, oldIndex, newIndex);  
+			updateColorAndOpacity(onlySchoolTd, newMiniRow, oldIndex, newIndex);
+
+			if(toResize) {
+				updateMiniRowWidth(newMiniRow, oldIndex);
+			}
 		});
 
         if (!rankButtonPressed){
