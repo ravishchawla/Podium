@@ -1274,7 +1274,7 @@
 			b = getUniqueIds(getRowsForSolver(b, [], 2));
 		}
 		
-		var regressionAttributes = []; // emily check for deactivated attributes
+		var regressionAttributes = [];
 		var slopeDiff = [];
 		for (var i = userAdjustedAttributesKeys.length; i < numericalAttributes.length; i++) {
 			var currentAttribute = numericalAttributes[i];
