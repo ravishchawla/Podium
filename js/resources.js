@@ -39,8 +39,8 @@ getNegativeMoveWithOpacity = function(opacity) {
 }
 
 const COLORS = {
-	"ODD_COLUMN" : "#f27997",
-	"EVEN_COLUMN" : "#a27997",
+	"ODD_COLUMN" : "#1f77b4", //"#f27997",
+	"EVEN_COLUMN" : "#aec7e8", //"#a27997",
 	"POSITIVE_MOVE" : "#96e898",
 	"NEGATIVE_MOVE" : "#e69898",
 	"POSITIVE_MOVE_GRADIENT" : getPositiveMoveWithOpacity,
