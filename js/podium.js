@@ -880,6 +880,7 @@
 			if (rowsForSolver.indexOf(Number(watchedRows[i])) < 0)
 				rowsForSolver.push(Number(watchedRows[i]));
 		}
+		
 		var numSurrounding = Math.ceil((numRows - rowsForSolver.length) / clickedRows.length); 
 		if (rowsForSolver.length >= numRows)
 			return rowsForSolver; 
@@ -1248,7 +1249,6 @@
 		for (var i = 0; i < selectedRows.length; i++)
 			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
 		
-		var changedRowIdsForUnderdetermined = getChangedRows();
 		var b = getChangedRows(); 
 		
 		for (var i = 0; i < selectedRowIds.length; i++) {
@@ -1267,32 +1267,30 @@
 
 			var normalizedWeights = normalize(retArray);
 			return normalizedWeights;
-		} else if (b.length == 1) {
-			// when only one item is being modeled, use weight vector
-			// produced from normalized attribute values
-			var currentDataItem = getDataByUniqueId(b[0]);
-			var attrVals = [];
-			for (var i = userAdjustedAttributesKeys.length; i < numericalAttributes.length; i++)
-				attrVals.push(currentDataItem[numericalAttributes[i] + "Norm"]);
-			
-			var normalizedWeights = normalize(attrVals);
-			return normalizedWeights;
+		} 
+		
+		if (b.length == 1) {
+			// when only one item is being modeled, add one more
+			b = getUniqueIds(getRowsForSolver(b, [], 2));
 		}
 		
-		var regressionAttributes = [];
+		var regressionAttributes = []; // emily check for deactivated attributes
 		var slopeDiff = [];
 		for (var i = userAdjustedAttributesKeys.length; i < numericalAttributes.length; i++) {
 			var currentAttribute = numericalAttributes[i];
 			var xRegressionData = []; // normalized rank values
 			var yRegressionData = []; // normalized attribute values
-			
-			for (var j = 0; j < b.length; j++) {
-				var currentDataItem = getDataByUniqueId(b[j]);
-				xRegressionData.push(Number(currentDataItem["rank"]) / data.length);
-				yRegressionData.push(currentDataItem[currentAttribute + "Norm"]);
+			var slope; 
+			if (attributeStatesMap[currentAttribute] == attributeStates.UNUSED)
+				slope = 0; 
+			else {
+				for (var j = 0; j < b.length; j++) {
+					var currentDataItem = getDataByUniqueId(b[j]);
+					xRegressionData.push(Number(currentDataItem["rank"]) / data.length);
+					yRegressionData.push(currentDataItem[currentAttribute + "Norm"]);
+				}
+				slope = getRegressionSlope(xRegressionData, yRegressionData);
 			}
-			
-			var slope = getRegressionSlope(xRegressionData, yRegressionData);
 			
 			regressionAttributes.push(currentAttribute);
 			slopeDiff.push(Math.abs(1.0 - Math.abs(slope)));
@@ -1598,7 +1596,7 @@
 			rowObj.find("td.oldIndex").html(rank);
 		}
      	
-     	console.log(miniCharWidthValues);  
+     	//console.log(miniCharWidthValues);  
 		changedRows = []; // reset changed rows
 		updateColumnWeights(normalizedWeights.slice());
         sortConsoleChartBars();
