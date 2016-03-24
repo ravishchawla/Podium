@@ -1,4 +1,4 @@
-School,G,Pts,Passing Cmp,Passing Att,Passing Pct,Passing Yds,Passing TD,Rushing Att,Rushing Yds,Rushing Avg,Rushing TD,Total Offense Plays,Total Offense Yds,Total Offense Avg,First Downs Pass,First Downs Rush,First Downs Pen,First Downs Tot,Penalties No.,Penalties Yds,Turnovers Fum,Turnovers Int,Turnovers Tot
+School,Games,Points,Passing Completions,Passing Attempts,Passing Percentage,Passing Yards,Passing Touchdowns,Rushing Attempts,Rushing Yards,Rushing Average,Rushing Touchdowns,Total Offense Plays,Total Offense Yards,Total Offense Average,First Downs (Passing),First Downs (Rushing),First Downs (Penalties),First Downs (Total),Penalties (Number),Penalties (Yards),Turnovers (Fumbles),Turnovers (Interceptions),Turnovers (Total)
 Baylor,13,48.1,17.6,29.9,58.9,289.5,3.4,54.9,326.7,5.9,3.2,84.8,616.2,7.3,11.1,16.9,1.5,29.5,9.1,80.2,1,1,2
 Texas Tech,13,45.1,29.9,47.7,62.7,388.2,3,35.7,191.3,5.4,2.6,83.4,579.5,6.9,15.6,10.8,1.8,28.3,7.1,64.3,0.6,1.2,1.8
 Western Kentucky,14,44.3,28.4,39.6,71.8,372.2,3.6,33.1,154.6,4.7,2.1,72.6,526.9,7.3,15,8.6,1.4,24.9,5.9,57.8,0.6,0.6,1.2
