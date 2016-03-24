@@ -230,7 +230,7 @@
 				  .attr("min-width", "50px")
 				  .style("color", function(d) { 
 				  	if(d.description == "Color") return d.fill;
-				  	else return COLORS.WHITE;
+				  	else return COLORS.SLATE;
 				  })
 				  .style("background-color", function(d) { return d.fill; });
 	}
@@ -491,12 +491,12 @@
                         expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-							+ (showExpectedValueOverlay ? COLORS.BLACK : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ (showExpectedValueOverlay ? COLORS.SLATE : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
 							+ ">";
                      
                         
 						cellBarHTML = "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
-								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
+								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.WHITE + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
 								+ "px; height: " + cellHeight + "px; background-color : " + (i % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
@@ -607,11 +607,11 @@
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
-							+ (showExpectedValueOverlay ? COLORS.BLACK : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
+							+ (showExpectedValueOverlay ? COLORS.SLATE : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
 							+ ">";
                         
 						cellBarHTML = "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
-								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.DARK_GREY + ";' >"
+								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.WHITE + ";' >"
 
 								+ "<div class = 'actualOverlayBar overlayBar' style = 'max-width: " + cellWidth + "px; width : " + cellWidth
 								+ "px; height: " + cellHeight + "px; background-color : " + (colNum % 2 == 0 ? COLORS.ODD_COLUMN : COLORS.EVEN_COLUMN) + "; z-index: 70;' >"
@@ -1438,14 +1438,14 @@
 
 		if (colorOverlay) {
 				if(rowObj.hasClass('greenColorChange')) {
-					rowObj.css("background-color", COLORS.POSITIVE_MOVE_GRADIENT(0.8));
+					rowObj.css("background-color", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
 					newMiniRowObj.css("fill", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
 				}
 				else if(rowObj.hasClass('redColorChange')) {
-					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(0.8));
+					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
 					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
 				} else {
-					newMiniRowObj.css("fill", COLORS.WHITE);
+					newMiniRowObj.css("fill", COLORS.LIGHT_GREY);
 					newMiniRowObj.css("opacity", 1);
 				}
 		}
@@ -1573,7 +1573,7 @@
 		selectedRows = [];
         handleClickedRow();
         setTimeout(function() {       
-            $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.SLATE }, 1000);
+            $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.WHITE }, 1000);
         }, timeDie);
         $("#discard_button").attr("disabled","disabled");
 	}
@@ -1643,7 +1643,7 @@
      
         rankButtonPressed = false;
         setTimeout(function() {       
-            $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.SLATE }, 1000);
+            $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.WHITE }, 1000);
         }, timeDie);
        
         htmlTableToCache = $("#tablePanel tbody").html(); 
@@ -1683,7 +1683,7 @@
 		colorOverlay = !colorOverlay;
 
 		if (!colorOverlay)
-			$("tr").css("background", COLORS.SLATE);
+			$("tr").css("background", COLORS.WHITE);
 		else
 			colorAndResizeRows(false);
 	}
@@ -1716,7 +1716,7 @@
         enableBarsOnCols("td.rankScore", normRankArray, rankScoreValueArray, 1);
         
         if(showExpectedValueOverlay && showBarOverlay ){
-            $("td #expectedBarId").css({"background-color" : COLORS.BLACK})
+            $("td #expectedBarId").css({"background-color" : COLORS.SLATE})
         }else{
             $("td #expectedBarId").css({"background-color" : COLORS.TRANSPARENT})
         }
@@ -1727,7 +1727,7 @@
     mar.expectedValueOverLayClicked = function() {
 		showExpectedValueOverlay = !showExpectedValueOverlay;
         if(showExpectedValueOverlay && showBarOverlay ){
-            $("td #expectedBarId").css({"background-color" : COLORS.BLACK})
+            $("td #expectedBarId").css({"background-color" : COLORS.SLATE})
         }else{
             $("td #expectedBarId").css({"background-color" : COLORS.TRANSPARENT})
         }
@@ -1981,7 +1981,7 @@
 	 * Adds a pseudo header that floats above the table when scrolling.
 	 */
 	function addFixedHeader() {
-		$("#tableId .header").css({"color":"white"});
+		$("#tableId .header").css({"color":COLORS.SLATE});
 		d3.select("#tableId").append("div").attr("class", "pseudoDivWrapper");		
 		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo(".pseudoDivWrapper");
 
@@ -2097,8 +2097,8 @@
         var elemTr = $("#rec" + id).closest('tr');
         var elemTrId = elemTr.attr('id');
 
-        var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill=" + COLORS.BLACK + "></rect>";
-        //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke=" + COLORS.BLACK + " stroke-width='1' fill= " + COLORS.RED + "/>>";
+        var addCircle = "<rect id='Dot' class='miniDotSvg' width='5' height='10' fill=" + COLORS.SLATE + "></rect>";
+        //var addCircle ="<circle id='Dot' class='miniDot' cx = "+recLeft+ " cy= " + recTop + " r = '10' stroke=" + COLORS.SLATE + " stroke-width='1' fill= " + COLORS.RED + "/>>";
         var elemTd = $("#rec" + id).closest('svg');
         var elemTdHtml = "" + elemTd.html() + addCircle;
         elemTd.html(elemTdHtml);
@@ -2133,7 +2133,7 @@
 		});
 
         
-		$("#miniChart tr").css("color", COLORS.BLACK);
+		$("#miniChart tr").css("color", COLORS.SLATE);
 		$("#miniChart svg").css("height", mapBarHeight);
 		$("#miniChart rect").css("height", mapBarHeight);
 	}
@@ -2178,8 +2178,8 @@
         var iter =0;
         $("tbody tr .rank.index.null").each(function() {
             if(iter>-1){
-               $(this).css("background", COLORS.SLATE);
-               $(this).css("color", COLORS.WHITE);
+               $(this).css("background", COLORS.WHITE);
+               $(this).css("color", COLORS.SLATE);
           
             }  
             
@@ -2196,13 +2196,13 @@
 
                     //ELSE CURRENT ROW IS NOT GREY                    
                     if (i == selectedRows.length - 1) {
-						//idValTr.css("color", COLORS.BLACK);
+						//idValTr.css("color", COLORS.SLATE);
 						//idValTr.css("font-weight", "900");                        
-                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.BLACK + ";" // FONT_COLOR_DARK
+                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.SLATE + ";" // FONT_COLOR_DARK
                         rankCol.attr("style", styleContent);
 					} else {
                         idValTr.css("font-weight", defFontWeight); 
-                        var styleContent = "color: " + COLORS.BLACK + "; background: " + COLORS.FONT_COLOR_LIGHT + ";"
+                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.DARK_GREY + ";"
                         rankCol.attr("style", styleContent);
                        
 					}
@@ -2320,12 +2320,12 @@
 			if (!fishEyeOverlay) {
 				$(".miniTr").css('height', defTrHeight);
 				$(".miniTr").css('font-size', defFontSize);
-				$(".miniTr").css('background', COLORS.WHITE);
-				$(".miniTr").css('color', COLORS.BLACK);
+				$(".miniTr").css('background', COLORS.LIGHT_GREY);
+				$(".miniTr").css('color', COLORS.SLATE);
 				$(".miniMapSvg").css('height',defSvgHeight);
 			}
 		}, function() {
-			$("#miniChart tr").css("color", COLORS.BLACK);
+			$("#miniChart tr").css("color", COLORS.SLATE);
 			$("#miniChart svg").css("height", mapBarHeight);
 			$("#miniChart rect").css("height", mapBarHeight);
 		});
@@ -2452,10 +2452,10 @@
 				return;
 
 			if (greyOut){                
-				$(this).attr("fill", COLORS.DARK_GREY);
+				$(this).attr("fill", COLORS.GREY);
                  }
 			else{
-                $(this).attr("fill", COLORS.MINIMAP_ROW);
+                $(this).attr("fill", COLORS.SLATE);
             }
 				
 		});

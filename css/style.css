@@ -7,15 +7,15 @@ body {
     display: block;
     position: relative;
     z-index: 20;
-    background-color: #555;
+    background-color: #fff;
 }
 
 
 .titleText {
-    text-shadow: 1px 1px 1px rgba(56,56,56,0.8);
+    text-shadow: 1px 1px 1px rgba(255,255,255,0.8);
     font-weight: bold;
     text-transform: uppercase;
-    color: #FFF;
+    color: #555;
     letter-spacing: 2pt;
     word-spacing: 6pt;
     font-size: 50px;
@@ -28,7 +28,7 @@ body {
 
 
 #auxPanel {
-	background-color: #555;
+	background-color: #fff;
 	width: 20%;
 	height: 100vh;
 	float: left;
@@ -43,12 +43,19 @@ body {
 }
 
 #tableId {
-	border: 2px #f2f2f2 solid;
+	border: 5px #fff solid;
 	font: 12px sans-serif;
 	overflow-y: scroll;
 	max-width: 100%;
 	max-height: 100%;
 	display: block;
+}
+
+#tableId td {
+	padding-top: 5em;
+    padding-bottom: 5em;
+    padding-left: 5em; 
+    padding-right: 5em;
 }
 
 #miniChart {
@@ -62,22 +69,28 @@ body {
 #consoleChart {
 	overflow-x: hidden;
 	overflow-y: hidden;
-	
 	max-width: 100%;
 	display: none;
 }
 
+#consoleChart td {
+	padding-top: .5em;
+    padding-bottom: .5em;
+    padding-left: .5em; 
+    padding-right: .5em;
+}
+
 #legendChart tr {
-	border-bottom: 10px solid #555;
+	border-bottom: 10px solid #fff;
 }
 
 #legendChart td{
-	border-right: 5px solid #555;
+	border-right: 5px solid #fff;
 }
 
 #consoleChart tr:nth-child(even){
-	background-color: #555;
-	border-bottom: 5px solid #555;
+	background-color: #fff;
+	border-bottom: 5px solid #fff;
 }
 
 #consoleChart tr:nth-child(odd) {
@@ -93,8 +106,8 @@ body {
 	width: 80%;
 	height: 100vh;
 	float: right;
-	background-color: #555;
-	color: #FFF;
+	background-color: #fff;
+	color: #555;
 }
 
 
@@ -103,13 +116,14 @@ body {
 	overflow: hidden;
 	padding: 10px;
 	height: 25px;
-	border: 1px solid grey;
+	border: 5px solid white;
 	width: 100px;
 }
 
 #tableId tr {
 	position: relative;
 	height: 1px;
+	border: 5px solid white;
 	overflow: hidden;
 }
 
@@ -133,26 +147,22 @@ body {
 }
 
 .focalRow {
-	border: 2px #000 solid;
+	border: 2px #fff solid;
 }
 
 .disabledAttribute {
 	opacity: 0.3;
 }
 
-.tableSeperator {
-	border-right: 0px #555  solid;
-}
-
 #tableId td {
 	padding: 0px;
-	border: 1px #f2f2f2 solid;
+	border: 3px #fff solid;
 }
 
 #tableId .overlayBar {
 	display: block;
 	float: left;
-	color: white;
+	color: #555;
 	position: relative;
 }
 
@@ -184,39 +194,41 @@ body {
 }
 
 .pseudoDivWrapper {
-	background-color: #555;
+	background-color: #fff;
 	z-index: 900;
 }
 
 .pseudoHeader {
-	color: #FFF;
-	background-color: #555;	
+	color: #555;
+	background-color: #fff;	
 }
-
-
-
 
 .miniMapSvg{
     display: block;
-    /*background:red;*/
 }
-
-
 
 .miniMapRect {
     display: inline;
-    
 }
+
 .miniDotSvg {
     display: inline;
-   
 }
 
 #checkboxButtons {
-	background-color: #555;
-	color: #FFF;
+	background-color: #fff;
+	color: #555;
+	padding-top: .5em;
+    padding-bottom: .5em;
+    padding-left: .5em; 
+    padding-right: .5em;
 }
 
 .nav-pills a {
-	color: white;
+	background-color: #f2f2f2;
+	color: #555;
+	padding-top: 1em;
+    padding-bottom: 1em;
+    padding-left: 1em; 
+    padding-right: 1em;
 }
