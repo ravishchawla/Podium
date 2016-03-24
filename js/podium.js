@@ -29,6 +29,7 @@
     var rankScoreValueArray = [];
     var consolechartSortedData = [];
     var miniCharWidthValues = [];
+    var expectedBarWidthValues = [];
 	var keys;
 
     /*Variables to hold cached data*/
@@ -461,7 +462,8 @@
 				if(!showBarOverlay)
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
 				else {
-				    expectedCellValues = getExpectedValuesArray(rowRankingScores);
+				    expectedBarValues = getExpectedValuesArray(rowRankingScores);
+				    expectedBarWidthValues = expectedBarValues.slice();
 				    rowNum = 0;
 				    colNum = 0;
 				    offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
@@ -470,8 +472,8 @@
 						if(numericalAttributes.indexOf(d.head) < 1) {
 							return d.html;
 						}
-						//expectationValue = (expectedCellValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
-						expectationValue = (expectedCellValues[colNum][rowNum]);
+						//expectationValue = (expectedBarValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
+						expectationValue = (expectedBarValues[colNum][rowNum]);
 						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
 						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellLeft = $(this).width() * expectationValue;
@@ -479,6 +481,7 @@
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10; }
 						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
+						expectedBarWidthValues[colNum][rowNum] = exCellLeft;
 
 						//The display bars are shwon as DIVs. Main div shows the cell background (grey),
 						//a div to show the actual value of the cell (pink/purple), a div to show the text of the cell,
@@ -562,7 +565,10 @@
 		colNum = 0;
 		expectationBarWidth = 1;
 		offset = columns.length - numericalAttributes.length + userAdjustedAttributesKeys.length;
-		expectedCellValues = getExpectedValuesArray(rowRankingScores);
+		expectedBarValues = getExpectedValuesArray(rowRankingScores);
+		if(expectedBarWidthValues.length == 0)
+			expectedBarWidthValues = expectedBarValues.slice();
+
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -587,7 +593,7 @@
 				else if(d3.select(this).select("div")[0][0] == null) {
 
 					d3.select(this).html(function(d, i) {
-						expectationValue = (expectedCellValues[colNum - offset][rowNum]);
+						expectationValue = (expectedBarValues[colNum - offset][rowNum]);
 						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
 						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellLeft = $(this).width() * expectationValue;
@@ -595,7 +601,7 @@
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
 						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
-
+						expectedBarWidthValues[colNum][rowNum] = exCellLeft;
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
@@ -730,18 +736,19 @@
 	}
 
 	mar.updateExpectations = function(attributeName) {
-		expectedCellValues = getExpectedValuesArray(rowRankingScores);
+		expectedBarValues = getExpectedValuesArray(rowRankingScores);
+		if(expectedBarWidthValues.length == 0)
+			expectedBarWidthValues = expectedBarValues.slice();
 
 		$("." + attributeName.split(" ").join("_") + " .expectationOverlayBar").css({"left" : function(idx, val) {
-			expectationValue = (expectedCellValues[numericalAttributes.indexOf(attributeName) - userAdjustedAttributesValues.length][idx]);
+			expectationValue = (expectedBarValues[numericalAttributes.indexOf(attributeName) - userAdjustedAttributesValues.length][idx]);
 			tdwidth = $(this).parent().parent().width();
 			exCellLeft = tdwidth * expectationValue;
 			exCellLeft = (exCellLeft >= tdwidth) ? tdwidth - 5: exCellLeft;
+			expectedBarWidthValues[numericalAttributes.indexOf(attributeName) - userAdjustedAttributesValues.length][idx] = exCellLeft;
 			$(this).find(".textOverlayBar").css({"left" : "-" + exCellLeft + "px"});
-
 			return exCellLeft;
 		}});
-
 	}
 
 	
@@ -1393,6 +1400,27 @@
 	function updateMiniRowWidth(newMiniRowObj, oldIndex) {
 		newMiniRowObj.attr("width", miniCharWidthValues[oldIndex]);
 	}
+
+	/*
+	 * Private
+	 * Update Expected bar positions for rows
+	 */
+	 function updateRowExpectations(oldIndex, newIndex) {
+	 		
+	 	if(oldIndex == newIndex) return;
+
+	 	var tableRow =  $("#tablePanel tr").filter(function() { 
+	 			return $(this).find("td.oldIndex").html() == oldIndex; 
+	 	});
+
+	 	exIndex = newIndex - 1;
+	 	colNum = 0;
+	 	tableRow.find(".expectationOverlayBar").css("left", function(d) {
+	 		return expectedBarWidthValues[colNum][exIndex];
+	 		colNum++;
+	 	});
+	 }
+
 	
 	/*
 	 * Private
@@ -2370,7 +2398,8 @@
 
 	/*
 	 * Private
-	 * Modify the colors of the rows based on where they have been moved
+	 * Modify the colors of the rows based on where they have been moved.
+	 * If toResize is True, then minimap row widths are also resized, otherwise not.
 	 */
 	function colorAndResizeRows(toResize) {
 		var movedRow = $(lastChangedRow);
@@ -2401,6 +2430,7 @@
 
 			if(toResize) {
 				updateMiniRowWidth(newMiniRow, oldIndex);
+				updateRowExpectations(oldIndex, newIndex);
 			}
 		});
 
