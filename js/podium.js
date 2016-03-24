@@ -480,7 +480,7 @@
 						//exCellLeft = exCellLeft - cellWidth;
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10; }
-						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
+						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 0.5: exCellLeft;
 						expectedBarWidthValues[colNum][rowNum] = exCellLeft;
 
 						//The display bars are shwon as DIVs. Main div shows the cell background (grey),
@@ -602,7 +602,7 @@
 						//exCellLeft = exCellLeft - cellWidth;
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
-						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
+						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 0.5: exCellLeft;
 						expectedBarWidthValues[colNum - offset][rowNum] = exCellLeft;
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
