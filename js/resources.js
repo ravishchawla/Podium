@@ -35,14 +35,14 @@ getNegativeMoveWithOpacity = function(opacity) {
 	else if (opacity > 0.3)
 		return 'rgb(235, 173, 173)';
 	else 
-		return 'rgb(240, 193, 193';
+		return 'rgb(240, 193, 193)';
 }
 
 const COLORS = {
-	"ODD_COLUMN" : "#1f77b4", //"#f27997",
-	"EVEN_COLUMN" : "#aec7e8", //"#a27997",
-	"POSITIVE_MOVE" : "#96e898",
-	"NEGATIVE_MOVE" : "#e69898",
+	"ODD_COLUMN" : "#1f77b4",
+	"EVEN_COLUMN" : "#aec7e8",
+	"POSITIVE_MOVE" : "#2ca02c",
+	"NEGATIVE_MOVE" : "#d62728",
 	"POSITIVE_MOVE_GRADIENT" : getPositiveMoveWithOpacity,
 	"NEGATIVE_MOVE_GRADIENT" : getNegativeMoveWithOpacity,
 	"MINIMAP_ROW" : "rgb(255, 255, 255)",

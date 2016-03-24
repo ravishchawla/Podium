@@ -477,7 +477,7 @@
 						exCellLeft = $(this).width() * expectationValue;
 						//exCellLeft = exCellLeft - cellWidth;
 						cellHeight = 25;
-						if(cellWidth < 10 ) { cellWidth = 10 }
+						if(cellWidth < 10 ) { cellWidth = 10; }
 						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
 
 						//The display bars are shwon as DIVs. Main div shows the cell background (grey),
@@ -1408,11 +1408,11 @@
 
 		if (colorOverlay) {
 				if(rowObj.hasClass('greenColorChange')) {
-					rowObj.css("background-color", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
+					rowObj.css("background-color", COLORS.POSITIVE_MOVE_GRADIENT(0.8));
 					newMiniRowObj.css("fill", COLORS.POSITIVE_MOVE_GRADIENT(opacity));
 				}
 				else if(rowObj.hasClass('redColorChange')) {
-					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
+					rowObj.css("background-color", COLORS.NEGATIVE_MOVE_GRADIENT(0.8));
 					newMiniRowObj.css("fill", COLORS.NEGATIVE_MOVE_GRADIENT(opacity));
 				} else {
 					newMiniRowObj.css("fill", COLORS.WHITE);
