@@ -569,6 +569,8 @@
 		if(expectedBarWidthValues.length == 0)
 			expectedBarWidthValues = expectedBarValues.slice();
 
+		console.log(expectedBarWidthValues);
+
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
 				return columns.map(function(c) {
@@ -601,7 +603,7 @@
 						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
 						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 5: exCellLeft;
-						expectedBarWidthValues[colNum][rowNum] = exCellLeft;
+						expectedBarWidthValues[colNum - offset][rowNum] = exCellLeft;
 						expectationBarHTML = "<div class = ' " + d.cl + "Svg expectationOverlayBar overlayBar'"
 							+ " id = 'expectedBarId' style = '"
 							+ "max-width : " + expectationBarWidth + "px; width : " + expectationBarWidth + "px; height: " + cellHeight + "px; background-color : "
