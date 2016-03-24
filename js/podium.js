@@ -2006,10 +2006,8 @@
 				if (index != -1) {
 					selectedRows.splice(index, 1);
 				}
-        updateRowFont();                
-       
-        miniMapDotRemove(item);
-        
+        updateRowFont();              
+        miniMapDotRemove(item);       
         
 	})
     }
@@ -2028,11 +2026,9 @@
 	 */ 
 	function updateClickedItem() {   
 		$('#tableId tr').mousedown(function() {
-            //selectionUpdatedMiniBar();
 			isDragging = true;
 			var item = $(this).index(); 
 			highlightItems(item);            
-            //console.log("Clicked : " + item);
             placeDotsOnMiniBar(item);
             
             updateRowFont();
@@ -2170,8 +2166,8 @@
 
                     //ELSE CURRENT ROW IS NOT GREY                    
                     if (i == selectedRows.length - 1) {
-						idValTr.css("color", COLORS.BLACK);
-						idValTr.css("font-weight", "900");                        
+						//idValTr.css("color", COLORS.BLACK);
+						//idValTr.css("font-weight", "900");                        
                         var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.BLACK + ";" // FONT_COLOR_DARK
                         rankCol.attr("style", styleContent);
 					} else {
@@ -2181,20 +2177,6 @@
                        
 					}
 				}else{
-                    //console.log("clicked on white")
-                //to be fixed :
-                /*
-                var gotTeamName = $(this).text();
-                
-                console.log("this white stuff is : " + gotTeamName)
-                console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-                
-                editSelectedRowItems(gotTeamName);
-				selectedRows.push(gotTeamName);
-				selectedRows = selectedRows.filter(function(item, ps) {
-					return selectedRows.indexOf(item) == ps;
-				});
-                */
                 }
 			});
 		} 
