@@ -198,6 +198,7 @@
 			ial.init(data, 0);
 			displayPage(data);
 			mar.rankButtonClicked(); 
+			mar.makeMiniRowsDefaultColor();
 		});
 	}
 
@@ -569,7 +570,7 @@
 		if(expectedBarWidthValues.length == 0)
 			expectedBarWidthValues = expectedBarValues.slice();
 
-		console.log(expectedBarWidthValues);
+		//console.log(expectedBarWidthValues);
 
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
@@ -929,6 +930,28 @@
 	
 	/*
 	 * Private
+	 * Get a list of n rows taken from the surrounding area of the clicked rows
+	 * Input is an array of unique ids
+	 */
+	function getSurroundingRowsForSolver(uniqueId) {
+		// use the rank value of the row with the given unique id
+		var rankVal = getDataByUniqueId(uniqueId)["rank"];
+		
+		var rowsForSolver = [];
+		rowsForSolver.push(rankVal);
+		
+		if (rankVal < data.length)
+			rowsForSolver.push(rankVal + 1);
+		if (rankVal > 0)
+			rowsForSolver.push(rankVal - 1);
+		
+		// return the row numbers
+		return rowsForSolver;
+	}
+	
+	
+	/*
+	 * Private
 	 * Get the list of changed rows
 	 */
 	function getChangedRows() {
@@ -1169,85 +1192,6 @@
 	
 	/*
 	 * Private
-	 * Runs SVD on the changed rows and returns an array of normalized weights
-	 * If no rows have been changed, returns the current array of attribute weights
-	 */
-	function runSVD() {
-		console.log("podium.js: SVD");
-		// use SVD to compute w = V * D_0^−1 * U^T * b
-		var minRows = useCategorical ? keys.length + 1 : numericalAttributes.length - userAdjustedAttributesKeys.length + 1;
-		
-		var selectedRowIds = []; 
-		for (var i = 0; i < selectedRows.length; i++)
-			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
-		var changedRowIdsForSVD = getChangedRows();
-		var b = getRowsForSolver(changedRowIdsForSVD, selectedRowIds, numericalAttributes.length + 1); 
-
-		if (b.length <= keys.length) {
-			// make sure the weights are updated
-			updateColumnWeights(null);
-			retArray = attributeWeights.slice();
-
-			//getting rid of the interaction weight
-			retArray.splice(0, 1);
-			
-			var normalizedWeights = normalize(retArray);
-
-			return normalizedWeights;
-		}
-		
-		var A = getAugmentedMatrix(b)[0];
-		var SVD = numeric.svd(A); 
-		var U = SVD.U; 
-		var S = SVD.S; 
-		var V = SVD.V; 
-		
-		var D0 = numeric.inv(numeric.diag(S)[0]); 
-		var UT = numeric.transpose(U);
-		var weights = numeric.dot(numeric.dot(numeric.dot(V, D0), numeric.transpose(U)), b);
-		var normalizedWeights = normalize(weights);
-
-		return normalizedWeights;
-	}
-	
-	
-	/*
-	 * Private
-	 * Runs LU decomposition on the changed rows and returns an array of normalized weights
-	 * If no rows have been changed, returns the current array of attribute weights
-	 */
-	function runLUD() {
-		console.log("podium.js: LUD");
-		var selectedRowIds = []; 
-		for (var i = 0; i < selectedRows.length; i++)
-			selectedRowIds.push(getDataByFirstCategoricalAttr(selectedRows[i])["uniqueId"]);
-		var changedRowIdsForLUD = getChangedRows();
-		var b = getRowsForSolver(changedRowIdsForLUD, selectedRowIds, numericalAttributes.length - userAdjustedAttributesKeys.length);
-
-		// can't recompute LUD unless something has been moved
-		if (b.length < 1) {
-			// make sure the weights are updated
-			updateColumnWeights(null);
-			retArray = attributeWeights.slice();
-
-			//getting rid of the interaction weight
-			retArray.splice(0, 1);
-
-			var normalizedWeights = normalize(retArray);
-			return normalizedWeights;
-		}
-		
-		var A = getMatrix(b)[0];
-		var LUD = numeric.LU(A); 
-		var weights = numeric.LUsolve(LUD, b);
-		var normalizedWeights = normalize(weights);
-
-		return normalizedWeights;
-	}
-	
-	
-	/*
-	 * Private
 	 * Runs solver using regression for the changed rows and returns an array of normalized weights
 	 * If no rows have been changed, returns the current array of attribute weights
 	 */
@@ -1260,13 +1204,8 @@
 		
 		var b = getChangedRows(); 
 		
-		for (var i = 0; i < selectedRowIds.length; i++) {
-			if (b.indexOf(selectedRowIds[i]) < 0)
-				b.push(selectedRowIds[i]);
-		}
-			
-		// can't recompute unless something has been moved
-		if (b.length < 1) {
+		// don't recompute unless something has been moved
+		if (getChangedRows().length < 1) { 
 			// make sure the weights are updated
 			updateColumnWeights(null);
 			retArray = attributeWeights.slice();
@@ -1278,9 +1217,15 @@
 			return normalizedWeights;
 		} 
 		
+		// combine the lists
+		for (var i = 0; i < selectedRowIds.length; i++) {
+			if (b.indexOf(selectedRowIds[i]) < 0)
+				b.push(selectedRowIds[i]);
+		}
+		
 		if (b.length == 1) {
-			// when only one item is being modeled, add one more
-			b = getUniqueIds(getRowsForSolver(b, [], 2));
+			// when only one item is being modeled, add surrounding rows
+			b = getUniqueIds(getSurroundingRowsForSolver(b[0]));
 		}
 		
 		var regressionAttributes = [];
@@ -1601,13 +1546,7 @@
        
         greyMinibars(false);
 		console.log("podium.js: Ranking"); 
-		var numRows = selectedRows.length + getChangedRows().length;
 		var normalizedWeights = runRegressionSolver();
-		
-		/*if (numRows <= numericalAttributes.length - userAdjustedAttributesKeys.length)
-			normalizedWeights = runLUD(); 
-		else 
-			normalizedWeights = runSVD();*/
 		
 		var ranking = computeRanking(normalizedWeights);
 
@@ -1685,7 +1624,7 @@
         });
         
         $("#discard_button").attr("disabled", "disabled");
-        console.log("Ranking Done");
+        console.log("podium.js: Ranking Done");
 	}
     
     
@@ -2408,6 +2347,41 @@
 		    stop: updateIndex
 		}).disableSelection();
         
+	}
+	
+	/*
+	 * Private
+	 * Make the rows of the minimap the default color
+	 */
+	mar.makeMiniRowsDefaultColor = function() {
+		minimap = d3.select("#auxPanel #miniChart");
+		minimap_rows = minimap.select("tbody")
+			.selectAll("tr")
+			.data(data);
+
+		minimap_rows.selectAll("td")
+			.data(function(row, i) {
+				var newIndex = Number(row["rank"]);
+				var oldIndex = Number(row["oldIndex"]);
+				var opacity = opacityScale(Math.abs(Number(newIndex) - Number(oldIndex)));
+				if (row["rank"] == row["oldIndex"])
+					opacity = 1;
+				
+				var barColor = COLORS.MINIMAP_ROW;
+				miniCharWidthValues.push((minimap_width * row["rankScore"])/maxRankScore);
+            		return [
+				        { column: "svg", value: '<svg class = miniMapSvg id = svg' + i  + ' width=' + minimap_width + 
+				        '><rect id = rec'+ i + ' class = miniMapRect width=' + minimap_width * row["rankScore"] / maxRankScore
+				        	+ ' height="50" fill="' + barColor + '"/></svg>' }];
+	
+			})
+			.style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
+			.html(function(d) {return d.value; })
+			.attr("height",  "10px");
+		
+		miniCharWidthValues.sort(function(a, b) { return parseFloat(b) - parseFloat(a); });
+		$("td", "#miniChart").attr("height", "1");
+		$("svg", "#miniChart").height(mapBarHeight);
 	}
 	
 
