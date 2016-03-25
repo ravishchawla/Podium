@@ -2154,7 +2154,7 @@
                         rankCol.attr("style", styleContent);
 					} else {
                         idValTr.css("font-weight", defFontWeight); 
-                        var styleContent = "color: " + COLORS.WHITE + "; background: " + COLORS.DARK_GREY + ";"
+                        var styleContent = "color: " + COLORS.SLATE + "; background: " + COLORS.LIGHT_GREY + ";"
                         rankCol.attr("style", styleContent);
                        
 					}
