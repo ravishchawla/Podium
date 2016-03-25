@@ -1302,24 +1302,25 @@
 			}
 			
 			regressionAttributes.push(currentAttribute);
-			slopeDiff.push(Math.abs(1.0 + slope)); // desired slope is -1
+			slopeDiff.push(slope); // desired slope is -1
+		}
+		
+		// positive slopes should be given weight 0 
+		// everything else should be normalized in [-1, 0]
+		for (var i = 0; i < slopeDiff.length; i++) {
+			if (slopeDiff[i] > 0)
+				slopeDiff[i] = 1;
+			else if (slopeDiff[i] < -1) // make it the recriprocal value so we can compare with slopes < 45 deg.
+				slopeDiff[i] = 1.0 / slopeDiff[i];
 		}
 		
 		// normalize the slope differences to be the normalized attribute weights
 		var minMax = getMinAndMax(slopeDiff);
-		
-		// positive slopes should be given the least weight
-		for (var i = 0; i < slopeDiff.length; i++) {
-			if (slopeDiff[i] > 0)
-				slopeDiff[i] = -1 * Number(slopeDiff[i]) + Number(minMax[0]);
-		}
-		
-		minMax = getMinAndMax(slopeDiff);
 		var weightSum = 0; 
 		for (var i = 0; i < slopeDiff.length; i++) {
 			var currentAttribute = numericalAttributes[i + userAdjustedAttributesKeys.length];
 			var newVal = 0; 
-			if (attributeStatesMap[currentAttribute] != attributeStates.UNUSED)
+			if (attributeStatesMap[currentAttribute] != attributeStates.UNUSED && slopeDiff[i] <= 0)
 				newVal = 1.0 - ((slopeDiff[i] - minMax[0]) / (minMax[1] - minMax[0]));
 			slopeDiff[i] = newVal; 
 			weightSum += newVal; 
