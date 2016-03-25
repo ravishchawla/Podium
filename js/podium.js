@@ -1418,6 +1418,7 @@
 	 	exIndex = newIndex - 1;
 	 	colNum = 0;
 	 	tableRow.find(".expectationOverlayBar").css("left", function(d) {
+	 		$(this).find(".textOverlayBar").css({"left" : "-" + expectedBarWidthValues[colNum][exIndex] + "px" });
 	 		return expectedBarWidthValues[colNum][exIndex];
 	 		colNum++;
 	 	});
