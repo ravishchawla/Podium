@@ -1232,13 +1232,24 @@
 		var uniqueIds = matrixResult[1]; 
 		var ranked = []; 
 		
+		// save all of the dot products in an array
+		var dotProds = []; 
 		for (var i = 0; i < matrix.length; i++) {
 			var id = uniqueIds[i];
 			var obj = getDataByUniqueId(Number(id));
 			var attrVals = matrix[i];
 			var dotProd = Number(numeric.dot(attrVals, weights));
+			dotProds.push(Number(dotProd));
+		}
+		
+		var maxRankScoreWOutInteraction = Math.max.apply(null, dotProds);
+		// apply interaction weight to the computed scores
+		for (var i = 0; i < matrix.length; i++) {
+			var id = uniqueIds[i];
+			var obj = getDataByUniqueId(Number(id));
+			var dotProd = dotProds[i];
 			var interactionWeight = Number(obj.ial.weightNorm);
-			var interactionVal = Number(obj.rankNorm);
+			var interactionVal = Number(obj.rankNorm) * maxRankScoreWOutInteraction;
 			var result = (interactionWeight * interactionVal) + ((1.0 - interactionWeight) * dotProd);
 			obj["rankScore"] = result;
 			ranked.push({ id: id, val: result });
@@ -1304,36 +1315,29 @@
 			else {
 				for (var j = 0; j < b.length; j++) {
 					var currentDataItem = getDataByUniqueId(b[j]);
-					xRegressionData.push(Number(currentDataItem["rank"]) / data.length);
+					xRegressionData.push(Number(1.0 - (currentDataItem["rank"]) / data.length));
 					yRegressionData.push(currentDataItem[currentAttribute + "Norm"]);
 				}
 				slope = getRegressionSlope(xRegressionData, yRegressionData);
 			}
 			
 			regressionAttributes.push(currentAttribute);
-			slopeDiff.push(slope); // desired slope is -1
+			slopeDiff.push(slope); // ideal slope is +1
 		}
 		
-		// positive slopes should be given weight 0 
-		// everything else should be normalized in [-1, 0]
+		// negative slopes should be given weight 0 
+		// everything else should be normalized in [0, 1]
 		for (var i = 0; i < slopeDiff.length; i++) {
-			if (slopeDiff[i] > 0)
-				slopeDiff[i] = 1;
-			else if (slopeDiff[i] < -1) // make it the recriprocal value so we can compare with slopes < 45 deg.
+			if (slopeDiff[i] < 0)
+				slopeDiff[i] = 0;
+			else if (slopeDiff[i] > 1) // make it the recriprocal value so we can compare with slopes < 45 deg.
 				slopeDiff[i] = 1.0 / slopeDiff[i];
 		}
 		
 		// normalize the slope differences to be the normalized attribute weights
-		var minMax = getMinAndMax(slopeDiff);
 		var weightSum = 0; 
-		for (var i = 0; i < slopeDiff.length; i++) {
-			var currentAttribute = numericalAttributes[i + userAdjustedAttributesKeys.length];
-			var newVal = 0; 
-			if (attributeStatesMap[currentAttribute] != attributeStates.UNUSED && slopeDiff[i] <= 0)
-				newVal = 1.0 - ((slopeDiff[i] - minMax[0]) / (minMax[1] - minMax[0]));
-			slopeDiff[i] = newVal; 
-			weightSum += newVal; 
-		}
+		for (var i = 0; i < slopeDiff.length; i++)
+			weightSum += slopeDiff[i]; 
 		
 		for (var i = 0; i < slopeDiff.length; i++)
 			slopeDiff[i] = slopeDiff[i] / weightSum;
@@ -1376,11 +1380,20 @@
 	function getExpectedValuesArray(rankPositions) {
 		var expectedValuesArray = [];
 		var pos;
+		var maxRankScore = Number.MIN_VALUE; 
+		
+		// figure out the maximum rank score
+		for (var i = 0; i < data.length; i++) {
+			var currentRankScore = Number(data[i]["rankScore"]);
+			if (currentRankScore > maxRankScore) {
+				maxRankScore = currentRankScore;
+			}
+		}
 
 		getExpectedValue = function(i) {
-			var expectedVal = (1.0 - (rankPositions[i] / data.length));
+			var expectedVal = maxRankScore * (1.0 - (rankPositions[i] / data.length));
 				if (rankPositions[i] == 1)
-					expectedVal = 1; 
+					expectedVal = maxRankScore * 1;
 				if (rankPositions[i] == data.length)
 					expectedVal = 0; 
 				return expectedVal;
