@@ -663,14 +663,14 @@
                                         tdWidthsOld = [];
                                         var currentWidth = $(this).width();
                                         tdWidthsOld.push(parseFloat(currentWidth));
-                        
+                                        //console.log("dnorm is : " + d.norm)
                         
                                         var diffText = newtextValueArray[i] - oldtextValueArray[i];
                                         var unitRatio = currentWidth/cellWidthArray[i];
-             
+                                        var tdWidthNew = (newtextValueArray[i])*parseFloat(currentWidth)/oldtextValueArray[i];
                                         var newWidth = (diffText*unitRatio) + currentWidth;
-								   		//cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
-                                        cellWidth = ($(this).width() <= 0 ? 50 : newWidth);
+								   		cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
+                                        //cellWidth = ($(this).width() <= 0 ? 50 : tdWidthNew);
 								   		cellWidth = cellWidth < 10 ? 10 : cellWidth;
                                         var texValue = $(this).find('.textOverlayBar').text();
 								   		return cellWidth;
@@ -738,7 +738,10 @@
       
 	}
     
-    
+      
+    /*
+	 * used to precompute textvalues on cells to fix bar widths // can be discarded later
+	 */
     function preUpdateTable(){
                 newtextValueArray = [];
                 oldtextValueArray = [];
@@ -755,6 +758,11 @@
                 });
 
         }
+    
+    
+    /*
+	 * tries to fix bar widths on update table, can be discarded later
+	 */    
     function fixBarLength(){ 
         console.log("Fixing Bar length");
         
@@ -762,36 +770,7 @@
             var newText = parseFloat($(this).text());
             //newtextValueArray.push(parseFloat(newText));
         });
-       //console.log("length is : " + newtextValueArray.length);
-       //console.log("length is : " + oldtextValueArray.length);
-       //console.log("length is : " + cellWidthArray.length)
-        /*
-       $(".actualOverlayBar.overlayBar").css("max-width", 1000);
-       $(".actualOverlayBar.overlayBar")
-           .css("width", function(i, d) {
-                //console.log("bar is : " + d + "  has data : " + i)
-                var currentWidth = $(this).width();
-                //tdWidthsOld.push(parseFloat(currentWidth));
-                var texValue = $(this).find('.textOverlayBar').text();
-                if(oldtextValueArray[i] == newtextValueArray[i]){
-                    //console.log("bar is : " + d + "  has data : " + i);
-                    //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
-                    //console.log("++++++++++++++++++++");  
-                    return currentWidth;
-                }else{
-                    //var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
-                    //var tdWidthNew = (parseFloat(currentWidth) * newtextValueArray[i])/(oldtextValueArray[i]*cellWidthArray[i]);
-                    //var tdWidthNew = (newtextValueArray[i])*currentWidth/cellWidthArray[i];
-                    var tdWidthNew = (newtextValueArray[i])*parseFloat(currentWidth)/oldtextValueArray[i];
-                    //console.log("tdCurrentWidth is : " + currentWidth + " tdWidthNew is : " + tdWidthNew);
-                    //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
-                    //console.log("bar is : " + d + "  has data : " + i)
-                    //console.log("++++++++++++++++++++");                   
-                    return tdWidthNew
-                }
-                
-           });
-        */
+       
          $(".actualOverlayBar.overlayBar").css("max-width", 1000);
          $(".actualOverlayBar.overlayBar")
            .css("width", function(i, d) {                    
@@ -1716,7 +1695,16 @@
 		// update the table order and color the rows
 		mar.updateData(ranking);
 		mar.updateMinimap();
-		mar.updateTable(); 
+        if(showBarOverlay){
+            console.log("updatetable2 running");
+            mar.barOverlayClicked();
+            mar.updateTable(); 
+            mar.barOverlayClicked();
+        }else{
+            console.log("updatetable running");
+            mar.updateTable();
+        }
+		
         
 		colorAndResizeRows(false);
      
