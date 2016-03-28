@@ -29,6 +29,7 @@
     var rankScoreValueArray = [];
     var consolechartSortedData = [];
     var miniCharWidthValues = [];
+    var tableColumnWidthValues = {};
     var expectedBarWidthValues = [];
 	var keys;
 
@@ -197,7 +198,7 @@
 			}
 			ial.init(data, 0);
 			displayPage(data);
-			mar.rankButtonClicked(); 
+			mar.rankButtonClicked();
 			mar.makeMiniRowsDefaultColor();
 		});
 	}
@@ -464,6 +465,7 @@
 					cells = cells.html(ƒ("html")).attr("class", ƒ("cl"));
 				else {
 				    expectedBarValues = getExpectedValuesArray(rowRankingScores);
+				    console.log(expectedBarValues);
 				    expectedBarWidthValues = expectedBarValues.slice();
 				    rowNum = 0;
 				    colNum = 0;
@@ -526,7 +528,6 @@
 				$(this).css("min-width", minWidthTDTH);
 			});
            
-			
 	}
 
 	/*
@@ -560,6 +561,11 @@
 		rows = table.select("tbody")
 			.selectAll("tr")
 			.data(data);
+
+		tableColumnWidthValues = {};
+		$("th", "#tableId").each(function(d) {
+			tableColumnWidthValues[$(this).text()] = this.getBoundingClientRect().width;
+		});
 		
 		// update the cells
 		rowNum = 0;
@@ -569,8 +575,6 @@
 		expectedBarValues = getExpectedValuesArray(rowRankingScores);
 		if(expectedBarWidthValues.length == 0)
 			expectedBarWidthValues = expectedBarValues.slice();
-
-		//console.log(expectedBarWidthValues);
 
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
@@ -594,7 +598,6 @@
 				}
 
 				else if(d3.select(this).select("div")[0][0] == null) {
-
 					d3.select(this).html(function(d, i) {
 						expectationValue = (expectedBarValues[colNum - offset][rowNum]);
 						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
@@ -624,21 +627,20 @@
 						return cellBarHTML;
 					});
 				} else {
-
 					d3.select(this).select(".actualOverlayBar")
 								   .style("width", function(d, i) {
-								   		cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
-								   		cellWidth = cellWidth < 10 ? 10 : cellWidth;
-								   		return cellWidth;
+								   		cellWidth = tableColumnWidthValues[d.head] * d.norm;
+								   		cellWidth = cellWidth < 1 ? 1 : cellWidth;
+								   		return cellWidth + "px";
 								   })
 								   .style("max-width", function(d, i) {
-								   		return cellWidth;
+								   		return cellWidth + "px";
 								   });
-
+					
 					d3.select(this).select(".textOverlayBar")
 								  .html(function(d, i) { 
 								  	return d.html;
-								  });
+								 });
 				}
 
 				colNum++;
@@ -687,14 +689,9 @@
 		});	
        
         
-        $("td").each(function(i, d) {
+        /*$("td").each(function(i, d) {
 			$(this).css("min-width", minWidthTDTH);
-			
-		});	
-        
-      
-        
-       
+		});*/	
 	}
 
 
@@ -1054,13 +1051,15 @@
 				if (currentVal > max)
 					max = currentVal;
 			}
-			
-			if (attributeState == attributeStates.HIGH) {
-				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min);
+
+			if (attributeState == attributeStates.HIGH  || attributeState == attributeStates.UNUSED) {
+				for (var i = 0; i < len; i++) {
+					dataset[i][attr + "Norm"] = (parseFloat(dataset[i][attr]) - min) / (max - min);
+				}
 			} else if (attributeState == attributeStates.LOW) {
-				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
+				for (var i = 0; i < len; i++) {
+					dataset[i][attr + "Norm"] = 1.0 - (parseFloat(dataset[i][attr]) - min) / (max - min);
+				}
 			}
 		} else {
 			var min = 0;
@@ -1346,8 +1345,9 @@
 	mar.updateData = function(newOrder) {
 		// the new data is an array containing {id, val} pairs -- use it to reconstruct data array
 		var updatedData = [];
-		for (var i = 0; i < newOrder.length; i++)
+		for (var i = 0; i < newOrder.length; i++) {
 			updatedData.push(getDataByUniqueId(Number(newOrder[i]["id"])));
+		}
 		
 		data = updatedData;
 	}
@@ -1541,7 +1541,6 @@
 	 * Rank!
 	 */
 	mar.rankButtonClicked = function() {
-		
         rankButtonPressed = true;
        
         greyMinibars(false);
@@ -1549,7 +1548,6 @@
 		var normalizedWeights = runRegressionSolver();
 		
 		var ranking = computeRanking(normalizedWeights);
-
 		// update oldIndex to the old rank position and update rank
 		for (var i = 0; i < ranking.length; i++) {
 			var id = Number(ranking[i]["id"]);
@@ -1938,8 +1936,10 @@
 		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo(".pseudoDivWrapper");
 
 		widths = [];
+		tableColumnWidthValues = {};
 		$("th", "#tableId").each(function(d) {
 			widths.push(this.getBoundingClientRect().width);
+			tableColumnWidthValues[$(this).text()] = this.getBoundingClientRect().width;
 		});
 
 		var headerOffset = $(".pseudoDivWrapper").position().left;
@@ -2531,6 +2531,7 @@
 
 					id = $(this).attr("id");
 					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+					normalizeAttribute(data, clickedRowName, attributeStates.UNUSED);
 					attributeStatesMap[clickedRowName] = attributeStates.UNUSED;
 				}
 				
@@ -2566,6 +2567,7 @@
 
 					id = pObj.attr("id");
 					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+					normalizeAttribute(data, clickedRowName, attribuestates.UNUSED);
 					attributeStatesMap[clickedRowName] = attributeStates.UNUSED;
 				}
 				mar.updateExpectations(clickedRowName);
