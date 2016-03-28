@@ -563,20 +563,9 @@
 	 */
     
 	mar.updateTable = function() { 
-        
-        //preUpdateTable();
-        
-          newtextValueArray = [];
-          oldtextValueArray = [];
-          cellWidthArray = [];
-
-         
-
-            $('.cellOverlayBar.overlayBar').each(function(){
-                var cellWidth = parseFloat($(this).width());
-                cellWidthArray.push(cellWidth);
-            });
-        
+        newtextValueArray = [];
+        oldtextValueArray = [];
+        cellWidthArray = [];
 		// update the rows
 		rows = table.select("tbody")
 			.selectAll("tr")
@@ -594,7 +583,15 @@
 		//console.log(expectedBarWidthValues);
         
         
-      
+        $('.textOverlayBar').each(function(){
+            var oldText = parseFloat($(this).text());
+            oldtextValueArray.push(oldText);
+        });
+        
+        $('.cellOverlayBar.overlayBar').each(function(){
+            var cellWidth = parseFloat($(this).width());
+            cellWidthArray.push(cellWidth);
+        });
 
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
@@ -625,7 +622,7 @@
 						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellLeft = $(this).width() * expectationValue;
 						//exCellLeft = exCellLeft - cellWidth;
-						cellHeight = 25; 
+						cellHeight = 25;
 						if(cellWidth < 10 ) { cellWidth = 10 }
 						exCellLeft = (exCellLeft >= $(this).width()) ? $(this).width() - 0.5: exCellLeft;
 						expectedBarWidthValues[colNum - offset][rowNum] = exCellLeft;
@@ -651,10 +648,9 @@
 				} else {                    
 					d3.select(this).select(".textOverlayBar")
 								    .html(function(d, i) {
-                                    var oldText = $(this).html();
-                                    oldtextValueArray.push(parseFloat(oldText));
-                                    newtextValueArray.push(parseFloat(d.html));
-                                    //console.log("new text : " + d.html + " Old text was : " + oldText);
+                                    var oldText = $(this).text();
+                                    //oldtextValueArray.push(parseFloat(oldText));
+                                    //newtextValueArray.push(parseFloat(d.html));
 								  	return d.html;                        
 								  });
 
@@ -664,15 +660,17 @@
                                         var currentWidth = $(this).width();
                                         tdWidthsOld.push(parseFloat(currentWidth));
                         
-                        
-                                        var diffText = newtextValueArray[i] - oldtextValueArray[i];
-                                        var unitRatio = currentWidth/cellWidthArray[i];
-             
-                                        var newWidth = (diffText*unitRatio) + currentWidth;
-								   		//cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
-                                        cellWidth = ($(this).width() <= 0 ? 50 : newWidth);
+								   		cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
 								   		cellWidth = cellWidth < 10 ? 10 : cellWidth;
                                         var texValue = $(this).find('.textOverlayBar').text();
+                                        
+                        
+                                       
+                                        var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
+                                        //console.log("tdWidthNew : " + tdWidthNew);
+                                        //console.log("texValue : " + texValue);
+                                        //console.log("newValue of text : " + parseFloat(d.html));
+                                        //console.log("currentWidth : " + parseFloat(currentWidth));
 								   		return cellWidth;
 								   })
 								   .style("max-width", function(d, i) {
@@ -733,39 +731,19 @@
 			
 		});	
         
-      
          
-      
+        $('.textOverlayBar').each(function(){
+            var oldText = parseFloat($(this).text());
+            newtextValueArray.push(oldText);
+        });
 	}
     
     
-    function preUpdateTable(){
-                newtextValueArray = [];
-                oldtextValueArray = [];
-                cellWidthArray = [];
 
-                $('.textOverlayBar').each(function(){
-                    var oldText = parseFloat($(this).text());
-                    //oldtextValueArray.push(parseFloat(oldText));
-                });
-
-                $('.cellOverlayBar.overlayBar').each(function(){
-                    var cellWidth = parseFloat($(this).width());
-                    //cellWidthArray.push(cellWidth);
-                });
-
-        }
-    function fixBarLength(){ 
-        console.log("Fixing Bar length");
-        
-        $('.textOverlayBar').each(function(){
-            var newText = parseFloat($(this).text());
-            //newtextValueArray.push(parseFloat(newText));
-        });
+    function fixBarLength(){
        //console.log("length is : " + newtextValueArray.length);
        //console.log("length is : " + oldtextValueArray.length);
        //console.log("length is : " + cellWidthArray.length)
-        /*
        $(".actualOverlayBar.overlayBar").css("max-width", 1000);
        $(".actualOverlayBar.overlayBar")
            .css("width", function(i, d) {
@@ -773,68 +751,13 @@
                 var currentWidth = $(this).width();
                 //tdWidthsOld.push(parseFloat(currentWidth));
                 var texValue = $(this).find('.textOverlayBar').text();
-                if(oldtextValueArray[i] == newtextValueArray[i]){
-                    //console.log("bar is : " + d + "  has data : " + i);
-                    //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
-                    //console.log("++++++++++++++++++++");  
-                    return currentWidth;
-                }else{
-                    //var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
-                    //var tdWidthNew = (parseFloat(currentWidth) * newtextValueArray[i])/(oldtextValueArray[i]*cellWidthArray[i]);
-                    //var tdWidthNew = (newtextValueArray[i])*currentWidth/cellWidthArray[i];
-                    var tdWidthNew = (newtextValueArray[i])*parseFloat(currentWidth)/oldtextValueArray[i];
-                    //console.log("tdCurrentWidth is : " + currentWidth + " tdWidthNew is : " + tdWidthNew);
-                    //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
-                    //console.log("bar is : " + d + "  has data : " + i)
-                    //console.log("++++++++++++++++++++");                   
-                    return tdWidthNew
-                }
-                
+                //var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
+                var tdWidthNew = (parseFloat(currentWidth) * newtextValueArray[i])/(oldtextValueArray[i]*cellWidthArray[i]);
+                //console.log("tdCurrentWidth is : " + currentWidth + " tdWidthNew is : " + tdWidthNew);
+                //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
+                //console.log("++++++++++++++++++++");
+                return tdWidthNew*cellWidthArray[i];
            });
-        */
-         $(".actualOverlayBar.overlayBar").css("max-width", 1000);
-         $(".actualOverlayBar.overlayBar")
-           .css("width", function(i, d) {                    
-                    //var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
-                    //var tdWidthNew = (parseFloat(currentWidth) * newtextValueArray[i])/(oldtextValueArray[i]*cellWidthArray[i]);
-                    //var tdWidthNew = (newtextValueArray[i])*currentWidth/cellWidthArray[i];
-                    var currentWidth = parseFloat($(this).width());       
-                    //var tdWidthNew = (newtextValueArray[i])*parseFloat(currentWidth)/oldtextValueArray[i];
-                    
-             
-                    var diffText = newtextValueArray[i] - oldtextValueArray[i];
-                    var unitRatio = currentWidth/cellWidthArray[i];
-             
-                    var newWidth = (diffText*unitRatio) + currentWidth;
-             
-             
-                    //console.log("tdCurrentWidth is : " + currentWidth + " tdWidthNew is : " + tdWidthNew);
-                    //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
-                    //console.log("bar is : " + d + "  has data : " + i)
-                    //console.log("++++++++++++++++++++");    
-                    console.log("Old Text Values is : " + oldtextValueArray[i]);
-                    console.log("New Text Values is : " + newtextValueArray[i]);
-                    console.log("value is : " + diffText*unitRatio)
-                    return 35;
-                
-                
-           });
-        
-        /*
-         $(".actualOverlayBar.overlayBar")
-           .css("background-color", function(i, d) {
-                //console.log("bar is : " + d + "  has data : " + i)
-                var currentWidth = $(this).width();
-                //tdWidthsOld.push(parseFloat(currentWidth));
-                var texValue = $(this).find('.textOverlayBar').text();
-                if(oldtextValueArray[i] == newtextValueArray[i]){                    
-                    return COLORS.BLUE;
-                }else{                  
-                    return COLORS.RED;
-                }
-                
-           });
-        */
         
          
     }
@@ -1717,7 +1640,7 @@
 		mar.updateData(ranking);
 		mar.updateMinimap();
 		mar.updateTable(); 
-        
+        fixBarLength();
 		colorAndResizeRows(false);
      
         //miniRowValues = miniCharWidthValues.slice();
@@ -1733,8 +1656,6 @@
 			rowObj.find("td.oldIndex").html(rank);
 		}
      	
-        
-        
      	//console.log(miniCharWidthValues);  
 		changedRows = []; // reset changed rows
 		updateColumnWeights(normalizedWeights.slice());
@@ -1749,7 +1670,7 @@
         updateRowFont();
         selectionUpdatedMiniBar();
         padMiniBars();
-       
+        
         rankButtonPressed = false;
         setTimeout(function() {       
             $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.WHITE }, 1000);
@@ -1782,9 +1703,6 @@
         
         $("#discard_button").attr("disabled", "disabled");
         console.log("podium.js: Ranking Done");
-        
-       
-        
 	}
     
     
