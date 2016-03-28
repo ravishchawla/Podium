@@ -29,6 +29,7 @@
     var rankScoreValueArray = [];
     var consolechartSortedData = [];
     var miniCharWidthValues = [];
+    var tableColumnWidthValues = {};
     var expectedBarWidthValues = [];
 	var keys;
 
@@ -164,7 +165,7 @@
 					}
 					
 					if (isNumerical) {
-						columns.push({ head: attrName, cl: attrName.split(" ").join("_") + " numericalAttribute", html: ƒ(attrName)});
+						columns.push({ head: attrName, cl: getNonSpacedString(attrName) + " numericalAttribute", html: ƒ(attrName)});
 						numericalAttributes.push(attrName);
 					} else {
 						var attrMap = {}; 
@@ -560,6 +561,11 @@
 		rows = table.select("tbody")
 			.selectAll("tr")
 			.data(data);
+
+		tableColumnWidthValues = {};
+		$("th", "#tableId").each(function(d) {
+ 			tableColumnWidthValues[$(this).text()] = this.getBoundingClientRect().width;
+ 		});
 		
 		// update the cells
 		rowNum = 0;
@@ -627,12 +633,12 @@
 
 					d3.select(this).select(".actualOverlayBar")
 								   .style("width", function(d, i) {
-								   		cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
-								   		cellWidth = cellWidth < 10 ? 10 : cellWidth;
-								   		return cellWidth;
+								   		cellWidth = tableColumnWidthValues[d.head] * d.norm;
+								   		cellWidth = cellWidth < 1 ? 1 : cellWidth;
+								   		return cellWidth + "px";
 								   })
 								   .style("max-width", function(d, i) {
-								   		return cellWidth;
+								   		return cellWidth + "px";
 								   });
 
 					d3.select(this).select(".textOverlayBar")
@@ -687,11 +693,11 @@
 		});	
        
         
-        $("td").each(function(i, d) {
+        /*$("td").each(function(i, d) {
 			$(this).css("min-width", minWidthTDTH);
 			
 		});	
-        
+        */
       
         
        
@@ -743,7 +749,7 @@
 		if(expectedBarWidthValues.length == 0)
 			expectedBarWidthValues = expectedBarValues.slice();
 
-		$("." + attributeName.split(" ").join("_") + " .expectationOverlayBar").css({"left" : function(idx, val) {
+		$("." + getNonSpacedString(attributeName) + " .expectationOverlayBar").css({"left" : function(idx, val) {
 			expectationValue = (expectedBarValues[numericalAttributes.indexOf(attributeName) - userAdjustedAttributesValues.length][idx]);
 			tdwidth = $(this).parent().parent().width();
 			exCellLeft = tdwidth * expectationValue;
@@ -1055,12 +1061,12 @@
 					max = currentVal;
 			}
 			
-			if (attributeState == attributeStates.HIGH) {
+			if (attributeState == attributeStates.HIGH || attributeState == attributeStates.UNUSED) {
 				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = (dataset[i][attr] - min) / (max - min);
+					dataset[i][attr + "Norm"] = (parseFloat(dataset[i][attr]) - min) / (max - min);
 			} else if (attributeState == attributeStates.LOW) {
 				for (var i = 0; i < len; i++)
-					dataset[i][attr + "Norm"] = 1.0 - (dataset[i][attr] - min) / (max - min);
+					dataset[i][attr + "Norm"] = 1.0 - (parseFloat(dataset[i][attr]) - min) / (max - min);
 			}
 		} else {
 			var min = 0;
@@ -1511,6 +1517,15 @@
 		currentActiveTab = tabToActivate;
 	}
 	
+	/*
+	 * Private
+	 * Return a non-spaced version of a string, so it can be 
+	 * indexed by jquery
+	 */
+	 function getNonSpacedString(strname) {
+	 	return strname.split(" ").join("_").replace("(", "").replace(")", "");
+	 }
+
 	/**************************************INPUTS**************************************/
 	
 	/*
@@ -1951,8 +1966,10 @@
 		$("#tableId thead").clone().attr("class", "pseudoHeader").removeClass("header").appendTo(".pseudoDivWrapper");
 
 		widths = [];
+		tableColumnWidthValues = {};
 		$("th", "#tableId").each(function(d) {
 			widths.push(this.getBoundingClientRect().width);
+			tableColumnWidthValues[$(this).text()] = this.getBoundingClientRect().width;
 		});
 
 		var headerOffset = $(".pseudoDivWrapper").position().left;
@@ -2544,6 +2561,7 @@
 
 					id = $(this).attr("id");
 					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+					normalizeAttribute(data, clickedRowName, attributeStates.UNUSED);
 					attributeStatesMap[clickedRowName] = attributeStates.UNUSED;
 				}
 				
@@ -2579,6 +2597,7 @@
 
 					id = pObj.attr("id");
 					unusedAttributes.push(parseInt(id.replace(/[^0-9\.]/g, ''), 10));
+					normalizeAttribute(data, clickedRowName, attributeStates.UNUSED);
 					attributeStatesMap[clickedRowName] = attributeStates.UNUSED;
 				}
 				mar.updateExpectations(clickedRowName);
