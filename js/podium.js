@@ -149,7 +149,7 @@
 				for(var attr = 0; attr < userAdjustedAttributesKeys.length; attr++) {
 					var attrName = userAdjustedAttributesKeys[attr];
 					numericalAttributes.push(attrName);
-					normalizeAttribute(data, attrName, attributeStates.HIGH);	
+					normalizeAttribute(data, attrName, attributeStates.HIGH);
 				}
 
 				// find numerical and categorical attributes
@@ -189,6 +189,7 @@
 						}
 					}
 					normalizeAttribute(data, attrName, attributeStates.HIGH);
+					setWidthNormValues(data, attrName);
 				}
 
 		        for(var i = 0; i < data.length; i++) {
@@ -452,6 +453,7 @@
 							}
 						});
 						cell["norm"] = row[c["head"] + "Norm"];
+						cell["WidthNorm"] = row[c["head"] + "WidthNorm"];
 						return cell; 
 					});
 				}).enter()
@@ -476,7 +478,9 @@
 						}
 						//expectationValue = (expectedBarValues[i-offset][rowNum] * d.norm)/parseFloat(d.html);
 						expectationValue = (expectedBarValues[colNum][rowNum]);
-						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
+						
+						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.WidthNorm;
+						
 						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellLeft = $(this).width() * expectationValue;
 						//exCellLeft = exCellLeft - cellWidth;
@@ -590,6 +594,7 @@
 							c[k] = null;
 					});
 					cell["norm"] = row[c["head"] + "Norm"];
+					cell["WidthNorm"] = row[c["head"] + "WidthNorm"];
 					return cell; 
 				});
 			}).style("display", function(d) { if (d.displayStyle != undefined) return d.displayStyle; else return ""; })
@@ -603,7 +608,7 @@
 
 					d3.select(this).html(function(d, i) {
 						expectationValue = (expectedBarValues[colNum - offset][rowNum]);
-						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.norm;
+						cellWidth = ($(this).width() <= 0) ? 50 : $(this).width() * d.WidthNorm;
 						//exCellLeft = ($(this).width() < 0) ? 50 : $(this).width() * expectationValue;
 						exCellLeft = $(this).width() * expectationValue;
 						//exCellLeft = exCellLeft - cellWidth;
@@ -633,8 +638,8 @@
 
 					d3.select(this).select(".actualOverlayBar")
 								   .style("width", function(d, i) {
-								   		cellWidth = tableColumnWidthValues[d.head] * d.norm;
-								   		cellWidth = cellWidth < 1 ? 1 : cellWidth;
+								   		cellWidth = tableColumnWidthValues[d.head] * d.WidthNorm;
+								   		if(cellWidth < 10 ) { cellWidth = 10; }
 								   		return cellWidth + "px";
 								   })
 								   .style("max-width", function(d, i) {
@@ -1040,6 +1045,45 @@
 		}
 		
 		return [matrix, uniqueIds];
+	}
+	
+	
+	/*
+	 * Private
+	 * Normalize the data so higher attribute values have bigger normalized values
+	 * Used to determine bar widths
+	 */
+	function setWidthNormValues(dataset, attr) {
+		if (numericalAttributes.indexOf(attr) > -1) {
+			var min = Number.MAX_VALUE; 
+			var max = Number.MIN_VALUE; 
+			var len = dataset.length;
+			for (var i = 0; i < len; i++) {
+				var currentVal = Number(dataset[i][attr]);
+				
+				if (currentVal < min)
+					min = currentVal; 
+				if (currentVal > max)
+					max = currentVal;
+			}
+			
+			for (var i = 0; i < len; i++)
+				dataset[i][attr + "WidthNorm"] = (parseFloat(dataset[i][attr]) - min) / (max - min);
+		} else {
+			var min = 0;
+			var max = Number.MIN_VALUE; 
+			var len = dataset.length;
+			for (var key in categoricalAttributeMap[attr]) {
+				var currentVal = Number(categoricalAttributeMap[attr][key]);
+				
+				if (currentVal > max)
+					max = currentVal;
+			}
+			
+			for (var i = 0; i < len; i++) {
+				dataset[i][attr + "WidthNorm"] = (categoricalAttributeMap[attr][dataset[i][attr]] - min) / (max - min);
+			}
+		}
 	}
 	
 	
@@ -1532,7 +1576,7 @@
 	 * Return the table to its state before changes were made
 	 */
 	mar.discardButtonClicked = function() {
-		console.log("podium.js: Discarding Changes"); 
+		console.log("podium.js: discarding changes"); 
 		$("#tablePanel tbody").html(htmlTableToCache);
 
 		prevStates = [];
@@ -1573,7 +1617,7 @@
         rankButtonPressed = true;
        
         greyMinibars(false);
-		console.log("podium.js: Ranking"); 
+		console.log("podium.js: ranking"); 
 		var normalizedWeights = runRegressionSolver();
 		
 		var ranking = computeRanking(normalizedWeights);
@@ -1652,7 +1696,7 @@
         });
         
         $("#discard_button").attr("disabled", "disabled");
-        console.log("podium.js: Ranking Done");
+        console.log("podium.js: ranking done");
 	}
     
     
