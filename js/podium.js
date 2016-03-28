@@ -17,12 +17,6 @@
 	var categoricalAttributeMap = {};
 	var attributeWeights = [];
 	var tooltipAttribute;
-    
-    var tdWidthsOld = [];
-    var tdTextValueOld = [];
-    var oldtextValueArray = [];
-    var newtextValueArray =[];
-    var cellWidthArray = [];
 
 	/*Arrays and variables to hold rows*/
 	var lastChangedRow;
@@ -561,11 +555,7 @@
 	/*
 	 * Update the table to display the given data
 	 */
-    
 	mar.updateTable = function() { 
-        newtextValueArray = [];
-        oldtextValueArray = [];
-        cellWidthArray = [];
 		// update the rows
 		rows = table.select("tbody")
 			.selectAll("tr")
@@ -581,17 +571,6 @@
 			expectedBarWidthValues = expectedBarValues.slice();
 
 		//console.log(expectedBarWidthValues);
-        
-        
-        $('.textOverlayBar').each(function(){
-            var oldText = parseFloat($(this).text());
-            oldtextValueArray.push(oldText);
-        });
-        
-        $('.cellOverlayBar.overlayBar').each(function(){
-            var cellWidth = parseFloat($(this).width());
-            cellWidthArray.push(cellWidth);
-        });
 
 		cells = rows.selectAll("td")
 			.data(function(row, i) {
@@ -632,7 +611,6 @@
 							+ (showExpectedValueOverlay ? COLORS.SLATE : COLORS.TRANSPARENT) + "; left : " + exCellLeft + "px; z-index: 80;'"
 							+ ">";
                         
-                                                
 						cellBarHTML = "<div class = 'cellOverlayBar overlayBar' style = 'max-width: " + $(this).width() + "px; width : " + $(this).width()
 								+ "px; height: " + cellHeight + "px; background-color : " + COLORS.WHITE + ";' >"
 
@@ -645,39 +623,22 @@
 								+ "</div>";	
 						return cellBarHTML;
 					});
-				} else {                    
-					d3.select(this).select(".textOverlayBar")
-								    .html(function(d, i) {
-                                    var oldText = $(this).text();
-                                    //oldtextValueArray.push(parseFloat(oldText));
-                                    //newtextValueArray.push(parseFloat(d.html));
-								  	return d.html;                        
-								  });
+				} else {
 
-					d3.select(this).select("div.actualOverlayBar.overlayBar")
+					d3.select(this).select(".actualOverlayBar")
 								   .style("width", function(d, i) {
-                                        tdWidthsOld = [];
-                                        var currentWidth = $(this).width();
-                                        tdWidthsOld.push(parseFloat(currentWidth));
-                        
 								   		cellWidth = ($(this).width() <= 0 ? 50 : $(this).width() * d.norm);
 								   		cellWidth = cellWidth < 10 ? 10 : cellWidth;
-                                        var texValue = $(this).find('.textOverlayBar').text();
-                                        
-                        
-                                       
-                                        var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
-                                        //console.log("tdWidthNew : " + tdWidthNew);
-                                        //console.log("texValue : " + texValue);
-                                        //console.log("newValue of text : " + parseFloat(d.html));
-                                        //console.log("currentWidth : " + parseFloat(currentWidth));
 								   		return cellWidth;
 								   })
 								   .style("max-width", function(d, i) {
 								   		return cellWidth;
-                                    });
+								   });
 
-           
+					d3.select(this).select(".textOverlayBar")
+								  .html(function(d, i) { 
+								  	return d.html;
+								  });
 				}
 
 				colNum++;
@@ -731,36 +692,11 @@
 			
 		});	
         
-         
-        $('.textOverlayBar').each(function(){
-            var oldText = parseFloat($(this).text());
-            newtextValueArray.push(oldText);
-        });
-	}
-    
-    
-
-    function fixBarLength(){
-       //console.log("length is : " + newtextValueArray.length);
-       //console.log("length is : " + oldtextValueArray.length);
-       //console.log("length is : " + cellWidthArray.length)
-       $(".actualOverlayBar.overlayBar").css("max-width", 1000);
-       $(".actualOverlayBar.overlayBar")
-           .css("width", function(i, d) {
-                //console.log("bar is : " + d + "  has data : " + i)
-                var currentWidth = $(this).width();
-                //tdWidthsOld.push(parseFloat(currentWidth));
-                var texValue = $(this).find('.textOverlayBar').text();
-                //var tdWidthNew = newtextValueArray[i] * parseFloat(currentWidth)/oldtextValueArray[i];
-                var tdWidthNew = (parseFloat(currentWidth) * newtextValueArray[i])/(oldtextValueArray[i]*cellWidthArray[i]);
-                //console.log("tdCurrentWidth is : " + currentWidth + " tdWidthNew is : " + tdWidthNew);
-                //console.log("td OldText is : " + oldtextValueArray[i] + " td NewText is : " + newtextValueArray[i]);
-                //console.log("++++++++++++++++++++");
-                return tdWidthNew*cellWidthArray[i];
-           });
+      
         
-         
-    }
+       
+	}
+
 
 	/*
 	 * Update the mini map 
@@ -1640,7 +1576,6 @@
 		mar.updateData(ranking);
 		mar.updateMinimap();
 		mar.updateTable(); 
-        fixBarLength();
 		colorAndResizeRows(false);
      
         //miniRowValues = miniCharWidthValues.slice();
@@ -1670,7 +1605,7 @@
         updateRowFont();
         selectionUpdatedMiniBar();
         padMiniBars();
-        
+     
         rankButtonPressed = false;
         setTimeout(function() {       
             $('#tablePanel tbody .School').animate({ backgroundColor: COLORS.WHITE }, 1000);
